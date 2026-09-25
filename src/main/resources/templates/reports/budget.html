@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Budget Variance Report')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('report-budget')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🎯</span> Budget vs Actuals Analysis Report</h1>
+                <p class="page-subtitle">Executive variance reporting comparing planned allocations against real general ledger expenditure</p>
+            </div>
+            <form th:action="@{/reports/budget}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label class="form-label" style="margin: 0;">Year:</label>
+                <input type="number" class="form-control" name="fiscalYear" th:value="${fiscalYear}" style="width: 100px;">
+                <label class="form-label" style="margin: 0;">Period:</label>
+                <select class="form-select" name="period" style="width: auto;">
+                    <option value="ALL" th:selected="${period == 'ALL' || period == null}">All / Annual</option>
+                    <option value="Q1" th:selected="${period == 'Q1'}">Q1</option>
+                    <option value="Q2" th:selected="${period == 'Q2'}">Q2</option>
+                    <option value="Q3" th:selected="${period == 'Q3'}">Q3</option>
+                    <option value="Q4" th:selected="${period == 'Q4'}">Q4</option>
+                </select>
+                <button type="submit" class="btn btn-secondary">Generate</button>
+            </form>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card cyan">
+                <div class="kpi-label">Total Target Allocation</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalPlanned, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Operating financial budget</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Actual General Ledger Incurred</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalActual, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">From posted ledger lines</div>
+            </div>
+            <div class="kpi-card" th:classappend="${report.totalVariance.doubleValue() >= 0 ? 'emerald' : 'rose'}">
+                <div class="kpi-label">Net Variance</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalVariance, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Actual - Planned variance</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title" th:text="'Detailed Variance Table — FY ' + ${report.fiscalYear} + ' (' + ${report.period} + ')'">Detailed Breakdown</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th>Planned Budget</th>
+                            <th>Actual Incurred</th>
+                            <th>Variance (₹)</th>
+                            <th>Variance %</th>
+                            <th>Threshold Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.items)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No budget allocations found for the specified period.</td>
+                        </tr>
+                        <tr th:each="row : ${report.items}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);" th:text="${row.accountCode}">5000</td>
+                            <td style="font-weight: 600;" th:text="${row.accountName}">Scrubber Maintenance</td>
+                            <td style="font-family: var(--font-mono);" th:text="'₹' + ${#numbers.formatDecimal(row.plannedAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600;" th:text="'₹' + ${#numbers.formatDecimal(row.actualAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;"
+                                th:classappend="${row.variance.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
+                                th:text="'₹' + ${#numbers.formatDecimal(row.variance, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600;"
+                                th:classappend="${row.variancePercentage.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
+                                th:text="${#numbers.formatDecimal(row.variancePercentage, 1, 2, 'POINT')} + '%'">0.00%</td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${row.variance.doubleValue() >= 0}">ON TARGET</span>
+                                <span class="badge badge-critical" th:if="${row.variance.doubleValue() < 0}">OVER BUDGET</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

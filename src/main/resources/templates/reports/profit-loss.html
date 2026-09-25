@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Profit & Loss')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('profit-loss')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📈</span> Profit & Loss Statement (P&L)</h1>
+                <p class="page-subtitle">Operating revenue from life-support utility sales vs habitat maintenance expenses from immutable double-entry ledger</p>
+            </div>
+            <form th:action="@{/reports/profit-loss}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label class="form-label" style="margin: 0;">Period:</label>
+                <input type="date" class="form-control" name="startDate" th:value="${report.startDate}" style="width: auto;">
+                <span style="color: var(--text-muted);">to</span>
+                <input type="date" class="form-control" name="endDate" th:value="${report.endDate}" style="width: auto;">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </form>
+        </div>
+
+        <!-- Profit/Loss KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card emerald">
+                <div class="kpi-label">Total Utility Revenue</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalRevenue, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Life-support usage & leases</div>
+            </div>
+            <div class="kpi-card amber">
+                <div class="kpi-label">Operating Expenses</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalExpenses, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Scrubber service & logistics</div>
+            </div>
+            <div class="kpi-card" th:classappend="${report.netResult.doubleValue() >= 0 ? 'cyan' : 'rose'}">
+                <div class="kpi-label">Net Habitat Result</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.netResult, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext" th:text="${report.netResult.doubleValue() >= 0 ? 'Operating Surplus' : 'Operating Deficit'}">Operating Surplus</div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 2rem;">
+            <div class="panel-header" style="background: rgba(16, 185, 129, 0.08);">
+                <div class="panel-title" style="color: var(--accent-emerald);">REVENUE (INCOME)</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-emerald);"
+                     th:text="'₹' + ${#numbers.formatDecimal(report.totalRevenue, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Revenue Source</th>
+                            <th style="text-align: right;">Amount Incurred (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.revenueItems)}">
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No revenue journal entries posted in this period.</td>
+                        </tr>
+                        <tr th:each="item : ${report.revenueItems}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-emerald);" th:text="${item.accountCode}">4000</td>
+                            <td style="font-weight: 600;" th:text="${item.accountName}">Life-Support Utility Revenue</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600; text-align: right;"
+                                th:text="'₹' + ${#numbers.formatDecimal(item.amount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header" style="background: rgba(244, 63, 94, 0.08);">
+                <div class="panel-title" style="color: var(--accent-rose);">OPERATING EXPENDITURES (EXPENSES)</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-rose);"
+                     th:text="'₹' + ${#numbers.formatDecimal(report.totalExpenses, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Expenditure Stream</th>
+                            <th style="text-align: right;">Amount Expensed (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.expenseItems)}">
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No expense journal entries posted in this period.</td>
+                        </tr>
+                        <tr th:each="item : ${report.expenseItems}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-rose);" th:text="${item.accountCode}">5000</td>
+                            <td style="font-weight: 600;" th:text="${item.accountName}">Scrubber Maintenance Expenditures</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600; text-align: right;"
+                                th:text="'₹' + ${#numbers.formatDecimal(item.amount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

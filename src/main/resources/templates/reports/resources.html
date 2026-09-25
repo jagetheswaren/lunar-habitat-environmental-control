@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Resource Metrics Report')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('report-resources')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>💧</span> Resource Metrics & Reclamation Audit</h1>
+                <p class="page-subtitle">Telemetry-derived life support consumption, atmospheric reclamation rates, and emergency inventory reserves</p>
+            </div>
+            <form th:action="@{/reports/resources}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label class="form-label" style="margin: 0;">Period:</label>
+                <input type="date" class="form-control" name="startDate" style="width: auto;">
+                <span style="color: var(--text-muted);">to</span>
+                <input type="date" class="form-control" name="endDate" style="width: auto;">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </form>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card cyan">
+                <div class="kpi-label">Total Oxygen Consumed</div>
+                <div class="kpi-value" th:text="${#numbers.formatDecimal(report.totalOxygenConsumedM3, 1, 2, 'POINT')} + ' m³'">0.00 m³</div>
+                <div class="kpi-subtext">Cumulative across all active domes</div>
+            </div>
+            <div class="kpi-card emerald">
+                <div class="kpi-label">Potable Water Consumed</div>
+                <div class="kpi-value" th:text="${#numbers.formatDecimal(report.totalWaterConsumedLiters, 1, 1, 'POINT')} + ' L'">0.0 L</div>
+                <div class="kpi-subtext">Telemetry-tracked closed-loop hydration</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Scrubber Autonomous Adjusts</div>
+                <div class="kpi-value" th:text="${report.totalScrubberAdjustments}">0</div>
+                <div class="kpi-subtext">Automated threshold corrections</div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 2rem;">
+            <div class="panel-header">
+                <div class="panel-title">Habitat Zone Resource Breakdown</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Zone Code</th>
+                            <th>Habitat Zone Name</th>
+                            <th>Total Oxygen (m³)</th>
+                            <th>Total Water (Liters)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.zoneBreakdowns)}">
+                            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No zone consumption recorded for this period.</td>
+                        </tr>
+                        <tr th:each="zb : ${report.zoneBreakdowns}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);" th:text="${zb.zoneCode}">DOME-A</td>
+                            <td style="font-weight: 600;" th:text="${zb.zoneName}">Habitat Dome Alpha</td>
+                            <td style="font-family: var(--font-mono);" th:text="${#numbers.formatDecimal(zb.oxygenConsumedM3, 1, 2, 'POINT')} + ' m³'">0.00 m³</td>
+                            <td style="font-family: var(--font-mono);" th:text="${#numbers.formatDecimal(zb.waterConsumedLiters, 1, 1, 'POINT')} + ' L'">0.0 L</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Buffer Resource Inventory & Stock Status</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Resource Name</th>
+                            <th>SKU</th>
+                            <th>Current Reserve Level</th>
+                            <th>Storage Module</th>
+                            <th>Reserve Alert Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.inventoryStock)}">
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No inventory records found.</td>
+                        </tr>
+                        <tr th:each="st : ${report.inventoryStock}">
+                            <td style="font-weight: 600;" th:text="${st.resourceName}">Reclaimed Oxygen</td>
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${st.sku}">O2-RECLAIM</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;" th:text="${#numbers.formatDecimal(st.quantity, 1, 1, 'POINT')} + ' ' + ${st.unitOfMeasure}">500.0 M3</td>
+                            <td th:text="${st.location}">Storage Module Cryo-1</td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${!st.lowStock}">NOMINAL RESERVE</span>
+                                <span class="badge badge-critical" th:if="${st.lowStock}">LOW RESERVE ALERT</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

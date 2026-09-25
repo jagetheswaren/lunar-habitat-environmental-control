@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="html-head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | Lunar Habitat Operations Console'">Lunar Habitat Operations Console</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+<body>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeNav)" class="lunar-sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">🌙</div>
+        <div>
+            <div class="brand-title">LUNAR HABITAT</div>
+            <div class="brand-subtitle">Life Support & ERP</div>
+        </div>
+    </div>
+
+    <div class="nav-section">Main Console</div>
+    <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'dashboard' ? 'active' : ''}">
+            <a th:href="@{/dashboard}"><span class="nav-icon">🪐</span> Operations Dashboard</a>
+        </li>
+    </ul>
+
+    <div class="nav-section">Operations & Life Support</div>
+    <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'telemetry' ? 'active' : ''}">
+            <a th:href="@{/telemetry}"><span class="nav-icon">📡</span> Telemetry Readings</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'alerts' ? 'active' : ''}">
+            <a th:href="@{/alerts}"><span class="nav-icon">⚠️</span> Environmental Alerts</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'resources' ? 'active' : ''}">
+            <a th:href="@{/resources}"><span class="nav-icon">🧪</span> Resource Stock</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'maintenance' ? 'active' : ''}">
+            <a th:href="@{/maintenance}"><span class="nav-icon">🛠️</span> Scrubber Maintenance</a>
+        </li>
+    </ul>
+
+    <div class="nav-section">Commercial & Billing</div>
+    <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'contacts' ? 'active' : ''}">
+            <a th:href="@{/contacts}"><span class="nav-icon">👥</span> Customers & Vendors</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'products' ? 'active' : ''}">
+            <a th:href="@{/products}"><span class="nav-icon">📦</span> Products & Services</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'sales-orders' ? 'active' : ''}">
+            <a th:href="@{/sales-orders}"><span class="nav-icon">📋</span> Sales Orders</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'invoices' ? 'active' : ''}">
+            <a th:href="@{/invoices}"><span class="nav-icon">🧾</span> Utility Invoices</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'purchase-orders' ? 'active' : ''}">
+            <a th:href="@{/purchase-orders}"><span class="nav-icon">🛒</span> Purchase Orders</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'vendor-bills' ? 'active' : ''}">
+            <a th:href="@{/vendor-bills}"><span class="nav-icon">📑</span> Vendor Bills</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'payments' ? 'active' : ''}">
+            <a th:href="@{/payments}"><span class="nav-icon">💳</span> Cash & Bank Payments</a>
+        </li>
+    </ul>
+
+    <div class="nav-section">Finance & Ledger</div>
+    <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'accounts' ? 'active' : ''}">
+            <a th:href="@{/accounts}"><span class="nav-icon">🏛️</span> Chart of Accounts</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'journals' ? 'active' : ''}">
+            <a th:href="@{/journals}"><span class="nav-icon">📜</span> General Ledger</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'budgets' ? 'active' : ''}">
+            <a th:href="@{/budgets}"><span class="nav-icon">📊</span> Budget vs Actuals</a>
+        </li>
+    </ul>
+
+    <div class="nav-section">Executive Reports</div>
+    <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'balance-sheet' ? 'active' : ''}">
+            <a th:href="@{/reports/balance-sheet}"><span class="nav-icon">⚖️</span> Balance Sheet</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'profit-loss' ? 'active' : ''}">
+            <a th:href="@{/reports/profit-loss}"><span class="nav-icon">📈</span> Profit & Loss</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'report-budget' ? 'active' : ''}">
+            <a th:href="@{/reports/budget}"><span class="nav-icon">🎯</span> Budget Report</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'report-resources' ? 'active' : ''}">
+            <a th:href="@{/reports/resources}"><span class="nav-icon">💧</span> Resource Metrics</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'report-environment' ? 'active' : ''}">
+            <a th:href="@{/reports/environment}"><span class="nav-icon">🌐</span> Environmental Audit</a>
+        </li>
+    </ul>
+
+    <div class="nav-section">Administration</div>
+    <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'zones' ? 'active' : ''}">
+            <a th:href="@{/habitat-zones}"><span class="nav-icon">🪐</span> Habitat Zones</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'thresholds' ? 'active' : ''}">
+            <a th:href="@{/thresholds}"><span class="nav-icon">⚙️</span> Safety Thresholds</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'audit-logs' ? 'active' : ''}">
+            <a th:href="@{/audit-logs}"><span class="nav-icon">🔒</span> Immutable Audit Trail</a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'settings' ? 'active' : ''}">
+            <a th:href="@{/settings}"><span class="nav-icon">🛠️</span> API & Configuration</a>
+        </li>
+    </ul>
+    <div style="height: 30px;"></div>
+</aside>
+
+<!-- Top Header Fragment -->
+<header th:fragment="top-header" class="lunar-header">
+    <div class="header-status">
+        <span class="pulse-dot"></span>
+        <span>LUNAR HABITAT STATUS: <strong style="color: var(--accent-emerald);">OPERATIONAL</strong></span>
+    </div>
+
+    <div class="header-user">
+        <div class="user-badge" sec:authorize="isAuthenticated()">
+            <span>👤</span>
+            <span sec:authentication="name" style="font-weight: 600;">operator</span>
+            <span class="user-role" sec:authentication="principal.authorities">[ROLE_ADMIN]</span>
+        </div>
+        <form th:action="@{/logout}" method="post" style="display: inline;">
+            <button type="submit" class="btn-logout">Disconnect</button>
+        </form>
+    </div>
+</header>
+
+<!-- Alerts Banner Fragment -->
+<div th:fragment="alerts-banner">
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span>✅</span>
+        <span th:text="${successMessage}">Operation completed successfully.</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-error">
+        <span>⚠️</span>
+        <span th:text="${errorMessage}">An error occurred processing the transaction.</span>
+    </div>
+</div>
+
+</body>
+</html>

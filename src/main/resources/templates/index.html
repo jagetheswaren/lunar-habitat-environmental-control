@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunar Habitat Operations</title>
+    <style>
+        body{font-family:Arial,sans-serif;background:#0b1020;color:#eef2ff;margin:0}
+        header{padding:28px 40px;background:#111936;border-bottom:1px solid #26345f}
+        main{padding:30px 40px;max-width:1200px;margin:auto}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+        .card{background:#151f3d;border:1px solid #2c3a68;border-radius:14px;padding:20px}
+        .card h3{margin-top:0}.tag{font-size:12px;opacity:.7}
+        code{color:#9fe8ff}.flow{padding:18px;background:#0f1730;border-radius:12px;margin-top:22px}
+    </style>
+</head>
+<body>
+<header><h1>🌙 Lunar Habitat Operations</h1><div class="tag">Environmental Control • Resource Reclamation • Utility Billing</div></header>
+<main>
+    <h2>Operations Dashboard</h2>
+    <div class="grid">
+        <div class="card"><h3>Telemetry</h3><p>Atmospheric pressure, CO₂, oxygen and water purity.</p><code>POST /api/lunar/telemetry</code></div>
+        <div class="card"><h3>Resources</h3><p>Reclaimed oxygen and potable water usage.</p><code>/api/lunar/products</code></div>
+        <div class="card"><h3>Billing</h3><p>Sales orders, customer invoices and payments.</p><code>/api/lunar/customer-invoices</code></div>
+        <div class="card"><h3>Procurement</h3><p>CO₂ filter cartridge POs and vendor bills.</p><code>/api/lunar/purchase-orders</code></div>
+        <div class="card"><h3>Accounting</h3><p>Chart of Accounts and journal entries.</p><code>/api/lunar/accounts</code></div>
+        <div class="card"><h3>Budgets</h3><p>Zone-based budget vs actual tracking.</p><code>/api/lunar/reports/budget</code></div>
+    </div>
+    <div class="flow">
+        <h3>Business Flow</h3>
+        <p>Telemetry → Resource Usage → Customer Invoice → Bank Receipt</p>
+        <p>Purchase Order → Vendor Bill → Bank Payment → Journal Entry</p>
+        <p>Budget → Actuals → Variance Report</p>
+    </div>
+</main>
+</body>
+</html>

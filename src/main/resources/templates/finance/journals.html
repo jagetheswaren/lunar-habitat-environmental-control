@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('General Ledger')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('journals')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📜</span> General Ledger & Double-Entry Journals</h1>
+                <p class="page-subtitle">Immutable transaction postings ensuring Total Debit == Total Credit compliance</p>
+            </div>
+            <a th:href="@{/reports/balance-sheet}" class="btn btn-secondary btn-sm">⚖️ View Balance Sheet</a>
+        </div>
+
+        <div class="panel" th:each="entry : ${entriesPage.content}">
+            <div class="panel-header" style="background: rgba(18, 28, 51, 0.7);">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan); font-size: 15px;"
+                          th:text="${entry.journalNumber}">JRN-001</span>
+                    <span class="badge badge-posted" th:text="${entry.journal.name}">Sales Journal</span>
+                    <span style="color: var(--text-secondary); font-size: 13px;" th:text="${entry.entryDate}">2026-09-24</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-emerald);"
+                          th:text="'Balanced: ₹' + ${#numbers.formatDecimal(entry.totalDebit, 1, 2)}">Balanced: ₹8,100.00</span>
+                    <span class="badge badge-paid" th:text="${entry.status}">POSTED</span>
+                </div>
+            </div>
+            <div class="panel-body" style="padding: 16px 24px;">
+                <p style="font-size: 13.5px; color: var(--text-secondary); margin-bottom: 12px;" th:text="${entry.description}">Customer utility invoice posting</p>
+                <div class="table-responsive">
+                    <table class="lunar-table">
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Analytic / Dome</th>
+                                <th>Memo</th>
+                                <th style="text-align: right;">Debit (₹)</th>
+                                <th style="text-align: right;">Credit (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="line : ${entry.lines}">
+                                <td style="font-weight: 600;" th:text="${line.account.accountCode} + ' - ' + ${line.account.accountName}">1300 - Accounts Receivable</td>
+                                <td th:text="${line.analyticAccount != null ? line.analyticAccount.name : '-'}">Habitat Dome Alpha</td>
+                                <td th:text="${line.description}">Reclaimed utility billing</td>
+                                <td style="text-align: right; font-family: var(--font-mono);"
+                                    th:text="${line.debit.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? '₹' + #numbers.formatDecimal(line.debit, 1, 2) : '-'}">₹8,100.00</td>
+                                <td style="text-align: right; font-family: var(--font-mono);"
+                                    th:text="${line.credit.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? '₹' + #numbers.formatDecimal(line.credit, 1, 2) : '-'}">-</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight: 700; border-top: 2px solid var(--border-color);">
+                                <td colspan="3">Ledger Totals:</td>
+                                <td style="text-align: right; font-family: var(--font-mono); color: var(--accent-cyan);"
+                                    th:text="'₹' + ${#numbers.formatDecimal(entry.totalDebit, 1, 2)}">₹8,100.00</td>
+                                <td style="text-align: right; font-family: var(--font-mono); color: var(--accent-cyan);"
+                                    th:text="'₹' + ${#numbers.formatDecimal(entry.totalCredit, 1, 2)}">₹8,100.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(entriesPage.content)}" class="panel">
+            <div class="panel-body" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                No journal entries posted to the general ledger yet. Post a customer invoice or vendor bill to view balanced transactions.
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

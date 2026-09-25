@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Utility Invoices')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('invoices')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🧾</span> Utility Invoices & Accounts Receivable</h1>
+                <p class="page-subtitle">Telemetry-driven consumption utility billing, double-entry GL posting, and tenant receivables</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="consumptionBillModal">
+                <span>⚡</span> Generate Telemetry Utility Bill
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Customer Invoice Registers</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th>Habitat Zone</th>
+                            <th>Invoice Date</th>
+                            <th>Billing Period</th>
+                            <th>Total (₹)</th>
+                            <th>Paid (₹)</th>
+                            <th>Balance (₹)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(invoicesPage.content)}">
+                            <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No utility invoices generated. Click "Generate Telemetry Utility Bill" to bill a commercial tenant.
+                            </td>
+                        </tr>
+                        <tr th:each="inv : ${invoicesPage.content}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${inv.invoiceNumber}">INV-001</td>
+                            <td style="font-weight: 600;" th:text="${inv.customer.name}">Commercial Lunar Mining Firm</td>
+                            <td th:text="${inv.habitatZone != null ? inv.habitatZone.name : '-'}">Habitat Dome Alpha</td>
+                            <td th:text="${inv.invoiceDate}">2026-09-24</td>
+                            <td style="font-size: 12px; color: var(--text-secondary);"
+                                th:text="${inv.billingPeriodStart} + ' to ' + ${inv.billingPeriodEnd}">2026-09-01 to 2026-09-24</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(inv.total, 1, 2)}">₹8,100.00</td>
+                            <td th:text="'₹' + ${#numbers.formatDecimal(inv.paidAmount, 1, 2)}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); color: var(--accent-emerald);" th:text="'₹' + ${#numbers.formatDecimal(inv.balanceDue, 1, 2)}">₹8,100.00</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${inv.status.name() == 'PAID' ? 'badge-paid' : (inv.status.name() == 'POSTED' ? 'badge-posted' : (inv.status.name() == 'PARTIALLY_PAID' ? 'badge-partial' : 'badge-draft'))}"
+                                      th:text="${inv.status}">DRAFT</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 6px;">
+                                    <form th:if="${inv.status.name() == 'DRAFT'}" th:action="@{'/invoices/' + ${inv.id} + '/post'}" method="post">
+                                        <button type="submit" class="btn btn-primary btn-sm">Post to General Ledger</button>
+                                    </form>
+                                    <a th:if="${inv.status.name() == 'POSTED' || inv.status.name() == 'PARTIALLY_PAID'}" th:href="@{/payments}" class="btn btn-secondary btn-sm">Receive Pay</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Consumption Billing Modal -->
+<div class="modal" id="consumptionBillModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Generate Telemetry-Driven Utility Bill</div>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/invoices/consumption-bill}" method="post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="customerId">Commercial Customer</label>
+                    <select id="customerId" name="customerId" class="form-control" required>
+                        <option th:each="c : ${customers}" th:value="${c.id}" th:text="${c.name} + ' (' + ${c.organizationName} + ')'"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="habitatZoneId">Habitat Dome / Zone</label>
+                    <select id="habitatZoneId" name="habitatZoneId" class="form-control" required>
+                        <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name} + ' (' + ${z.code} + ')'"></option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="billingPeriodStart">Billing Period Start</label>
+                        <input type="date" id="billingPeriodStart" name="billingPeriodStart" class="form-control"
+                               th:value="${#temporals.format(#temporals.createNow().minusDays(30), 'yyyy-MM-dd')}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="billingPeriodEnd">Billing Period End</label>
+                        <input type="date" id="billingPeriodEnd" name="billingPeriodEnd" class="form-control"
+                               th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <input type="checkbox" id="includeScrubberService" name="includeScrubberService" value="true" checked style="width: 18px; height: 18px;">
+                    <label for="includeScrubberService" style="font-size: 13.5px; color: var(--text-primary); cursor: pointer;">
+                        Include CO₂ Scrubber Servicing & Environmental Monitoring surcharge
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="notes">Invoice Memo / Notes</label>
+                    <input type="text" id="notes" name="notes" class="form-control" placeholder="Automated lunar utility reclamation billing...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">⚡ Calculate & Issue Invoice</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

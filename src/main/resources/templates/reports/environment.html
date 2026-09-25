@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Environmental Audit Report')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('report-environment')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🌐</span> Environmental Audit & Biosphere Health</h1>
+                <p class="page-subtitle">Telemetry parameter analytics, closed-loop safety violations, scrubber actuator triggers, and incident logs</p>
+            </div>
+            <form th:action="@{/reports/environment}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label class="form-label" style="margin: 0;">Period:</label>
+                <input type="date" class="form-control" name="startDate" style="width: auto;">
+                <span style="color: var(--text-muted);">to</span>
+                <input type="date" class="form-control" name="endDate" style="width: auto;">
+                <button type="submit" class="btn btn-secondary">Filter</button>
+            </form>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card cyan">
+                <div class="kpi-label">Mean Pressure (kPa)</div>
+                <div class="kpi-value" th:text="${report.averagePressureKpa != null ? #numbers.formatDecimal(report.averagePressureKpa, 1, 2, 'POINT') + ' kPa' : 'N/A'}">101.3 kPa</div>
+                <div class="kpi-subtext" th:text="'Min: ' + ${report.minPressureKpa != null ? report.minPressureKpa : 'N/A'} + ' | Max: ' + ${report.maxPressureKpa != null ? report.maxPressureKpa : 'N/A'}">Min / Max bounds</div>
+            </div>
+            <div class="kpi-card emerald">
+                <div class="kpi-label">Mean Water Purity</div>
+                <div class="kpi-value" th:text="${report.averageWaterPurityPercent != null ? #numbers.formatDecimal(report.averageWaterPurityPercent, 1, 2, 'POINT') + '%' : 'N/A'}">98.5%</div>
+                <div class="kpi-subtext">Safe threshold: &gt;= 95.0%</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Mean CO2 Concentration</div>
+                <div class="kpi-value" th:text="${report.averageCo2Ppm != null ? #numbers.formatDecimal(report.averageCo2Ppm, 1, 0, 'POINT') + ' ppm' : 'N/A'}">550 ppm</div>
+                <div class="kpi-subtext">Safe threshold: &lt; 1000 ppm</div>
+            </div>
+            <div class="kpi-card" th:classappend="${report.environmentalHealthStatus == 'NOMINAL' || report.environmentalHealthStatus == 'STABLE' ? 'emerald' : 'rose'}">
+                <div class="kpi-label">Biosphere Health Status</div>
+                <div class="kpi-value" th:text="${report.environmentalHealthStatus}">STABLE</div>
+                <div class="kpi-subtext" th:text="${report.criticalAlerts} + ' Critical Alerts Recorded'">0 Critical Alerts</div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 2rem;">
+            <div class="panel-header">
+                <div class="panel-title">Environmental Threshold Breaches & Incident Log</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Observed Average</th>
+                            <th>Nominal Operating Range</th>
+                            <th>Incident Frequency</th>
+                            <th>Biosphere Integrity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: 600; color: var(--accent-cyan);">Atmospheric Pressure</td>
+                            <td style="font-family: var(--font-mono);" th:text="${report.averagePressureKpa != null ? #numbers.formatDecimal(report.averagePressureKpa, 1, 2, 'POINT') + ' kPa' : 'N/A'}">101.3 kPa</td>
+                            <td>95.0 kPa — 105.0 kPa</td>
+                            <td style="font-family: var(--font-mono);" th:text="${report.totalAlerts} + ' alerts'">0 alerts</td>
+                            <td><span class="badge badge-paid">NOMINAL</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600; color: var(--accent-emerald);">Potable Water Purity</td>
+                            <td style="font-family: var(--font-mono);" th:text="${report.averageWaterPurityPercent != null ? #numbers.formatDecimal(report.averageWaterPurityPercent, 1, 2, 'POINT') + '%' : 'N/A'}">98.5%</td>
+                            <td>&ge; 95.0% Recycled Standard</td>
+                            <td style="font-family: var(--font-mono);" th:text="${report.criticalAlerts} + ' critical'">0 critical</td>
+                            <td><span class="badge badge-paid">PURIFIED</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600; color: var(--accent-purple);">CO2 Scrubber Operations</td>
+                            <td style="font-family: var(--font-mono);" th:text="${report.scrubberAdjustments} + ' auto-cycles'">0 auto-cycles</td>
+                            <td>Autonomous actuation on &gt; 1000 ppm</td>
+                            <td style="font-family: var(--font-mono);" th:text="${report.scrubberAdjustments} + ' adjustments'">0 adjustments</td>
+                            <td><span class="badge badge-posted">ACTIVE CO2 REMOVAL</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <span>🛡️</span>
+            <span>
+                <strong>Autonomous Closed-Loop Assurance:</strong>
+                All telemetry records are continuously processed by the Threshold Evaluation Engine. Deviations outside configured safety boundaries automatically trigger environmental alerts and actuation flags without human latency.
+            </span>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

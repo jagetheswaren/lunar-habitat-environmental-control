@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Resource Reclamation & Inventory')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('resources')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🧪</span> Resource Reclamation & Stock Inventory</h1>
+                <p class="page-subtitle">Lunar habitat consumables: Reclaimed Oxygen, Potable Water, and CO₂ Filter Cartridges</p>
+            </div>
+            <a th:href="@{/reports/resources}" class="btn btn-secondary btn-sm">📊 Detailed Consumption Report</a>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Tracked Consumable Reserves</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Resource Name</th>
+                            <th>SKU</th>
+                            <th>Current Reserve</th>
+                            <th>Unit</th>
+                            <th>Safety Minimum</th>
+                            <th>Storage Location</th>
+                            <th>Buffer Status</th>
+                            <th>Last Audit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${inventory}">
+                            <td style="font-weight: 600;" th:text="${item.resourceName}">Reclaimed Oxygen</td>
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${item.sku}">OXY-RECLAIMED</td>
+                            <td style="font-size: 16px; font-weight: 700; font-family: var(--font-mono);"
+                                th:text="${#numbers.formatDecimal(item.quantity, 1, 2)}">12500.00</td>
+                            <td th:text="${item.unitOfMeasure}">M3</td>
+                            <td th:text="${#numbers.formatDecimal(item.minimumStock, 1, 2)}">5000.00</td>
+                            <td th:text="${item.location}">Tank Farm Alpha</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${item.quantity < item.minimumStock ? 'badge-critical' : 'badge-paid'}"
+                                      th:text="${item.quantity < item.minimumStock ? 'BUFFER BREACH' : 'OPTIMAL'}">OPTIMAL</span>
+                            </td>
+                            <td style="font-size: 12px; color: var(--text-muted);"
+                                th:text="${#temporals.format(item.lastUpdated, 'yyyy-MM-dd HH:mm')}">2026-09-24</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Budget Management')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('budgets')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📊</span> Budget Management & Variance Analysis</h1>
+                <p class="page-subtitle">Track planned allocations vs real posted accounting general ledger actuals by analytic zone</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="budgetModal">
+                <span>➕</span> Allocate Budget
+            </button>
+        </div>
+
+        <!-- Budget KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card cyan">
+                <div class="kpi-label">Fiscal Year Budget</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(analysis.totalPlanned, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Planned lifecycle expenditure</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Actual Posted Consumption</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(analysis.totalActual, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">From immutable general ledger</div>
+            </div>
+            <div class="kpi-card" th:classappend="${analysis.totalVariance.doubleValue() > 0 ? 'emerald' : 'amber'}">
+                <div class="kpi-label">Net Variance</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(analysis.totalVariance, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Actual minus Planned allocation</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title" th:text="'Fiscal Year ' + ${analysis.fiscalYear} + ' Performance breakdown (' + ${analysis.period} + ')'">Performance Breakdown</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th>Planned Budget</th>
+                            <th>Actual Ledger Incurred</th>
+                            <th>Variance Amount</th>
+                            <th>Variance %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(analysis.items)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                No budget lines registered for this period. Click 'Allocate Budget' to set targets.
+                            </td>
+                        </tr>
+                        <tr th:each="item : ${analysis.items}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);" th:text="${item.accountCode}">5000</td>
+                            <td style="font-weight: 600;" th:text="${item.accountName}">Scrubber Maintenance</td>
+                            <td style="font-family: var(--font-mono);" th:text="'₹' + ${#numbers.formatDecimal(item.plannedAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600;" th:text="'₹' + ${#numbers.formatDecimal(item.actualAmount, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;"
+                                th:classappend="${item.variance.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
+                                th:text="'₹' + ${#numbers.formatDecimal(item.variance, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600;"
+                                th:classappend="${item.variancePercentage.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
+                                th:text="${#numbers.formatDecimal(item.variancePercentage, 1, 2, 'POINT')} + '%'">0.00%</td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${item.variance.doubleValue() >= 0}">ON TARGET</span>
+                                <span class="badge badge-critical" th:if="${item.variance.doubleValue() < 0}">OVER BUDGET</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Budget Modal -->
+<div class="modal" id="budgetModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title">Record Planned Budget Allocation</h3>
+            <button class="modal-close" data-modal-close="budgetModal">&times;</button>
+        </div>
+        <form th:action="@{/budgets}" method="post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Analytic Habitat Zone *</label>
+                    <select class="form-select" name="analyticAccountId" required>
+                        <option value="">-- Select Analytic Habitat Zone --</option>
+                        <option th:each="az : ${analyticAccounts}" th:value="${az.id}" th:text="${az.name} + ' (' + ${az.code} + ')'"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">General Ledger Account *</label>
+                    <select class="form-select" name="accountId" required>
+                        <option value="">-- Select GL Account --</option>
+                        <option th:each="acc : ${accounts}" th:value="${acc.id}" th:text="${acc.accountCode} + ' - ' + ${acc.accountName}"></option>
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Fiscal Year *</label>
+                        <input type="number" class="form-control" name="fiscalYear" th:value="${#dates.year(#dates.createNow())}" required min="2025" max="2050">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Period *</label>
+                        <select class="form-select" name="period" required>
+                            <option value="ALL">Annual (ALL)</option>
+                            <option value="Q1">Q1</option>
+                            <option value="Q2">Q2</option>
+                            <option value="Q3">Q3</option>
+                            <option value="Q4">Q4</option>
+                            <option value="M01">January</option>
+                            <option value="M02">February</option>
+                            <option value="M03">March</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Planned Allocation Amount (₹) *</label>
+                    <input type="number" step="0.01" class="form-control" name="plannedAmount" placeholder="e.g. 50000.00" required min="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Operational Notes</label>
+                    <textarea class="form-control" name="notes" rows="2" placeholder="e.g. Life support oxygen purification provisioning"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="budgetModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Allocate Budget</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

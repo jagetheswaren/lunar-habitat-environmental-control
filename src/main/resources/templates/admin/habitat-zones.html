@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Habitat Zones')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('zones')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🪐</span> Lunar Habitat Zones & Modules</h1>
+                <p class="page-subtitle">Configure operational domes, mining sectors, agricultural modules, and analytic accounting centers</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="zoneModal">
+                <span>➕</span> Commission New Habitat Zone
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Active Lunar Habitat Zones</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Zone Code</th>
+                            <th>Habitat Zone Name</th>
+                            <th>Description</th>
+                            <th>Physical Coordinates / Sector</th>
+                            <th>Operational Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(zones)}">
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No habitat zones registered.</td>
+                        </tr>
+                        <tr th:each="z : ${zones}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);" th:text="${z.code}">DOME-A</td>
+                            <td style="font-weight: 600;" th:text="${z.name}">Habitat Dome Alpha</td>
+                            <td th:text="${z.description}">Primary Crew Biosphere & Life Support Hub</td>
+                            <td style="font-family: var(--font-mono);" th:text="${z.locationDescription}">Sector 4 - South Pole Basin</td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${z.status == 'ACTIVE'}">ACTIVE</span>
+                                <span class="badge badge-critical" th:if="${z.status != 'ACTIVE'}" th:text="${z.status}">INACTIVE</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Habitat Zone Modal -->
+<div class="modal" id="zoneModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title">Commission Habitat Zone</h3>
+            <button class="modal-close" data-modal-close="zoneModal">&times;</button>
+        </div>
+        <form th:action="@{/habitat-zones}" method="post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Zone Code *</label>
+                    <input type="text" class="form-control" name="code" placeholder="e.g. DOME-C" required uppercase>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Habitat Zone Name *</label>
+                    <input type="text" class="form-control" name="name" placeholder="e.g. Agricultural Hydroponics Dome" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location / Sector Coordinates</label>
+                    <input type="text" class="form-control" name="locationDescription" placeholder="e.g. Sector 7 - Shackleton Rim">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" name="description" rows="2" placeholder="Primary functions, life support dependencies, etc."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="zoneModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Commission Zone</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

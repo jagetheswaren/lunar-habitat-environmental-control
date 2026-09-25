@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Vendor Bills')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('vendor-bills')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📑</span> Vendor Bills & Accounts Payable</h1>
+                <p class="page-subtitle">Supplier liabilities, replacement filter invoicing, and automatic General Ledger double-entry posting</p>
+            </div>
+            <a th:href="@{/payments}" class="btn btn-secondary btn-sm">💳 Process Payment</a>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Accounts Payable Registers</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Bill #</th>
+                            <th>Vendor</th>
+                            <th>Bill Date</th>
+                            <th>Due Date</th>
+                            <th>Total (₹)</th>
+                            <th>Paid (₹)</th>
+                            <th>Balance (₹)</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(billsPage.content)}">
+                            <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No vendor bills recorded.
+                            </td>
+                        </tr>
+                        <tr th:each="b : ${billsPage.content}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${b.billNumber}">BILL-001</td>
+                            <td style="font-weight: 600;" th:text="${b.vendor.name}">Environmental Sensor Vendor</td>
+                            <td th:text="${b.billDate}">2026-09-24</td>
+                            <td th:text="${b.dueDate}">2026-10-24</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(b.total, 1, 2)}">₹5,000.00</td>
+                            <td th:text="'₹' + ${#numbers.formatDecimal(b.paidAmount, 1, 2)}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); color: var(--accent-rose);" th:text="'₹' + ${#numbers.formatDecimal(b.balanceDue, 1, 2)}">₹5,000.00</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${b.status.name() == 'PAID' ? 'badge-paid' : (b.status.name() == 'POSTED' ? 'badge-posted' : 'badge-draft')}"
+                                      th:text="${b.status}">DRAFT</span>
+                            </td>
+                            <td>
+                                <form th:if="${b.status.name() == 'DRAFT'}" th:action="@{'/vendor-bills/' + ${b.id} + '/post'}" method="post">
+                                    <button type="submit" class="btn btn-primary btn-sm">Post to General Ledger</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

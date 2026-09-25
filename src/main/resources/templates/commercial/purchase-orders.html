@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Purchase Orders')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('purchase-orders')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🛒</span> Procurement & Purchase Orders</h1>
+                <p class="page-subtitle">Equipment acquisition, replacement CO₂ filters, and supply vessel procurement</p>
+            </div>
+            <a th:href="@{/vendor-bills}" class="btn btn-secondary btn-sm">📑 View Vendor Bills</a>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Purchase Order Registers</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>PO Number</th>
+                            <th>Vendor</th>
+                            <th>Order Date</th>
+                            <th>Subtotal</th>
+                            <th>Tax</th>
+                            <th>Total (₹)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(poPage.content)}">
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No purchase orders registered in procurement queue.
+                            </td>
+                        </tr>
+                        <tr th:each="po : ${poPage.content}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${po.poNumber}">PO-001</td>
+                            <td style="font-weight: 600;" th:text="${po.vendor.name}">Environmental Sensor Vendor</td>
+                            <td th:text="${po.orderDate}">2026-09-24</td>
+                            <td th:text="'₹' + ${#numbers.formatDecimal(po.subtotal, 1, 2)}">₹5,000.00</td>
+                            <td th:text="'₹' + ${#numbers.formatDecimal(po.tax, 1, 2)}">₹0.00</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(po.total, 1, 2)}">₹5,000.00</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${po.status.name() == 'APPROVED' ? 'badge-posted' : (po.status.name() == 'RECEIVED' ? 'badge-paid' : 'badge-draft')}"
+                                      th:text="${po.status}">DRAFT</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 6px;">
+                                    <form th:if="${po.status.name() == 'DRAFT'}" th:action="@{'/purchase-orders/' + ${po.id} + '/submit'}" method="post">
+                                        <button type="submit" class="btn btn-secondary btn-sm">Submit</button>
+                                    </form>
+                                    <form th:if="${po.status.name() == 'SUBMITTED'}" th:action="@{'/purchase-orders/' + ${po.id} + '/approve'}" method="post">
+                                        <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

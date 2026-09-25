@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Product & Resource Master')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('products')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📦</span> Product, Resource & Service Master</h1>
+                <p class="page-subtitle">Reclaimed Oxygen, Potable Water, CO₂ Scrubber Servicing, and Life-Support Consumables</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="productModal">
+                <span>➕</span> Register New Product / Service
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Master Catalog</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Product Name</th>
+                            <th>Category</th>
+                            <th>Unit of Measure</th>
+                            <th>Unit Price</th>
+                            <th>Tax Rate</th>
+                            <th>Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(productsPage.content)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No products configured in master catalog.
+                            </td>
+                        </tr>
+                        <tr th:each="p : ${productsPage.content}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${p.sku}">OXY-RECLAIMED</td>
+                            <td style="font-weight: 600;" th:text="${p.name}">Reclaimed Oxygen</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${p.productType.name() == 'GOODS' ? 'badge-posted' : 'badge-partial'}"
+                                      th:text="${p.productType}">GOODS</span>
+                            </td>
+                            <td th:text="${p.unitOfMeasure}">M3</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(p.unitPrice, 1, 2)}">₹12.50</td>
+                            <td th:text="${#numbers.formatPercent(p.taxRate, 1, 1)}">0.0%</td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${p.active}">ACTIVE</span>
+                                <span class="badge badge-draft" th:unless="${p.active}">INACTIVE</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Product Modal -->
+<div class="modal" id="productModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Register Product or Service</div>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/products}" method="post">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="sku">SKU Code</label>
+                        <input type="text" id="sku" name="sku" class="form-control" placeholder="e.g. H2O-POTABLE" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="productType">Item Classification</label>
+                        <select id="productType" name="productType" class="form-control" required>
+                            <option value="GOODS">Goods / Consumable Resource</option>
+                            <option value="SERVICE">Maintenance / Service Charge</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="name">Product Name</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Potable Water" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="unitOfMeasure">Unit of Measure</label>
+                        <select id="unitOfMeasure" name="unitOfMeasure" class="form-control" required>
+                            <option value="M3">Cubic Meter (m³)</option>
+                            <option value="LITER">Liter (L)</option>
+                            <option value="UNIT">Unit / Pieces</option>
+                            <option value="SERVICE">Service Incident</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="unitPrice">Unit Price (₹)</label>
+                        <input type="number" step="0.01" id="unitPrice" name="unitPrice" class="form-control" placeholder="0.80" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="taxRate">Applicable Tax Rate (e.g. 0.05 for 5%)</label>
+                        <input type="number" step="0.01" id="taxRate" name="taxRate" class="form-control" value="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="active">Catalog Status</label>
+                        <select id="active" name="active" class="form-control">
+                            <option value="true">Active & Billable</option>
+                            <option value="false">Discontinued</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="description">Item Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="2" placeholder="Description of resource reclamation product..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Save to Catalog</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

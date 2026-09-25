@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Sales Orders')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('sales-orders')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📋</span> Customer Sales Orders</h1>
+                <p class="page-subtitle">Commercial agreements for habitat life-support utility services and dome leases</p>
+            </div>
+            <a th:href="@{/invoices}" class="btn btn-secondary btn-sm">🧾 View Invoices</a>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Sales Orders Log</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Habitat Zone</th>
+                            <th>Order Date</th>
+                            <th>Service Period</th>
+                            <th>Total (₹)</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(soPage.content)}">
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No sales orders recorded.
+                            </td>
+                        </tr>
+                        <tr th:each="so : ${soPage.content}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${so.orderNumber}">SO-001</td>
+                            <td style="font-weight: 600;" th:text="${so.customer.name}">Commercial Lunar Mining Firm</td>
+                            <td th:text="${so.habitatZone != null ? so.habitatZone.name : 'All Zones'}">Habitat Dome Alpha</td>
+                            <td th:text="${so.orderDate}">2026-09-24</td>
+                            <td th:text="${so.servicePeriodStart} + ' to ' + ${so.servicePeriodEnd}">Period</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(so.total, 1, 2)}">₹8,100.00</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${so.status.name() == 'INVOICED' ? 'badge-paid' : (so.status.name() == 'CONFIRMED' ? 'badge-posted' : 'badge-draft')}"
+                                      th:text="${so.status}">DRAFT</span>
+                            </td>
+                            <td>
+                                <form th:if="${so.status.name() == 'DRAFT'}" th:action="@{'/sales-orders/' + ${so.id} + '/confirm'}" method="post">
+                                    <button type="submit" class="btn btn-primary btn-sm">Confirm Order</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

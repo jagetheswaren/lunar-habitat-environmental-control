@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Safety Thresholds')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('thresholds')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>⚙️</span> Environmental Safety Thresholds</h1>
+                <p class="page-subtitle">Configure real-time monitoring limits for the autonomous life support and scrubber adjustment engine</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="thresholdModal">
+                <span>➕</span> Configure Threshold
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Active Threshold Configuration Rules</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Minimum Value</th>
+                            <th>Maximum Value</th>
+                            <th>Unit</th>
+                            <th>Alert Severity</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(thresholds)}">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No environmental thresholds defined.</td>
+                        </tr>
+                        <tr th:each="th : ${thresholds}">
+                            <td style="font-weight: 700; color: var(--accent-cyan);" th:text="${th.parameter}">ATMOSPHERIC_PRESSURE</td>
+                            <td style="font-family: var(--font-mono);" th:text="${th.minimumValue != null ? th.minimumValue : 'None'}">95.00</td>
+                            <td style="font-family: var(--font-mono);" th:text="${th.maximumValue != null ? th.maximumValue : 'None'}">105.00</td>
+                            <td style="font-family: var(--font-mono);" th:text="${th.unit}">kPa</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${th.severity.name() == 'CRITICAL' ? 'badge-critical' : (th.severity.name() == 'WARNING' ? 'badge-partial' : 'badge-posted')}"
+                                      th:text="${th.severity}">CRITICAL</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${th.enabled}">ACTIVE</span>
+                                <span class="badge badge-critical" th:if="${!th.enabled}">DISABLED</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Threshold Modal -->
+<div class="modal" id="thresholdModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3 class="modal-title">Configure Safety Parameter Threshold</h3>
+            <button class="modal-close" data-modal-close="thresholdModal">&times;</button>
+        </div>
+        <form th:action="@{/thresholds}" method="post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Parameter *</label>
+                    <select class="form-select" name="parameter" required>
+                        <option value="ATMOSPHERIC_PRESSURE">Atmospheric Pressure</option>
+                        <option value="WATER_PURITY">Water Purity</option>
+                        <option value="CO2_LEVEL">CO2 Concentration</option>
+                        <option value="TEMPERATURE">Internal Temperature</option>
+                        <option value="HUMIDITY">Relative Humidity</option>
+                    </select>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Minimum Safe Value</label>
+                        <input type="number" step="0.01" class="form-control" name="minimumValue" placeholder="e.g. 95.0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Maximum Safe Value</label>
+                        <input type="number" step="0.01" class="form-control" name="maximumValue" placeholder="e.g. 105.0">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Measurement Unit *</label>
+                        <input type="text" class="form-control" name="unit" placeholder="e.g. kPa, %, ppm, °C" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Violation Severity *</label>
+                        <select class="form-select" name="severity" required>
+                            <option value="WARNING">WARNING</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                            <option value="INFO">INFO</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); cursor: pointer;">
+                        <input type="checkbox" name="enabled" value="true" checked>
+                        <span>Enable this threshold rule immediately in autonomous life-support pipeline</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="thresholdModal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Threshold Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

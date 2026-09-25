@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Configuration & Documentation')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('settings')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🛠️</span> Configuration, APIs & Integration Endpoints</h1>
+                <p class="page-subtitle">Project Leap Day 1/2/3 ecosystem tooling, Swagger OpenAPI docs, actuator health status, and Postman testing suite</p>
+            </div>
+            <a th:href="@{/swagger-ui/index.html}" target="_blank" class="btn btn-primary">
+                <span>📖</span> Open Swagger API Docs
+            </a>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card cyan">
+                <div class="kpi-label">REST API Base Path</div>
+                <div class="kpi-value" style="font-size: 1.25rem; font-family: var(--font-mono);">/api/v1/lunar/</div>
+                <div class="kpi-subtext">20 Controller Resources Active</div>
+            </div>
+            <div class="kpi-card emerald">
+                <div class="kpi-label">Actuator Health Status</div>
+                <div class="kpi-value" style="font-size: 1.25rem;">UP (OPERATIONAL)</div>
+                <div class="kpi-subtext">MySQL &amp; DiskSpace Verified</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Database Schema Status</div>
+                <div class="kpi-value" style="font-size: 1.25rem;">V1 -> V7 MIGRATED</div>
+                <div class="kpi-subtext">Flyway Migration Engine</div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 2rem;">
+            <div class="panel-header">
+                <div class="panel-title">Developer &amp; Testing Endpoints</div>
+            </div>
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-weight: 700; color: var(--accent-cyan);">Interactive Swagger UI</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">Complete OpenAPI 3.0 documentation of all 20 REST controllers with live try-it-out capabilities.</div>
+                    </div>
+                    <a th:href="@{/swagger-ui/index.html}" target="_blank" class="btn btn-secondary btn-sm">Launch Swagger UI</a>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-weight: 700; color: var(--accent-emerald);">Spring Boot Actuator Health</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">Continuous automated health monitoring and database liveness probes.</div>
+                    </div>
+                    <a th:href="@{/actuator/health}" target="_blank" class="btn btn-secondary btn-sm">Inspect Health JSON</a>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-surface); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div>
+                        <div style="font-weight: 700; color: var(--accent-purple);">Raw OpenAPI JSON Specification</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem;">Standard schema file ready for automated client generation and Postman synchronization.</div>
+                    </div>
+                    <a th:href="@{/v3/api-docs}" target="_blank" class="btn btn-secondary btn-sm">View api-docs</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Architectural Standards &amp; Invariants</div>
+            </div>
+            <div style="padding: 1.5rem; line-height: 1.7; color: var(--text-secondary); font-size: 0.9rem;">
+                <p><strong>1. Double-Entry Accounting Invariant:</strong> All financial entries are processed via the AccountingEngineService ensuring <code>Total Debit == Total Credit</code> before committing to the general ledger.</p>
+                <p><strong>2. Autonomous Life Support Control:</strong> Telemetry ingestion pipelines automatically inspect threshold violations and adjust CO2 scrubbers without latency.</p>
+                <p><strong>3. Role-Based Access Control:</strong> Strict separation of roles across ADMIN, HABITAT_OPERATOR, ACCOUNTANT, TENANT_USER, and VIEWER.</p>
+                <p><strong>4. Precision Assurance:</strong> All monetary allocations and resource transactions utilize <code>BigDecimal (19,4)</code> precision.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

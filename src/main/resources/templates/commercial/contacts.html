@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Contacts Master')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('contacts')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>👥</span> Contact Master (Customers & Vendors)</h1>
+                <p class="page-subtitle">Commercial lunar mining corporations, research tenants, and sensor equipment vendors</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="contactModal">
+                <span>➕</span> Register New Contact
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Registered Contacts</div>
+                <div style="display: flex; gap: 8px;">
+                    <a th:href="@{/contacts}" class="btn btn-secondary btn-sm" th:classappend="${selectedType == null ? 'active' : ''}">All</a>
+                    <a th:href="@{/contacts(type='CUSTOMER')}" class="btn btn-secondary btn-sm" th:classappend="${selectedType?.name() == 'CUSTOMER' ? 'active' : ''}">Customers Only</a>
+                    <a th:href="@{/contacts(type='VENDOR')}" class="btn btn-secondary btn-sm" th:classappend="${selectedType?.name() == 'VENDOR' ? 'active' : ''}">Vendors Only</a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Organization</th>
+                            <th>Type</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(contactsPage.content)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No contacts registered in master directory.
+                            </td>
+                        </tr>
+                        <tr th:each="c : ${contactsPage.content}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${c.code}">CUST-001</td>
+                            <td style="font-weight: 600;" th:text="${c.name}">Commercial Lunar Mining Firm</td>
+                            <td th:text="${c.organizationName}">Lunar Mining Consortium</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${c.contactType.name() == 'CUSTOMER' ? 'badge-posted' : 'badge-partial'}"
+                                      th:text="${c.contactType}">CUSTOMER</span>
+                            </td>
+                            <td th:text="${c.email}">contact@lunarmining.space</td>
+                            <td th:text="${c.phone}">+91-9876543210</td>
+                            <td>
+                                <span class="badge badge-paid" th:text="${c.status}">ACTIVE</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Contact Modal -->
+<div class="modal" id="contactModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Register Master Contact</div>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/contacts}" method="post">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="code">Unique Code</label>
+                        <input type="text" id="code" name="code" class="form-control" placeholder="e.g. CUST-002" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="contactType">Contact Type</label>
+                        <select id="contactType" name="contactType" class="form-control" required>
+                            <option value="CUSTOMER">Customer (Commercial Tenant / Mining)</option>
+                            <option value="VENDOR">Vendor (Equipment / Filter Supplier)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="name">Contact Representative Name</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Commander Sarah Chen" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="organizationName">Organization / Corporation</label>
+                    <input type="text" id="organizationName" name="organizationName" class="form-control" placeholder="e.g. Artemis Mining Ventures" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Official Email</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="operations@artemis.space" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="phone">Comms Frequency / Phone</label>
+                        <input type="text" id="phone" name="phone" class="form-control" placeholder="+91-0000000000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="address">Habitat / Lunar Surface Sector</label>
+                    <input type="text" id="address" name="address" class="form-control" placeholder="Sector 7G, Shackleton Crater">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Master Contact</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

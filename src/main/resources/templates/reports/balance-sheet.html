@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Balance Sheet')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('balance-sheet')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>⚖️</span> Lunar Facility Balance Sheet</h1>
+                <p class="page-subtitle">Real-time financial statement generated directly from immutable double-entry general ledger journal entries</p>
+            </div>
+            <form th:action="@{/reports/balance-sheet}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                <label class="form-label" style="margin: 0;">As Of Date:</label>
+                <input type="date" class="form-control" name="asOfDate" th:value="${asOfDate}" style="width: auto;">
+                <button type="submit" class="btn btn-secondary">Refresh</button>
+            </form>
+        </div>
+
+        <!-- Balance Status -->
+        <div class="kpi-grid">
+            <div class="kpi-card cyan">
+                <div class="kpi-label">Total Assets</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalAssets, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Infrastructure, Scrubbers, Cash/Bank</div>
+            </div>
+            <div class="kpi-card amber">
+                <div class="kpi-label">Total Liabilities</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalLiabilities, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Creditors, Sensor & Supply Payables</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Equity & Retained Earnings</div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(report.totalEquity, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+                <div class="kpi-subtext">Net operating surplus from operations</div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 2rem;">
+            <div class="panel-header" style="background: rgba(14, 165, 233, 0.08);">
+                <div class="panel-title" style="color: var(--accent-cyan);">ASSETS</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);"
+                     th:text="'₹' + ${#numbers.formatDecimal(report.totalAssets, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th style="text-align: right;">Debit Balance (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.assets)}">
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No asset accounts with balances recorded.</td>
+                        </tr>
+                        <tr th:each="item : ${report.assets}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);" th:text="${item.accountCode}">1000</td>
+                            <td style="font-weight: 600;" th:text="${item.accountName}">Lunar Habitat Dome Infrastructure</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600; text-align: right;"
+                                th:text="'₹' + ${#numbers.formatDecimal(item.balance, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-bottom: 2rem;">
+            <div class="panel-header" style="background: rgba(245, 158, 11, 0.08);">
+                <div class="panel-title" style="color: var(--accent-amber);">LIABILITIES</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-amber);"
+                     th:text="'₹' + ${#numbers.formatDecimal(report.totalLiabilities, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th style="text-align: right;">Credit Balance (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.liabilities)}">
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No liability accounts with balances recorded.</td>
+                        </tr>
+                        <tr th:each="item : ${report.liabilities}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-amber);" th:text="${item.accountCode}">2000</td>
+                            <td style="font-weight: 600;" th:text="${item.accountName}">Sensor Vendor Creditors</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600; text-align: right;"
+                                th:text="'₹' + ${#numbers.formatDecimal(item.balance, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header" style="background: rgba(168, 85, 247, 0.08);">
+                <div class="panel-title" style="color: var(--accent-purple);">EQUITY & NET EARNINGS</div>
+                <div style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-purple);"
+                     th:text="'₹' + ${#numbers.formatDecimal(report.totalEquity, 1, 'COMMA', 2, 'POINT')}">₹0.00</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Account Code</th>
+                            <th>Account Name</th>
+                            <th style="text-align: right;">Credit Balance (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(report.equity)}">
+                            <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No equity balance recorded.</td>
+                        </tr>
+                        <tr th:each="item : ${report.equity}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-purple);" th:text="${item.accountCode}">3000</td>
+                            <td style="font-weight: 600;" th:text="${item.accountName}">Habitat Operational Equity</td>
+                            <td style="font-family: var(--font-mono); font-weight: 600; text-align: right;"
+                                th:text="'₹' + ${#numbers.formatDecimal(item.balance, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="alert" th:classappend="${report.balanced ? 'alert-success' : 'alert-error'}" style="margin-top: 2rem;">
+            <span>⚖️</span>
+            <span>
+                <strong>Accounting Equation Status:</strong>
+                Assets (₹<span th:text="${#numbers.formatDecimal(report.totalAssets, 1, 'COMMA', 2, 'POINT')}">0.00</span>)
+                = Liabilities + Equity (₹<span th:text="${#numbers.formatDecimal(report.totalLiabilitiesAndEquity, 1, 'COMMA', 2, 'POINT')}">0.00</span>)
+                — <span th:text="${report.balanced ? 'BALANCED' : 'UNBALANCED VARIANCE DETECTED'}">BALANCED</span>
+            </span>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

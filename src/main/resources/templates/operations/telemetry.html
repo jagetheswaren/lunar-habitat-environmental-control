@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Telemetry Readings')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('telemetry')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>📡</span> Environmental Telemetry Ingestion</h1>
+                <p class="page-subtitle">Real-time sensor monitoring, automated threshold comparison, and life-support control</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="ingestModal">
+                <span>➕</span> Ingest Sensor Reading
+            </button>
+        </div>
+
+        <!-- Telemetry Table -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Telemetry Sensor Log</div>
+                <div style="display: flex; gap: 10px;">
+                    <a th:href="@{/telemetry}" class="btn btn-secondary btn-sm" th:classappend="${selectedZoneId == null ? 'active' : ''}">All Zones</a>
+                    <a th:each="z : ${zones}"
+                       th:href="@{/telemetry(zoneId=${z.id})}"
+                       th:text="${z.code}"
+                       class="btn btn-secondary btn-sm"
+                       th:classappend="${selectedZoneId == z.id ? 'active' : ''}">DOME-A</a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Zone</th>
+                            <th>Pressure (kPa)</th>
+                            <th>Water Purity</th>
+                            <th>CO₂ (ppm)</th>
+                            <th>Temp (°C)</th>
+                            <th>O₂ Usage</th>
+                            <th>H₂O Usage</th>
+                            <th>Scrubber Control</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(telemetryPage.content)}">
+                            <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No telemetry data recorded. Use the "Ingest Sensor Reading" button above to submit readings.
+                            </td>
+                        </tr>
+                        <tr th:each="t : ${telemetryPage.content}">
+                            <td style="font-family: var(--font-mono);" th:text="'#TEL-' + ${t.id}">#TEL-1</td>
+                            <td style="font-weight: 600;" th:text="${t.habitatZone.name}">Habitat Dome Alpha</td>
+                            <td th:text="${t.atmosphericPressureKpa} + ' kPa'">101.3 kPa</td>
+                            <td th:text="${t.waterPurityPercent} + ' %'">98.5 %</td>
+                            <td th:text="${t.co2LevelPpm} + ' ppm'">420.0 ppm</td>
+                            <td th:text="${t.temperatureCelsius} + ' °C'">21.5 °C</td>
+                            <td th:text="${t.oxygenConsumptionM3} + ' m³'">120 m³</td>
+                            <td th:text="${t.waterConsumptionLiters} + ' L'">800 L</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${t.scrubberAutoAdjusted ? 'badge-critical' : 'badge-paid'}"
+                                      th:text="${t.scrubberAutoAdjusted ? 'AUTO-BOOSTED' : 'NOMINAL'}">NOMINAL</span>
+                            </td>
+                            <td style="font-size: 12px; color: var(--text-muted);"
+                                th:text="${#temporals.format(t.recordedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-09-24 12:00:00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Ingestion Modal -->
+<div class="modal" id="ingestModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Ingest Telemetry Sensor Reading</div>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/telemetry}" method="post">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label" for="habitatZoneId">Target Habitat Zone</label>
+                    <select id="habitatZoneId" name="habitatZoneId" class="form-control" required>
+                        <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name} + ' (' + ${z.code} + ')'"></option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="atmosphericPressureKpa">Pressure (kPa)</label>
+                        <input type="number" step="0.1" id="atmosphericPressureKpa" name="atmosphericPressureKpa" class="form-control" value="101.3" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="waterPurityPercent">Water Purity (%)</label>
+                        <input type="number" step="0.1" id="waterPurityPercent" name="waterPurityPercent" class="form-control" value="98.5" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="oxygenConsumptionM3">O₂ Consumption (m³)</label>
+                        <input type="number" step="0.1" id="oxygenConsumptionM3" name="oxygenConsumptionM3" class="form-control" value="125.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="waterConsumptionLiters">Water Consumption (L)</label>
+                        <input type="number" step="0.1" id="waterConsumptionLiters" name="waterConsumptionLiters" class="form-control" value="820.0" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="co2LevelPpm">CO₂ Level (ppm)</label>
+                        <input type="number" step="0.1" id="co2LevelPpm" name="co2LevelPpm" class="form-control" value="450.0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="temperatureCelsius">Temperature (°C)</label>
+                        <input type="number" step="0.1" id="temperatureCelsius" name="temperatureCelsius" class="form-control" value="21.5">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="source">Data Source</label>
+                    <select id="source" name="source" class="form-control">
+                        <option value="SENSOR">Environmental Sensor Telemetry</option>
+                        <option value="MANUAL">Manual Habitat Audit</option>
+                        <option value="API">Automated Subsystem API</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Transmit & Evaluate Reading</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

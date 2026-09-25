@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Operations & Financial Console')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('dashboard')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">
+                    <span>🌙</span>
+                    Autonomous Lunar Habitat Control Center
+                </h1>
+                <p class="page-subtitle">Unified Operations Console: Environmental Telemetry, Resource Reclamation & Double-Entry Accounting</p>
+            </div>
+            <div>
+                <a th:href="@{/telemetry}" class="btn btn-secondary btn-sm" style="margin-right: 8px;">📡 Ingest Telemetry</a>
+                <a th:href="@{/invoices}" class="btn btn-primary btn-sm">🧾 Invoicing & Billing</a>
+            </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-label">Commercial Clients</span>
+                    <span class="kpi-icon">👥</span>
+                </div>
+                <div class="kpi-value" th:text="${summary.totalCustomers}">0</div>
+                <div class="kpi-subtext">Active mining & research firms</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-label">Approved Vendors</span>
+                    <span class="kpi-icon">🏢</span>
+                </div>
+                <div class="kpi-value" th:text="${summary.totalVendors}">0</div>
+                <div class="kpi-subtext">Sensor & scrubber suppliers</div>
+            </div>
+
+            <div class="kpi-card" th:classappend="${summary.openAlerts > 0 ? 'amber' : 'emerald'}">
+                <div class="kpi-header">
+                    <span class="kpi-label">Open Alerts</span>
+                    <span class="kpi-icon">⚠️</span>
+                </div>
+                <div class="kpi-value" th:text="${summary.openAlerts}" th:style="${summary.openAlerts > 0 ? 'color: var(--accent-amber);' : 'color: var(--accent-emerald);'}">0</div>
+                <div class="kpi-subtext" th:text="${summary.criticalAlerts} + ' Critical threshold breaches'">0 Critical</div>
+            </div>
+
+            <div class="kpi-card emerald">
+                <div class="kpi-header">
+                    <span class="kpi-label">Oxygen Usage (24h)</span>
+                    <span class="kpi-icon">🫧</span>
+                </div>
+                <div class="kpi-value" th:text="${#numbers.formatDecimal(summary.oxygenConsumption24h, 1, 2)} + ' m³'">0.00 m³</div>
+                <div class="kpi-subtext">Reclaimed life-support O₂</div>
+            </div>
+
+            <div class="kpi-card emerald">
+                <div class="kpi-header">
+                    <span class="kpi-label">Water Usage (24h)</span>
+                    <span class="kpi-icon">💧</span>
+                </div>
+                <div class="kpi-value" th:text="${#numbers.formatDecimal(summary.waterConsumption24h, 1, 2)} + ' L'">0.00 L</div>
+                <div class="kpi-subtext">Potable reclaimed water</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-label">Month Revenue</span>
+                    <span class="kpi-icon">📈</span>
+                </div>
+                <div class="kpi-value" style="color: var(--accent-emerald);" th:text="'₹' + ${#numbers.formatDecimal(summary.currentMonthRevenue, 1, 2)}">₹0.00</div>
+                <div class="kpi-subtext">Life-support utility billings</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <span class="kpi-label">Month Expenses</span>
+                    <span class="kpi-icon">📉</span>
+                </div>
+                <div class="kpi-value" style="color: var(--accent-rose);" th:text="'₹' + ${#numbers.formatDecimal(summary.currentMonthExpenses, 1, 2)}">₹0.00</div>
+                <div class="kpi-subtext">Scrubber maintenance & logistics</div>
+            </div>
+
+            <div class="kpi-card" th:classappend="${summary.budgetVariance >= 0 ? 'emerald' : 'amber'}">
+                <div class="kpi-header">
+                    <span class="kpi-label">Budget Variance</span>
+                    <span class="kpi-icon">🎯</span>
+                </div>
+                <div class="kpi-value" th:text="'₹' + ${#numbers.formatDecimal(summary.budgetVariance, 1, 2)}">₹0.00</div>
+                <div class="kpi-subtext">Actuals vs Planned Budget</div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 28px;">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>📡</span> Environmental Stability Benchmarks
+                    </div>
+                    <span class="badge badge-posted">Real-time Telemetry</span>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-container">
+                        <canvas id="telemetryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span>⚖️</span> Financial Ledger Performance
+                    </div>
+                    <span class="badge badge-paid">Double-Entry Balance</span>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-container">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Open Environmental Alerts Table -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span>⚠️</span> Active Environmental & Operational Alerts
+                </div>
+                <a th:href="@{/alerts}" class="btn btn-secondary btn-sm">View All Alerts</a>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Habitat Zone</th>
+                            <th>Parameter</th>
+                            <th>Severity</th>
+                            <th>Message</th>
+                            <th>Recorded At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(openAlerts)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                🟢 All environmental parameters are currently within nominal safety limits. No open alerts.
+                            </td>
+                        </tr>
+                        <tr th:each="alert : ${openAlerts}">
+                            <td style="font-family: var(--font-mono);" th:text="'#ALR-' + ${alert.id}">#ALR-1</td>
+                            <td th:text="${alert.habitatZone.name}">Habitat Dome Alpha</td>
+                            <td style="font-weight: 600; color: var(--accent-cyan);" th:text="${alert.alertType}">ATMOSPHERIC_PRESSURE</td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${alert.severity.name() == 'CRITICAL' ? 'badge-critical' : 'badge-partial'}"
+                                      th:text="${alert.severity}">WARNING</span>
+                            </td>
+                            <td th:text="${alert.message}">Pressure variance detected</td>
+                            <td style="font-size: 12px; color: var(--text-muted);" th:text="${#temporals.format(alert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2026-09-24 10:00</td>
+                            <td>
+                                <form th:action="@{'/alerts/' + ${alert.id} + '/acknowledge'}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-secondary btn-sm">Acknowledge</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+document.addEventListener('DOMContentLoaded', () => {
+    // Telemetry Chart
+    const ctxTelemetry = document.getElementById('telemetryChart');
+    if (ctxTelemetry) {
+        new Chart(ctxTelemetry, {
+            type: 'line',
+            data: {
+                labels: ['T-6h', 'T-5h', 'T-4h', 'T-3h', 'T-2h', 'T-1h', 'Current'],
+                datasets: [{
+                    label: 'Atmospheric Pressure (kPa)',
+                    data: [101.4, 101.2, 101.3, 100.8, 101.5, 101.3, 101.35],
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }, {
+                    label: 'Water Purity (%)',
+                    data: [98.8, 98.7, 98.9, 98.5, 98.6, 99.0, 99.1],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#94a3b8' } }
+                },
+                scales: {
+                    x: { grid: { color: '#223259' }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: '#223259' }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Financial Chart
+    const ctxFinance = document.getElementById('financialChart');
+    if (ctxFinance) {
+        const rev = /*[[${summary.currentMonthRevenue}]]*/ 0;
+        const exp = /*[[${summary.currentMonthExpenses}]]*/ 0;
+        new Chart(ctxFinance, {
+            type: 'bar',
+            data: {
+                labels: ['Utility Revenue', 'Operational Expenses', 'Net Margin'],
+                datasets: [{
+                    label: 'Amount (₹)',
+                    data: [rev, exp, (rev - exp)],
+                    backgroundColor: ['#10b981', '#f43f5e', '#38bdf8'],
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                    y: { grid: { color: '#223259' }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+});
+/*]]>*/
+</script>
+
+</body>
+</html>
