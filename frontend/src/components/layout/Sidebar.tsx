@@ -25,6 +25,7 @@ import {
   UserCheck,
   Settings,
   ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 
 interface Props {
@@ -47,6 +48,7 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
     {
       title: 'LIFE SUPPORT',
       items: [
+        { name: 'Resource Reclamation', path: '/reclamation', icon: RefreshCw },
         { name: 'Atmospheric Rules', path: '/thresholds', icon: Sliders },
         { name: 'Habitat Sectors', path: '/zones', icon: Globe2 },
         { name: 'Resource Reserves', path: '/inventory', icon: Boxes },

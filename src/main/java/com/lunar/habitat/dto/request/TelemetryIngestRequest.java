@@ -1,5 +1,6 @@
 package com.lunar.habitat.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.lunar.habitat.enums.TelemetrySource;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -7,8 +8,8 @@ import java.math.BigDecimal;
 
 public class TelemetryIngestRequest {
 
-    @NotNull(message = "Habitat zone ID is required")
-    private Long habitatZoneId;
+    @JsonAlias({"zoneId", "moduleId", "habitatModule", "zone"})
+    private Long habitatZoneId = 1L;
 
     @NotNull(message = "Atmospheric pressure is required")
     @PositiveOrZero(message = "Pressure must be positive or zero")
@@ -27,9 +28,13 @@ public class TelemetryIngestRequest {
     @PositiveOrZero(message = "CO2 level must be positive or zero")
     private BigDecimal co2LevelPpm = new BigDecimal("400.0000");
 
+    @JsonAlias({"o2Level", "o2PartialPressureKpa", "oxygenLevel", "o2LevelPercent"})
+    private BigDecimal o2PartialPressureKpa = new BigDecimal("21.0000");
+
     private BigDecimal temperatureCelsius = new BigDecimal("22.0000");
 
     @PositiveOrZero(message = "Humidity must be positive or zero")
+    @JsonAlias({"relativeHumidityPercent", "relativeHumidity", "humidity"})
     private BigDecimal humidityPercent = new BigDecimal("45.0000");
 
     private TelemetrySource source = TelemetrySource.SENSOR;
@@ -37,11 +42,11 @@ public class TelemetryIngestRequest {
     public TelemetryIngestRequest() {}
 
     public Long getHabitatZoneId() {
-        return habitatZoneId;
+        return habitatZoneId != null ? habitatZoneId : 1L;
     }
 
     public void setHabitatZoneId(Long habitatZoneId) {
-        this.habitatZoneId = habitatZoneId;
+        this.habitatZoneId = habitatZoneId != null ? habitatZoneId : 1L;
     }
 
     public BigDecimal getAtmosphericPressureKpa() {
@@ -98,6 +103,14 @@ public class TelemetryIngestRequest {
 
     public void setHumidityPercent(BigDecimal humidityPercent) {
         this.humidityPercent = humidityPercent;
+    }
+
+    public BigDecimal getO2PartialPressureKpa() {
+        return o2PartialPressureKpa;
+    }
+
+    public void setO2PartialPressureKpa(BigDecimal o2PartialPressureKpa) {
+        this.o2PartialPressureKpa = o2PartialPressureKpa;
     }
 
     public TelemetrySource getSource() {

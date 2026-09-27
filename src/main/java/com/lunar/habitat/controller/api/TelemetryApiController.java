@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/telemetry")
+@RequestMapping({"/api/v1/lunar/telemetry", "/api/lunar/telemetry"})
 @Tag(name = "Environmental Telemetry", description = "Environmental sensor telemetry ingestion and monitoring API")
 public class TelemetryApiController {
 

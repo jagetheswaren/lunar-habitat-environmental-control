@@ -77,10 +77,10 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
                 // Operations & Telemetry APIs (V1 and V2)
-                .requestMatchers(HttpMethod.POST, "/api/v1/lunar/telemetry/**", "/api/v2/telemetry/**").hasAnyRole("ADMIN", "HABITAT_OPERATOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/lunar/telemetry/**", "/api/v2/telemetry/**", "/api/lunar/telemetry/**").hasAnyRole("ADMIN", "HABITAT_OPERATOR")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/lunar/alerts/**", "/api/v2/alerts/**").hasAnyRole("ADMIN", "HABITAT_OPERATOR")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/lunar/alerts/**", "/api/v2/alerts/**").hasAnyRole("ADMIN", "HABITAT_OPERATOR")
-                .requestMatchers("/api/v1/lunar/telemetry/**", "/api/v2/telemetry/**",
+                .requestMatchers("/api/v1/lunar/telemetry/**", "/api/v2/telemetry/**", "/api/lunar/telemetry/**",
                                  "/api/v1/lunar/alerts/**", "/api/v2/alerts/**",
                                  "/api/v2/zones/**", "/api/v2/dashboard/**", "/api/v2/lunar-core/**").hasAnyRole("ADMIN", "HABITAT_OPERATOR", "VIEWER", "ACCOUNTANT")
 
@@ -97,6 +97,8 @@ public class SecurityConfig {
                                                  "/api/v1/lunar/products/**", "/api/v2/products/**",
                                                  "/api/v1/lunar/zones/**",
                                                  "/api/v1/lunar/habitat-zones/**",
+                                                 "/api/lunar/modules/**",
+                                                 "/api/lunar/zones/**",
                                                  "/api/v1/lunar/accounts/**", "/api/v2/accounts/**",
                                                  "/api/v1/lunar/budgets/**", "/api/v2/budgets/**",
                                                  "/api/v1/lunar/inventory/**", "/api/v2/inventory/**",
@@ -107,6 +109,8 @@ public class SecurityConfig {
                                  "/api/v1/lunar/products/**", "/api/v2/products/**",
                                  "/api/v1/lunar/zones/**",
                                  "/api/v1/lunar/habitat-zones/**",
+                                 "/api/lunar/modules/**",
+                                 "/api/lunar/zones/**",
                                  "/api/v1/lunar/accounts/**", "/api/v2/accounts/**",
                                  "/api/v1/lunar/inventory/**", "/api/v2/inventory/**",
                                  "/api/v1/lunar/resources/**", "/api/v2/resources/**",

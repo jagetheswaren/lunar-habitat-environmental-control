@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping({"/api/v1/lunar/zones", "/api/v1/lunar/habitat-zones"})
+@RequestMapping({"/api/v1/lunar/zones", "/api/v1/lunar/habitat-zones", "/api/lunar/modules", "/api/lunar/zones"})
 @Tag(name = "Habitat Zones", description = "Habitat Dome and Module Configuration API")
 public class HabitatZoneApiController {
 
