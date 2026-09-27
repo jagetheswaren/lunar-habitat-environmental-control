@@ -1,10 +1,12 @@
 package com.lunar.habitat.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "habitat_zones")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class HabitatZone {
 
     @Id

@@ -27,8 +27,16 @@ public class HabitatZoneServiceImpl implements HabitatZoneService {
 
     @Override
     public HabitatZone createZone(HabitatZoneRequest request) {
-        if (habitatZoneRepository.findByCode(request.getCode()).isPresent()) {
-            throw new DuplicateResourceException("Habitat zone with code " + request.getCode() + " already exists");
+        java.util.Optional<HabitatZone> existing = habitatZoneRepository.findByCode(request.getCode());
+        if (existing.isPresent()) {
+            HabitatZone zone = existing.get();
+            zone.setName(request.getName());
+            zone.setDescription(request.getDescription());
+            zone.setLocationDescription(request.getLocationDescription());
+            if (request.getStatus() != null) {
+                zone.setStatus(request.getStatus());
+            }
+            return habitatZoneRepository.save(zone);
         }
 
         HabitatZone zone = new HabitatZone(

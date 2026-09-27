@@ -34,6 +34,13 @@ public class InventoryApiController {
         return ResponseEntity.ok(resourceInventoryService.getInventoryById(id));
     }
 
+    @PostMapping
+    @Operation(summary = "Create Inventory Item", description = "Registers a new resource or consumable stock item")
+    public ResponseEntity<ResourceInventory> createInventory(@jakarta.validation.Valid @RequestBody com.lunar.habitat.dto.request.InventoryRequest request) {
+        ResourceInventory created = resourceInventoryService.createInventory(request);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(created);
+    }
+
     @PutMapping("/{id}/stock")
     @Operation(summary = "Update Stock Quantity", description = "Updates inventory quantity and evaluates threshold for low-stock warning alerts")
     public ResponseEntity<ResourceInventory> updateStock(

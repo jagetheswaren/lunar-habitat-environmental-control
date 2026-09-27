@@ -30,8 +30,14 @@ public class ContactServiceImpl implements ContactService {
 
     @Override
     public Contact createContact(ContactRequest request) {
-        if (contactRepository.findByCode(request.getCode()).isPresent()) {
-            throw new DuplicateResourceException("Contact with code " + request.getCode() + " already exists");
+        java.util.Optional<Contact> existing = contactRepository.findByCode(request.getCode());
+        if (existing.isPresent()) {
+            Contact contact = existing.get();
+            contact.setName(request.getName());
+            contact.setEmail(request.getEmail());
+            contact.setPhone(request.getPhone());
+            contact.setAddress(request.getAddress());
+            return contactRepository.save(contact);
         }
 
         Contact contact = new Contact(

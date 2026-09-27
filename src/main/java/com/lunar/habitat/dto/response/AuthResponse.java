@@ -4,6 +4,7 @@ import java.util.List;
 
 public class AuthResponse {
 
+    private String token;
     private String username;
     private String fullName;
     private String email;
@@ -12,12 +13,25 @@ public class AuthResponse {
 
     public AuthResponse() {}
 
-    public AuthResponse(String username, String fullName, String email, List<String> roles, String message) {
+    public AuthResponse(String token, String username, String fullName, String email, List<String> roles, String message) {
+        this.token = token;
         this.username = username;
         this.fullName = fullName;
         this.email = email;
         this.roles = roles;
         this.message = message;
+    }
+
+    public AuthResponse(String username, String fullName, String email, List<String> roles, String message) {
+        this(null, username, fullName, email, roles, message);
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public String getUsername() {

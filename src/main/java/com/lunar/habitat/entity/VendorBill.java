@@ -10,6 +10,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "vendor_bills")
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class VendorBill {
 
     @Id

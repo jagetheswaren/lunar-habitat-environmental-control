@@ -132,17 +132,18 @@ public class ThresholdEngineServiceImpl implements ThresholdEngineService {
 
     @Override
     public EnvironmentalThreshold createThreshold(ThresholdRequest request) {
-        EnvironmentalThreshold threshold = new EnvironmentalThreshold(
-                request.getParameter(),
-                request.getMinimumValue(),
-                request.getMaximumValue(),
-                request.getUnit(),
-                request.getSeverity(),
-                request.getActionDescription());
+        EnvironmentalThreshold threshold = thresholdRepository.findByParameter(request.getParameter())
+                .orElseGet(EnvironmentalThreshold::new);
+        threshold.setParameter(request.getParameter());
+        threshold.setMinimumValue(request.getMinimumValue());
+        threshold.setMaximumValue(request.getMaximumValue());
+        threshold.setUnit(request.getUnit());
+        threshold.setSeverity(request.getSeverity());
         threshold.setEnabled(request.isEnabled());
+        threshold.setActionDescription(request.getActionDescription());
         EnvironmentalThreshold saved = thresholdRepository.save(threshold);
         auditLogService.log(AuditAction.CREATE, "EnvironmentalThreshold", saved.getId().toString(),
-                "Created threshold for " + saved.getParameter());
+                "Configured threshold for " + saved.getParameter());
         return saved;
     }
 

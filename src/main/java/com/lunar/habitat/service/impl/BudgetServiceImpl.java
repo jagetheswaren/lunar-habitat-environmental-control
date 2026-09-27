@@ -5,12 +5,14 @@ import com.lunar.habitat.dto.response.BudgetReportResponse;
 import com.lunar.habitat.entity.Account;
 import com.lunar.habitat.entity.AnalyticAccount;
 import com.lunar.habitat.entity.Budget;
+import com.lunar.habitat.entity.HabitatZone;
 import com.lunar.habitat.enums.AuditAction;
 import com.lunar.habitat.exception.DuplicateResourceException;
 import com.lunar.habitat.exception.ResourceNotFoundException;
 import com.lunar.habitat.repository.AccountRepository;
 import com.lunar.habitat.repository.AnalyticAccountRepository;
 import com.lunar.habitat.repository.BudgetRepository;
+import com.lunar.habitat.repository.HabitatZoneRepository;
 import com.lunar.habitat.repository.JournalEntryLineRepository;
 import com.lunar.habitat.service.AuditLogService;
 import com.lunar.habitat.service.BudgetService;
@@ -32,17 +34,20 @@ public class BudgetServiceImpl implements BudgetService {
     private final AnalyticAccountRepository analyticAccountRepository;
     private final AccountRepository accountRepository;
     private final JournalEntryLineRepository journalEntryLineRepository;
+    private final HabitatZoneRepository habitatZoneRepository;
     private final AuditLogService auditLogService;
 
     public BudgetServiceImpl(BudgetRepository budgetRepository,
                              AnalyticAccountRepository analyticAccountRepository,
                              AccountRepository accountRepository,
                              JournalEntryLineRepository journalEntryLineRepository,
+                             HabitatZoneRepository habitatZoneRepository,
                              AuditLogService auditLogService) {
         this.budgetRepository = budgetRepository;
         this.analyticAccountRepository = analyticAccountRepository;
         this.accountRepository = accountRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
+        this.habitatZoneRepository = habitatZoneRepository;
         this.auditLogService = auditLogService;
     }
 
@@ -175,6 +180,24 @@ public class BudgetServiceImpl implements BudgetService {
         }
 
         return response;
+    }
+
+    @Override
+    public com.lunar.habitat.entity.AnalyticAccount createAnalyticAccount(com.lunar.habitat.dto.request.AnalyticAccountRequest request) {
+        HabitatZone zone = null;
+        if (request.getHabitatZoneId() != null) {
+            zone = habitatZoneRepository.findById(request.getHabitatZoneId()).orElse(null);
+        }
+        AnalyticAccount aa = new AnalyticAccount(request.getCode(), request.getName(), zone);
+        AnalyticAccount saved = analyticAccountRepository.save(aa);
+        auditLogService.logAction(AuditAction.CREATE, "ANALYTIC_ACCOUNT", saved.getId(), null, "Created analytic account: " + saved.getName());
+        return saved;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AnalyticAccount> getAllAnalyticAccounts() {
+        return analyticAccountRepository.findAll();
     }
 
     @Override

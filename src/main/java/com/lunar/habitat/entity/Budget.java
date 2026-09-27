@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Table(name = "budgets", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"analytic_account_id", "account_id", "fiscal_year", "period"})
 })
+@com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Budget {
 
     @Id

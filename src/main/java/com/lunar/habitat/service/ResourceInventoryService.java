@@ -7,6 +7,7 @@ import java.util.List;
 public interface ResourceInventoryService {
     List<ResourceInventory> getAllInventory();
     ResourceInventory getInventoryById(Long id);
+    ResourceInventory createInventory(com.lunar.habitat.dto.request.InventoryRequest request);
     ResourceInventory updateStock(Long id, BigDecimal newQuantity);
     List<ResourceInventory> getLowStockResources();
     void checkInventoryThresholds();

@@ -15,5 +15,7 @@ public interface BudgetService {
     List<Budget> getBudgetsByFiscalYear(Integer fiscalYear);
     Page<Budget> searchBudgets(Integer fiscalYear, Long analyticAccountId, Long accountId, Pageable pageable);
     BudgetReportResponse calculateBudgetVsActual(Integer fiscalYear, String period);
+    com.lunar.habitat.entity.AnalyticAccount createAnalyticAccount(com.lunar.habitat.dto.request.AnalyticAccountRequest request);
+    List<com.lunar.habitat.entity.AnalyticAccount> getAllAnalyticAccounts();
     void deleteBudget(Long id);
 }

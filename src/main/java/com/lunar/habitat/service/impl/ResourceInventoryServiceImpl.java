@@ -51,6 +51,35 @@ public class ResourceInventoryServiceImpl implements ResourceInventoryService {
     }
 
     @Override
+    public ResourceInventory createInventory(com.lunar.habitat.dto.request.InventoryRequest request) {
+        java.util.Optional<ResourceInventory> existing = resourceInventoryRepository.findBySku(request.getSku());
+        if (existing.isPresent()) {
+            ResourceInventory item = existing.get();
+            item.setResourceName(request.getResourceName());
+            item.setQuantity(request.getQuantity());
+            item.setUnitOfMeasure(request.getUnitOfMeasure());
+            item.setLocation(request.getLocation());
+            if (request.getMinimumStock() != null) item.setMinimumStock(request.getMinimumStock());
+            if (request.getMaximumStock() != null) item.setMaximumStock(request.getMaximumStock());
+            return resourceInventoryRepository.save(item);
+        }
+
+        ResourceInventory item = new ResourceInventory(
+                request.getResourceName(),
+                request.getSku(),
+                request.getQuantity(),
+                request.getUnitOfMeasure(),
+                request.getLocation(),
+                request.getMinimumStock(),
+                request.getMaximumStock()
+        );
+        ResourceInventory saved = resourceInventoryRepository.save(item);
+        auditLogService.logAction(AuditAction.CREATE, "INVENTORY", saved.getId(), null, "Created resource: " + saved.getResourceName());
+        checkInventoryThresholds();
+        return saved;
+    }
+
+    @Override
     public ResourceInventory updateStock(Long id, BigDecimal newQuantity) {
         ResourceInventory item = getInventoryById(id);
         BigDecimal oldQuantity = item.getQuantity();

@@ -30,8 +30,17 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product createProduct(ProductRequest request) {
-        if (productRepository.findBySku(request.getSku()).isPresent()) {
-            throw new DuplicateResourceException("Product with SKU " + request.getSku() + " already exists");
+        java.util.Optional<Product> existing = productRepository.findBySku(request.getSku());
+        if (existing.isPresent()) {
+            Product product = existing.get();
+            product.setName(request.getName());
+            product.setDescription(request.getDescription());
+            product.setProductType(request.getProductType());
+            product.setUnitOfMeasure(request.getUnitOfMeasure());
+            product.setUnitPrice(request.getUnitPrice());
+            product.setTaxRate(request.getTaxRate());
+            product.setActive(request.isActive());
+            return productRepository.save(product);
         }
 
         Product product = new Product(

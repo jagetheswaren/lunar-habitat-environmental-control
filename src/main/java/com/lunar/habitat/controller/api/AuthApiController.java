@@ -48,7 +48,12 @@ public class AuthApiController {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
 
+        String token = "Basic " + java.util.Base64.getEncoder().encodeToString(
+                (request.getUsername() + ":" + request.getPassword()).getBytes()
+        );
+
         return ResponseEntity.ok(new AuthResponse(
+                token,
                 user.getUsername(),
                 user.getFullName(),
                 user.getEmail(),

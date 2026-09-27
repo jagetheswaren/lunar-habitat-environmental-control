@@ -19,9 +19,18 @@ import java.time.LocalDate;
 public class ReportApiController {
 
     private final ReportService reportService;
+    private final com.lunar.habitat.service.InvoiceService invoiceService;
+    private final com.lunar.habitat.service.VendorBillService vendorBillService;
+    private final com.lunar.habitat.service.AccountingEngineService accountingEngineService;
 
-    public ReportApiController(ReportService reportService) {
+    public ReportApiController(ReportService reportService,
+                               com.lunar.habitat.service.InvoiceService invoiceService,
+                               com.lunar.habitat.service.VendorBillService vendorBillService,
+                               com.lunar.habitat.service.AccountingEngineService accountingEngineService) {
         this.reportService = reportService;
+        this.invoiceService = invoiceService;
+        this.vendorBillService = vendorBillService;
+        this.accountingEngineService = accountingEngineService;
     }
 
     @GetMapping("/summary")
@@ -69,5 +78,23 @@ public class ReportApiController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) Long zoneId) {
         return ResponseEntity.ok(reportService.generateEnvironmentalReport(startDate, endDate, zoneId));
+    }
+
+    @GetMapping("/accounts-receivable")
+    @Operation(summary = "Accounts Receivable Report", description = "Retrieves accounts receivable / customer invoices summary")
+    public ResponseEntity<org.springframework.data.domain.Page<com.lunar.habitat.entity.Invoice>> getAccountsReceivable(org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(invoiceService.searchInvoices(null, null, null, null, null, pageable));
+    }
+
+    @GetMapping("/accounts-payable")
+    @Operation(summary = "Accounts Payable Report", description = "Retrieves accounts payable / vendor bills summary")
+    public ResponseEntity<org.springframework.data.domain.Page<com.lunar.habitat.entity.VendorBill>> getAccountsPayable(org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(vendorBillService.searchVendorBills(null, null, null, pageable));
+    }
+
+    @GetMapping("/general-ledger")
+    @Operation(summary = "General Ledger Report", description = "Retrieves double-entry general ledger transactions")
+    public ResponseEntity<org.springframework.data.domain.Page<com.lunar.habitat.entity.JournalEntry>> getGeneralLedger(org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(accountingEngineService.searchJournalEntries(null, null, null, null, pageable));
     }
 }

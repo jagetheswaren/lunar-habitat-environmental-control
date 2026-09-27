@@ -22,9 +22,12 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final com.lunar.habitat.security.BearerTokenAuthFilter bearerTokenAuthFilter;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService,
+                          com.lunar.habitat.security.BearerTokenAuthFilter bearerTokenAuthFilter) {
         this.userDetailsService = userDetailsService;
+        this.bearerTokenAuthFilter = bearerTokenAuthFilter;
     }
 
     @Bean
@@ -76,17 +79,24 @@ public class SecurityConfig {
                 // Master Data & Budgets APIs
                 .requestMatchers(HttpMethod.GET, "/api/v1/lunar/contacts/**",
                                                  "/api/v1/lunar/products/**",
+                                                 "/api/v1/lunar/zones/**",
                                                  "/api/v1/lunar/habitat-zones/**",
                                                  "/api/v1/lunar/accounts/**",
                                                  "/api/v1/lunar/budgets/**",
+                                                 "/api/v1/lunar/inventory/**",
+                                                 "/api/v1/lunar/maintenance/**",
                                                  "/api/v1/lunar/reports/**").authenticated()
                 .requestMatchers("/api/v1/lunar/contacts/**",
                                  "/api/v1/lunar/products/**",
+                                 "/api/v1/lunar/zones/**",
+                                 "/api/v1/lunar/habitat-zones/**",
                                  "/api/v1/lunar/accounts/**",
-                                 "/api/v1/lunar/budgets/**").hasAnyRole("ADMIN", "ACCOUNTANT")
+                                 "/api/v1/lunar/inventory/**",
+                                 "/api/v1/lunar/maintenance/**",
+                                 "/api/v1/lunar/budgets/**").hasAnyRole("ADMIN", "ACCOUNTANT", "HABITAT_OPERATOR")
 
                 // Admin-only endpoints
-                .requestMatchers("/admin/**", "/api/v1/lunar/thresholds/**", "/api/v1/lunar/audit-logs/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**", "/api/v1/lunar/users/**", "/api/v1/lunar/thresholds/**", "/api/v1/lunar/audit-logs/**").hasRole("ADMIN")
 
                 // Web UI pages require authentication
                 .requestMatchers("/", "/dashboard/**", "/operations/**", "/commercial/**", "/finance/**", "/reports/**").authenticated()
@@ -105,6 +115,7 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             )
+            .addFilterBefore(bearerTokenAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
             .httpBasic(Customizer.withDefaults()); // Enables HTTP Basic for Postman testing
 
         return http.build();

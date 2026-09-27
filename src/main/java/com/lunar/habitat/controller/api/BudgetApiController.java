@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/lunar/budgets")
@@ -22,6 +23,19 @@ public class BudgetApiController {
 
     public BudgetApiController(BudgetService budgetService) {
         this.budgetService = budgetService;
+    }
+
+    @PostMapping("/analytic-accounts")
+    @Operation(summary = "Create Analytic Account", description = "Creates a cost center / habitat dome analytic account")
+    public ResponseEntity<com.lunar.habitat.entity.AnalyticAccount> createAnalyticAccount(@Valid @RequestBody com.lunar.habitat.dto.request.AnalyticAccountRequest request) {
+        com.lunar.habitat.entity.AnalyticAccount created = budgetService.createAnalyticAccount(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/analytic-accounts")
+    @Operation(summary = "List Analytic Accounts", description = "Retrieves all analytic accounts and cost centers")
+    public ResponseEntity<List<com.lunar.habitat.entity.AnalyticAccount>> getAllAnalyticAccounts() {
+        return ResponseEntity.ok(budgetService.getAllAnalyticAccounts());
     }
 
     @PostMapping

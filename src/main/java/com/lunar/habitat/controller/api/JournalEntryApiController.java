@@ -37,7 +37,7 @@ public class JournalEntryApiController {
         return ResponseEntity.ok(journalRepository.findAll());
     }
 
-    @PostMapping("/entries")
+    @PostMapping({"", "/entries"})
     @Operation(summary = "Create Journal Entry",
             description = "Creates and posts a double-entry general ledger entry. Strictly validates Total Debit == Total Credit, rejecting unbalanced entries.")
     public ResponseEntity<JournalEntry> createJournalEntry(@Valid @RequestBody JournalEntryRequest request) {

@@ -20,6 +20,7 @@ public class Role {
     @Column(length = 255)
     private String description;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private Set<User> users = new HashSet<>();
 

@@ -43,6 +43,9 @@ class BudgetServiceTest {
     @Mock
     private AuditLogService auditLogService;
 
+    @Mock
+    private com.lunar.habitat.repository.HabitatZoneRepository habitatZoneRepository;
+
     @InjectMocks
     private BudgetServiceImpl budgetService;
 
