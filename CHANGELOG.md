@@ -5,6 +5,31 @@ All notable changes to the Autonomous Lunar Habitat Environmental Control & Reso
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-09-27
+
+### Added
+- dedicated Digital Twin inspection page (`/digital-twin`) with multi-angle technical framing, live status badges, environmental telemetry dossier, active alert triage, and preventative maintenance schedules
+- refined operational UI components (high-density `DataTable`, `StatusBadge`, `MetricCard`, `PageHeader`, `Header`, `Sidebar`)
+
+### Changed
+- Taste Skill mission-control design system: migrated from arbitrary purple/neon SaaS styling to deep graphite/lunar black substrates (`#0B0E14`), charcoal command panels (`#111622`), 1px razor borders (`#1E2638`), and restrained cyan/emerald/amber state accents
+- telemetry and alert presentation: tabular monospace numeric readouts, time-range selectors, threshold guide lines, and severity KPI counters
+- application shell/navigation: logical aerospace grouping (MISSION, LIFE SUPPORT, OPERATIONS, FINANCE, SYSTEM) with clean Lucide icons (0 emojis)
+- resource/maintenance/finance UI density: compact technical grids, safety stock reserve percentage bars, and preventative maintenance timelines
+
+### Fixed
+- React module resolution and Vite JSX runtime configuration
+- Lucide icon import resolution across all components
+- Three.js type definitions resolution
+- Java Language Server memory configuration (`-Xms512m -Xmx4g -XX:+UseG1GC`) with heavy directory watcher exclusions
+
+### Verified
+- Java CI with Maven (GitHub Actions)
+- Frontend CI (GitHub Actions)
+- JUnit 5 test suite (27/27 passed)
+- Newman V2 API test suite (72/72 requests, 141/141 assertions passed)
+- production frontend build (`tsc && vite build`)
+
 ## [2.0.0] - 2026-09-27
 
 ### Added
