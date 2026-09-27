@@ -19,9 +19,11 @@ import java.util.Base64;
 public class BearerTokenAuthFilter extends OncePerRequestFilter {
 
     private final CustomUserDetailsService userDetailsService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public BearerTokenAuthFilter(CustomUserDetailsService userDetailsService) {
+    public BearerTokenAuthFilter(CustomUserDetailsService userDetailsService, JwtTokenProvider jwtTokenProvider) {
         this.userDetailsService = userDetailsService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
@@ -31,26 +33,42 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
 
         if (authHeader != null && (authHeader.startsWith("Bearer ") || authHeader.startsWith("bearer "))) {
             String token = authHeader.substring(7).trim();
-            if (token.startsWith("Basic ") || token.startsWith("basic ")) {
-                token = token.substring(6).trim();
-            }
 
-            try {
-                byte[] decoded = Base64.getDecoder().decode(token);
-                String credentials = new String(decoded, StandardCharsets.UTF_8);
-                String[] parts = credentials.split(":", 2);
-                if (parts.length == 2) {
-                    String username = parts[0];
+            // 1. Try JWT authentication first
+            if (jwtTokenProvider.validateToken(token)) {
+                String username = jwtTokenProvider.getUsernameFromToken(token);
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    if (userDetails != null) {
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
-            } catch (Exception ignored) {
-                // Let other filters handle or reject
+            } else {
+                // 2. Fallback to Basic credentials encoded in Bearer token (backwards compatibility for E2E suites)
+                if (token.startsWith("Basic ") || token.startsWith("basic ")) {
+                    token = token.substring(6).trim();
+                }
+
+                try {
+                    byte[] decoded = Base64.getDecoder().decode(token);
+                    String credentials = new String(decoded, StandardCharsets.UTF_8);
+                    String[] parts = credentials.split(":", 2);
+                    if (parts.length == 2) {
+                        String username = parts[0];
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                        if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    }
+                } catch (Exception ignored) {
+                    // Let security filter chain proceed
+                }
             }
         }
 

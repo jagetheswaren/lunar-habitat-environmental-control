@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import * as T from '../api/types';
 import { LunarDome3D } from '../components/3d/LunarDome3D';
+import { LunarCoreWidget } from '../components/intelligence/LunarCoreWidget';
 import { MetricCard } from '../components/ui/MetricCard';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import {
@@ -22,6 +23,7 @@ import {
   FileText,
   Loader2,
   RefreshCw,
+  Zap,
 } from 'lucide-react';
 
 interface Props {
@@ -35,6 +37,7 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
   const [zones, setZones] = useState<T.HabitatZone[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sseConnected, setSseConnected] = useState<boolean>(false);
 
   // Quick Action Modal State: Post Telemetry
   const [showPostModal, setShowPostModal] = useState(false);
@@ -71,8 +74,44 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchData();
+
+    // Live Server-Sent Events (SSE) Telemetry Stream connection
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource(api.v2.getStreamUrl());
+
+      eventSource.addEventListener('CONNECTED', () => {
+        setSseConnected(true);
+      });
+
+      eventSource.addEventListener('TELEMETRY', () => {
+        setSseConnected(true);
+        fetchData();
+      });
+
+      eventSource.addEventListener('ALERT', () => {
+        setSseConnected(true);
+        fetchData();
+      });
+
+      eventSource.addEventListener('HEARTBEAT', () => {
+        setSseConnected(true);
+      });
+
+      eventSource.onerror = () => {
+        setSseConnected(false);
+      };
+    } catch (e) {
+      console.warn('SSE stream unavailable, using polling fallback');
+    }
+
     const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
   }, []);
 
   const latestTelemetry = telemetry.length > 0 ? telemetry[telemetry.length - 1] : null;
@@ -155,6 +194,20 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
             <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium border border-cyan-500/30 bg-cyan-500/10 text-cyan-400">
               MISSION ORBITAL ACTIVE
             </span>
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-medium flex items-center gap-1.5 border ${
+                sseConnected
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                  : 'border-slate-700 bg-space-850 text-slate-400'
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  sseConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+                }`}
+              />
+              {sseConnected ? 'LIVE SSE TELEMETRY STREAM CONNECTED' : 'POLLING FALLBACK ACTIVE'}
+            </span>
           </div>
           <p className="text-xs font-mono text-slate-400 mt-1">
             Autonomous Environmental Control • Resource Reclamation • Financial Governance
@@ -183,13 +236,19 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* 3D Lunar Habitat Visualizer Hero Card */}
+      {/* 3D Lunar Habitat Digital Twin Hero Card */}
       <LunarDome3D
         status={domeStatus}
         zoneName={latestTelemetry?.habitatZone?.name || 'Habitat Dome Alpha'}
-        co2Level={latestTelemetry ? Number(latestTelemetry.co2LevelPpm) : 450}
-        pressure={latestTelemetry ? Number(latestTelemetry.atmosphericPressureKpa) : 101.3}
+        co2Level={latestTelemetry ? Number(latestTelemetry.co2LevelPpm) : 428}
+        pressure={latestTelemetry ? Number(latestTelemetry.atmosphericPressureKpa) : 101.32}
+        waterPurity={latestTelemetry ? Number(latestTelemetry.waterPurityPercent) : 99.4}
+        temperature={latestTelemetry ? Number(latestTelemetry.temperatureCelsius) : 22.1}
+        humidity={latestTelemetry ? Number(latestTelemetry.humidityPercent) : 46}
       />
+
+      {/* LUNAR CORE Operational Intelligence Widget */}
+      <LunarCoreWidget />
 
       {/* Environmental Live KPI Grid */}
       <div>

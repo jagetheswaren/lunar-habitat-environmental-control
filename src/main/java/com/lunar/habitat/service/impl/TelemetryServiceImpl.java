@@ -26,15 +26,18 @@ public class TelemetryServiceImpl implements TelemetryService {
     private final HabitatZoneRepository habitatZoneRepository;
     private final ThresholdEngineService thresholdEngineService;
     private final AuditLogService auditLogService;
+    private final com.lunar.habitat.service.TelemetryStreamService telemetryStreamService;
 
     public TelemetryServiceImpl(TelemetryRepository telemetryRepository,
                                 HabitatZoneRepository habitatZoneRepository,
                                 ThresholdEngineService thresholdEngineService,
-                                AuditLogService auditLogService) {
+                                AuditLogService auditLogService,
+                                com.lunar.habitat.service.TelemetryStreamService telemetryStreamService) {
         this.telemetryRepository = telemetryRepository;
         this.habitatZoneRepository = habitatZoneRepository;
         this.thresholdEngineService = thresholdEngineService;
         this.auditLogService = auditLogService;
+        this.telemetryStreamService = telemetryStreamService;
     }
 
     @Override
@@ -60,6 +63,12 @@ public class TelemetryServiceImpl implements TelemetryService {
         Telemetry saved = telemetryRepository.save(telemetry);
         auditLogService.log(AuditAction.CREATE, "Telemetry", saved.getId().toString(),
                 "Ingested telemetry for " + zone.getName() + " with status: " + saved.getStatus());
+
+        // Broadcast to real-time SSE stream for 3D Digital Twin & Mission Control
+        try {
+            telemetryStreamService.broadcastTelemetry(telemetryStreamService.toV2(saved));
+        } catch (Exception ignored) {}
+
         return saved;
     }
 

@@ -16,6 +16,49 @@ export interface AuthResponse {
   message: string;
 }
 
+export interface LunarCoreHealth {
+  overallIndex: number;
+  status: 'OPTIMAL' | 'NOMINAL' | 'ELEVATED_RISK' | 'CRITICAL';
+  atmosphereScore: number;
+  waterScore: number;
+  lifeSupportScore: number;
+  resourcesScore: number;
+  maintenanceScore: number;
+  powerScore: number;
+  activeCriticalAlerts: number;
+  activeWarningAlerts: number;
+  scrubberStatus: string;
+  powerGridStatus: string;
+  timestamp?: string;
+  operationalInsights: string[];
+}
+
+export interface DiagnosticQueryResult {
+  query: string;
+  answer: string;
+  severity: string;
+  keyEvidence: string[];
+  suggestedActions: string[];
+  telemetrySnapshot?: Record<string, any>;
+}
+
+export interface HabitatZoneV2 {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  targetCapacity: number;
+  isPressurized: boolean;
+  isHabitable: boolean;
+  status: string;
+  positionX: number;
+  positionY: number;
+  positionZ: number;
+  primarySystem: string;
+  currentTelemetry?: any;
+  activeAlertsCount: number;
+}
+
 export interface HabitatZone {
   id: number;
   code: string;

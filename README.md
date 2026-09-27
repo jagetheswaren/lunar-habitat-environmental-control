@@ -44,20 +44,22 @@ Maintaining human presence on the Moon requires complete self-sufficiency and re
 
 ---
 
-## 💻 4. Technology Stack
+## 💻 4. Technology Stack & V2 Architecture
 
 | Layer | Component | Specification |
 |---|---|---|
 | **Language** | Java | Java 17 LTS (Eclipse Temurin / OpenJDK) |
-| **Framework** | Spring Boot | 3.4.3 |
-| **Persistence** | Spring Data JPA / Hibernate | 6.x ORM with Lazy Loading & Cascades |
-| **Migrations** | Flyway | Versioned migrations V1 through V7 |
-| **Database** | MySQL | 8.0+ (InnoDB, UTF-8 MB4) |
-| **Security** | Spring Security | Role-Based Access Control (RBAC) + BCrypt Hashing |
-| **Validation** | Jakarta Bean Validation | `@NotNull`, `@NotBlank`, `@Positive`, `@Email` |
-| **API Docs** | SpringDoc OpenAPI | OpenAPI 3.0 / Swagger UI |
-| **Frontend** | Thymeleaf + HTML5 + CSS3 | Space-console dark theme, Chart.js 4.4, Vanilla JS |
-| **Testing** | JUnit 5 + Mockito + MockMvc | Unit tests + Integration tests + Newman E2E |
+| **Backend Framework** | Spring Boot | 3.4.3 (REST APIs `/api/v1/*` & `/api/v2/*`) |
+| **V2 Frontend** | React 18 + Vite + TypeScript | Mission Control UI, Tailwind CSS, Lucide icons, Starfield Canvas |
+| **3D Digital Twin** | Three.js WebGL | 4 interconnected lunar base sectors, animated camera zoom, live telemetry overlay |
+| **Operational Intelligence** | LUNAR CORE Engine | Deterministic 0-100 Habitat Health Index + Grounded Operator Diagnostic Assistant |
+| **Real-Time Streaming** | Server-Sent Events (SSE) | Live telemetry and threshold breach broadcasting (`/api/v2/telemetry/stream`) |
+| **Security & Auth** | Spring Security + JWT | Dual-mode: HMAC-SHA256 JWT access/refresh tokens + legacy HTTP Basic/Bearer support |
+| **Persistence** | Spring Data JPA / Hibernate | 6.x ORM with Lazy Loading, Cascades, and Pagination |
+| **Migrations** | Flyway | Versioned SQL migrations V1 through V7 (27 MySQL tables) |
+| **Database** | MySQL / H2 MySQL-Mode | 8.0+ (InnoDB, UTF-8 MB4) |
+| **API Docs** | SpringDoc OpenAPI | OpenAPI 3.0 / Swagger UI (`/swagger-ui/index.html`) |
+| **Testing** | JUnit 5 + MockMvc + Newman | 21/21 JUnit passed + 65/65 Postman requests passed (130/130 assertions) |
 
 ---
 
@@ -382,12 +384,14 @@ npm run dev
 - **Build Production Bundle:** `npm run build` (outputs to `frontend/dist/`)
 - **Lint Check:** `npm run lint`
 
-### 3D Interactive Web Design Features
-1. **Interactive Three.js 3D Biosphere Dome:** Geodesic dome wireframe, translucent inner environmental barrier, central telemetry spire, and smooth cursor-tracking 3D tilt.
-2. **Rotating Orbital Sensor Rings:** Dual orbital tracks with an active satellite beacon providing real-time visual telemetry status.
-3. **Floating Sensor Particles:** Dynamic atmospheric particulate system reacting to simulated pressure and CO₂ levels.
-4. **Deep-Space Twinkling Starfield:** High-performance, lightweight HTML5 2D canvas with variable-opacity twinkling stars.
-5. **Mission Control Glassmorphism:** Cyan, emerald, amber, and red cybernetic glowing panels with `@media (prefers-reduced-motion)` accessibility support.
+### 3D Interactive Web Design & V2 Features
+1. **Cinematic & Functional 3D Lunar Habitat Digital Twin:** Real-time Three.js WebGL simulation featuring 4 interconnected base sectors (Habitat Dome Alpha, Hydroponics Dome Beta, Life Support Sector Gamma, and Solar Grid Delta), resource transfer pipelines, and smooth camera zoom animations.
+2. **Interactive Telemetry Spec Overlays:** Selecting any module pans the camera and reveals real-time metrics (Pressure, Oxygen, CO₂, Temperature, Humidity, Water Purity, Life Support, Scrubber status, and Power). Modules glow amber or pulsing red during threshold excursions.
+3. **LUNAR CORE Operational Intelligence:** Deterministic 0-100 Habitat Health Index (Atmosphere, Water, Life Support, Power, Resources, Maintenance) with an interactive Grounded Operator Diagnostic Assistant answering incident and telemetry inquiries.
+4. **Live Server-Sent Events (SSE) Streaming:** Real-time push updates via `GET /api/v2/telemetry/stream` for zero-latency mission control monitoring without polling.
+5. **Modern JWT Authentication (`/api/v2/auth/login`):** Issues RFC 7519 HMAC-SHA256 access and refresh tokens with role-based claims.
+6. **Deep-Space Twinkling Starfield:** High-performance, lightweight HTML5 2D canvas with variable-opacity twinkling stars.
+7. **Mission Control Glassmorphism:** Graphite-black surfaces, warm lunar-grey panels, restrained cyan telemetry highlights, amber warnings, and ruby critical states.
 
 ---
 

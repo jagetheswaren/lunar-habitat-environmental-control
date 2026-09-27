@@ -200,4 +200,25 @@ export const api = {
       return res.data?.content || res.data || [];
     },
   },
+  v2: {
+    getHealth: async (): Promise<T.LunarCoreHealth> => {
+      const res = await axios.get<T.LunarCoreHealth>('http://localhost:8081/api/v2/lunar-core/health');
+      return res.data;
+    },
+    diagnose: async (query: string): Promise<T.DiagnosticQueryResult> => {
+      const res = await axios.get<T.DiagnosticQueryResult>('http://localhost:8081/api/v2/lunar-core/diagnose', {
+        params: { q: query },
+      });
+      return res.data;
+    },
+    getZones: async (): Promise<T.HabitatZoneV2[]> => {
+      const res = await axios.get<T.HabitatZoneV2[]>('http://localhost:8081/api/v2/zones');
+      return res.data || [];
+    },
+    getLatestTelemetry: async () => {
+      const res = await axios.get('http://localhost:8081/api/v2/telemetry/latest');
+      return res.data;
+    },
+    getStreamUrl: () => 'http://localhost:8081/api/v2/telemetry/stream',
+  },
 };

@@ -63,7 +63,9 @@ public class SecurityConfig {
                 // Static resources & documentation & authentication
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**", "/favicon.ico").permitAll()
                 .requestMatchers("/login", "/error").permitAll()
-                .requestMatchers("/api/v1/lunar/auth/**").permitAll()
+                .requestMatchers("/api/v1/lunar/auth/**", "/api/v2/auth/**").permitAll()
+                .requestMatchers("/api/v2/telemetry/stream").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v2/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
 
