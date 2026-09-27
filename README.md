@@ -1,10 +1,12 @@
 # 🌙 Autonomous Lunar Habitat Environmental Control & Resource Reclamation Infrastructure
 
+[![Java CI with Maven](https://github.com/jagetheswaren/lunar-habitat-environmental-control/actions/workflows/build.yml/badge.svg)](https://github.com/jagetheswaren/lunar-habitat-environmental-control/actions/workflows/build.yml)
+[![Frontend CI](https://github.com/jagetheswaren/lunar-habitat-environmental-control/actions/workflows/frontend.yml/badge.svg)](https://github.com/jagetheswaren/lunar-habitat-environmental-control/actions/workflows/frontend.yml)
 [![Java](https://img.shields.io/badge/Java-17%2B-blue.svg)](https://adoptium.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.3-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![Flyway](https://img.shields.io/badge/Flyway-V1--V7-red.svg)](https://flywaydb.org/)
 [![Database](https://img.shields.io/badge/MySQL-8.0%2B-orange.svg)](https://www.mysql.com/)
-[![Thymeleaf](https://img.shields.io/badge/UI-Thymeleaf%20%2B%20CSS3-green.svg)](https://www.thymeleaf.org/)
+[![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20TypeScript%20%2B%20Three.js-cyan.svg)](frontend/)
 [![Swagger](https://img.shields.io/badge/OpenAPI-3.0%20(Swagger%20UI)-brightgreen.svg)](http://localhost:8081/swagger-ui/index.html)
 [![Postman](https://img.shields.io/badge/Postman%2FNewman-72%2F72%20Passed%20(141%20Assertions)-orange.svg)](postman/)
 [![JUnit 5](https://img.shields.io/badge/JUnit%205-27%2F27%20Passed-blue.svg)](src/test/java)
@@ -91,7 +93,7 @@ Spring Security Filter Chain (RBAC / BCrypt)
           MySQL 8.0+ Relational Database (27 Tables)
 ```
 
-For the detailed multi-stage workflow architecture diagram, see [PROJECT_FLOW.md](file:///c:/Users/jaget/Downloads/lunar-habitat-leap-spring-boot/lunar-habitat-leap/PROJECT_FLOW.md).
+For the detailed multi-stage workflow architecture diagram, see [PROJECT_FLOW.md](PROJECT_FLOW.md).
 
 ---
 
@@ -278,6 +280,9 @@ java -jar target/lunar-habitat-0.0.1-SNAPSHOT.jar
 
 ## 🔑 13. System Credentials & Roles
 
+> [!WARNING]
+> **DEVELOPMENT SEED CREDENTIALS ONLY:** The credentials listed below (`admin` / `admin123`, etc.) are pre-seeded solely for local development, academic evaluation, and automated Newman test suites. **Production deployments must NOT use these default credentials.** In production environments, configure administrative accounts via secure environment variables (`DB_PASSWORD`, `JWT_SECRET`, etc.) and establish strong passwords.
+
 | Username | Password | Role | Description |
 |---|---|---|---|
 | `admin` | `admin123` | `ROLE_ADMIN` | Full administrative control, CoA, users, thresholds |
@@ -291,8 +296,8 @@ java -jar target/lunar-habitat-0.0.1-SNAPSHOT.jar
 ## 🎬 14. Faculty Presentation & Demonstration Guide
 
 For a step-by-step walkthrough to present to professors or evaluation panels, consult:
-- **[DEMO_GUIDE.md](file:///c:/Users/jaget/Downloads/lunar-habitat-leap-spring-boot/lunar-habitat-leap/DEMO_GUIDE.md):** 20 detailed presentation sections covering **WHAT TO OPEN**, **WHAT TO CLICK**, and **WHAT TO EXPLAIN**.
-- **[PROJECT_FLOW.md](file:///c:/Users/jaget/Downloads/lunar-habitat-leap-spring-boot/lunar-habitat-leap/PROJECT_FLOW.md):** Architectural diagrams and deep-dive technical workflows.
+- **[DEMO_GUIDE.md](DEMO_GUIDE.md):** 20 detailed presentation sections covering **WHAT TO OPEN**, **WHAT TO CLICK**, and **WHAT TO EXPLAIN**.
+- **[PROJECT_FLOW.md](PROJECT_FLOW.md):** Architectural diagrams and deep-dive technical workflows.
 
 ### Summary Faculty Presentation Workflow
 1. **Login & Dashboard:** Authenticate as `admin` and show live telemetry KPIs and balanced ledger stats.

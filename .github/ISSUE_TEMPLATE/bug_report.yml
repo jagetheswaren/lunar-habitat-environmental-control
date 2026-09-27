@@ -1,0 +1,47 @@
+name: Bug Report
+description: File a bug report for Lunar Habitat Environmental Control
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please provide as much detail as possible.
+  - type: input
+    id: component
+    attributes:
+      label: Affected Component
+      description: e.g. Frontend Mission Control, Telemetry API, Scrubber Engine, Double-Entry Accounting
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the Bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed reproduction steps.
+      placeholder: |
+        1. Ingest telemetry at '/api/v2/telemetry'
+        2. Set CO2 level to 1280 ppm
+        3. Check alert response
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen under nominal operation.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or Terminal Output
+      description: Include any relevant stack traces or browser console logs.
+      render: shell
