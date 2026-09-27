@@ -158,12 +158,17 @@ Post-execution database verification was performed directly against the persiste
 - **Total Postman Tests/Assertions:** 130
 - **Postman Execution Result:** 65/65 Requests Executed, 130/130 Assertions Passed (0 Failed)
 - **Maven Test Result:** `Tests run: 21, Failures: 0, Errors: 0, Skipped: 0` (`BUILD SUCCESS`)
-- **Maven Package Result:** `mvn compile jar:jar spring-boot:repackage` (`BUILD SUCCESS`)
+- **Maven Package Result:** `mvn package` (`BUILD SUCCESS`, `target/lunar-habitat-0.0.1-SNAPSHOT.jar`)
+- **Frontend Build Result:** `npm run build` (`BUILD SUCCESS`, 1667 modules transformed, Vite bundle clean)
+- **Frontend Port:** `http://localhost:5173` (React 18 + Vite + TypeScript + Three.js)
+- **Backend Port:** `http://localhost:8081` (Spring Boot 3.4.3 + Flyway + MySQL/H2)
+- **Swagger Documentation:** `http://localhost:8081/swagger-ui/index.html`
+- **Rebuild Branch:** `fullstack-3d-rebuild`
 - **GitHub Repository URL:** https://github.com/jagetheswaren/lunar-habitat-environmental-control
-- **Default Branch:** `main`
 - **Docker:** Completely excluded (0 Dockerfiles or Docker Compose configurations).
 
 ---
 
 ## 🏆 FULL WORKING PROJECT STATUS: READY
+## 🏆 FULL-STACK REBUILD STATUS: READY
 

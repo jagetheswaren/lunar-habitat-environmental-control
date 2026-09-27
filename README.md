@@ -326,6 +326,71 @@ Generates production-ready standalone JAR: `target/lunar-habitat-0.0.1-SNAPSHOT.
 
 ---
 
+## 🛰️ 15.5. Full-Stack 3D Architecture & Modern Frontend Upgrade
+
+The project features a **two-tier enterprise full-stack architecture** with a dedicated modern 3D Mission Control web console alongside the existing Spring Boot + Thymeleaf application:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│             LUNAR HABITAT MISSION CONTROL CONSOLE                      │
+│                                                                        │
+│   [ Modern 3D Frontend (Port 5173) ]       [ Thymeleaf SSR (Port 8081) ]│
+│   • React 18 + Vite + TypeScript           • Thymeleaf 3 + Chart.js    │
+│   • Three.js 3D Biosphere Dome             • Server-rendered templates │
+│   • Tailwind CSS + Glassmorphism           • Space-console CSS3        │
+│   • 28 Mission Operations Pages            • 33 Monolithic routes      │
+└──────────────────┬─────────────────────────────────────┬───────────────┘
+                   │ HTTP REST (CORS/Proxy)              │ Direct SSR
+                   ▼                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             SPRING BOOT 3.4.3 ENTERPRISE BACKEND (Port 8081)           │
+│   • 21 REST API Controllers (/api/v1/lunar/**)                         │
+│   • Spring Security 6.4 + BCrypt + HTTP Basic / Token Auth             │
+│   • Double-Entry General Ledger (Debit = Credit Verification)          │
+│   • OpenAPI 3.0 / Swagger UI (/swagger-ui/index.html)                  │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │ JPA / Hibernate ORM
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             DATABASE LAYER: MySQL 8.0 / In-Memory H2                    │
+│   • Flyway Migrations (V1 - V7) • 27 Production Schema Tables          │
+│   • Zero Hardcoded Data • Pure Database Persistence & Real KPIs       │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Running the Full-Stack Application
+
+#### 1. Backend (Spring Boot 3.4.3 + Flyway + MySQL/H2)
+```bash
+# In the project root:
+mvn spring-boot:run
+# Or run packaged jar:
+java -jar target/lunar-habitat-0.0.1-SNAPSHOT.jar
+```
+- **Backend URL:** `http://localhost:8081`
+- **Swagger Documentation:** `http://localhost:8081/swagger-ui/index.html`
+- **Actuator Health:** `http://localhost:8081/actuator/health`
+
+#### 2. Frontend (React 18 + Vite + TypeScript + Three.js)
+```bash
+# In frontend directory:
+cd frontend
+npm install
+npm run dev
+```
+- **Frontend URL:** `http://localhost:5173`
+- **Build Production Bundle:** `npm run build` (outputs to `frontend/dist/`)
+- **Lint Check:** `npm run lint`
+
+### 3D Interactive Web Design Features
+1. **Interactive Three.js 3D Biosphere Dome:** Geodesic dome wireframe, translucent inner environmental barrier, central telemetry spire, and smooth cursor-tracking 3D tilt.
+2. **Rotating Orbital Sensor Rings:** Dual orbital tracks with an active satellite beacon providing real-time visual telemetry status.
+3. **Floating Sensor Particles:** Dynamic atmospheric particulate system reacting to simulated pressure and CO₂ levels.
+4. **Deep-Space Twinkling Starfield:** High-performance, lightweight HTML5 2D canvas with variable-opacity twinkling stars.
+5. **Mission Control Glassmorphism:** Cyan, emerald, amber, and red cybernetic glowing panels with `@media (prefers-reduced-motion)` accessibility support.
+
+---
+
 ## 📁 16. Project Directory Structure
 
 ```

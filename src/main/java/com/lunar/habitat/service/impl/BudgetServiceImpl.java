@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -59,13 +60,16 @@ public class BudgetServiceImpl implements BudgetService {
         Account account = accountRepository.findById(request.getAccountId())
                 .orElseThrow(() -> new ResourceNotFoundException("GL Account not found with ID: " + request.getAccountId()));
 
-        budgetRepository.findByAnalyticAccountIdAndAccountIdAndFiscalYearAndPeriod(
-                analytic.getId(), account.getId(), request.getFiscalYear(), request.getPeriod())
-                .ifPresent(b -> {
-                    throw new DuplicateResourceException(String.format(
-                            "Budget already exists for %s on account %s for FY%d %s",
-                            analytic.getName(), account.getAccountCode(), request.getFiscalYear(), request.getPeriod()));
-                });
+        Optional<Budget> existing = budgetRepository.findByAnalyticAccountIdAndAccountIdAndFiscalYearAndPeriod(
+                analytic.getId(), account.getId(), request.getFiscalYear(), request.getPeriod());
+        if (existing.isPresent()) {
+            Budget b = existing.get();
+            b.setPlannedAmount(request.getPlannedAmount());
+            if (request.getNotes() != null) {
+                b.setNotes(request.getNotes());
+            }
+            return budgetRepository.save(b);
+        }
 
         Budget budget = new Budget(analytic, account, request.getFiscalYear(), request.getPeriod(), request.getPlannedAmount(), request.getNotes());
 
@@ -184,14 +188,17 @@ public class BudgetServiceImpl implements BudgetService {
 
     @Override
     public com.lunar.habitat.entity.AnalyticAccount createAnalyticAccount(com.lunar.habitat.dto.request.AnalyticAccountRequest request) {
-        HabitatZone zone = null;
-        if (request.getHabitatZoneId() != null) {
-            zone = habitatZoneRepository.findById(request.getHabitatZoneId()).orElse(null);
-        }
-        AnalyticAccount aa = new AnalyticAccount(request.getCode(), request.getName(), zone);
-        AnalyticAccount saved = analyticAccountRepository.save(aa);
-        auditLogService.logAction(AuditAction.CREATE, "ANALYTIC_ACCOUNT", saved.getId(), null, "Created analytic account: " + saved.getName());
-        return saved;
+        return analyticAccountRepository.findByCode(request.getCode())
+                .orElseGet(() -> {
+                    HabitatZone zone = null;
+                    if (request.getHabitatZoneId() != null) {
+                        zone = habitatZoneRepository.findById(request.getHabitatZoneId()).orElse(null);
+                    }
+                    AnalyticAccount aa = new AnalyticAccount(request.getCode(), request.getName(), zone);
+                    AnalyticAccount saved = analyticAccountRepository.save(aa);
+                    auditLogService.logAction(AuditAction.CREATE, "ANALYTIC_ACCOUNT", saved.getId(), null, "Created analytic account: " + saved.getName());
+                    return saved;
+                });
     }
 
     @Override
