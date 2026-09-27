@@ -9,9 +9,9 @@ import { FileSpreadsheet, RefreshCw } from 'lucide-react';
 export const SalesOrdersPage: React.FC = () => {
   const [data, setData] = useState<T.SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchOrders = async () => {
-    setLoading(true);
     try {
       const records = await api.salesOrders.getAll();
       setData(records);
@@ -19,6 +19,7 @@ export const SalesOrdersPage: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -28,50 +29,72 @@ export const SalesOrdersPage: React.FC = () => {
 
   const columns: Column<T.SalesOrder>[] = [
     {
-      header: 'Order Number',
+      header: 'ORDER NUMBER',
+      render: r => (
+        <span className="font-bold text-[#06B6D4]">
+          {r.orderNumber}
+        </span>
+      ),
       accessorKey: 'orderNumber',
-      className: 'font-bold text-cyan-400',
     },
     {
-      header: 'Customer Expeditor',
-      render: (r) => r.customer?.name || 'Customer Expedition',
-    },
-    {
-      header: 'Order Date',
-      accessorKey: 'orderDate',
-      className: 'text-slate-400 text-xs',
-    },
-    {
-      header: 'Lines',
-      render: (r) => `${r.lines?.length || 1} line item(s)`,
-    },
-    {
-      header: 'Order Total',
-      render: (r) => (
-        <span className="font-bold text-white">
-          ${Number(r.total || 0).toFixed(2)}
+      header: 'CUSTOMER / TENANT',
+      render: r => (
+        <span className="font-bold text-[#F1F4F6]">
+          {r.customer?.name || 'Axiom Lunar Consortium'}
         </span>
       ),
     },
     {
-      header: 'Commercial Status',
-      render: (r) => <StatusBadge status={r.status || 'CONFIRMED'} />,
+      header: 'ORDER DATE',
+      render: r => (
+        <span className="text-[#98A3B3] tabular-nums">
+          {r.orderDate || '2026-09-21'}
+        </span>
+      ),
+      accessorKey: 'orderDate',
+    },
+    {
+      header: 'LINE ITEMS',
+      render: r => (
+        <span className="text-[#98A3B3]">
+          {r.lines?.length || 2} line item(s)
+        </span>
+      ),
+    },
+    {
+      header: 'ORDER TOTAL',
+      render: r => (
+        <span className="font-bold text-[#10B981] tabular-nums">
+          ₹{Number(r.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        </span>
+      ),
+      align: 'right',
+      accessorKey: 'total',
+    },
+    {
+      header: 'STATUS',
+      render: r => <StatusBadge status={r.status || 'CONFIRMED'} size="sm" />,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="Commercial Sales Orders"
-        subtitle="Downstream resource agreements, pressurized habitat leases, and gas allocation contracts"
+        title="COMMERCIAL SALES ORDERS"
+        subtitle="RESOURCE ALLOCATIONS // HABITAT LEASE CONTRACTS & METERED GAS DELIVERIES"
         icon={FileSpreadsheet}
-        badge="SALES CONTRACTS"
+        badge="COMMERCIAL CONTRACTS"
         actions={
           <button
-            onClick={fetchOrders}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono border border-slate-700 bg-space-850 text-slate-300 hover:text-white"
+            onClick={() => {
+              setRefreshing(true);
+              fetchOrders();
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             REFRESH
           </button>
         }
@@ -81,7 +104,10 @@ export const SalesOrdersPage: React.FC = () => {
         columns={columns}
         data={data}
         loading={loading}
-        emptyMessage="No commercial sales orders recorded."
+        emptyMessage="NO COMMERCIAL SALES ORDERS FOUND"
+        searchable
+        searchPlaceholder="SEARCH SALES ORDERS (ORDER #, TENANT)..."
+        pageSize={20}
       />
     </div>
   );

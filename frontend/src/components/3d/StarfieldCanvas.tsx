@@ -25,8 +25,8 @@ export const StarfieldCanvas: React.FC = () => {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
 
-      // Deep graphite / lunar black substrate
-      ctx.fillStyle = '#0B0E14';
+      // Deep graphite / lunar void substrate
+      ctx.fillStyle = '#080B10';
       ctx.fillRect(0, 0, width, height);
 
       // Faint static astronomical coordinates

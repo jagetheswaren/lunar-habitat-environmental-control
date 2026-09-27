@@ -5,6 +5,11 @@ import { Dashboard } from './pages/Dashboard';
 import { DigitalTwinPage } from './pages/DigitalTwinPage';
 import { TelemetryPage } from './pages/TelemetryPage';
 import { AlertsPage } from './pages/AlertsPage';
+import { AtmospherePage } from './pages/AtmospherePage';
+import { OxygenPage } from './pages/OxygenPage';
+import { WaterPage } from './pages/WaterPage';
+import { ScrubbersPage } from './pages/ScrubbersPage';
+import { ResourceReclamationPage } from './pages/ResourceReclamationPage';
 import { ThresholdsPage } from './pages/ThresholdsPage';
 import { HabitatZonesPage } from './pages/HabitatZonesPage';
 import { InventoryPage } from './pages/InventoryPage';
@@ -25,7 +30,6 @@ import { ReportsPage } from './pages/ReportsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { ResourceReclamationPage } from './pages/ResourceReclamationPage';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
@@ -61,26 +65,34 @@ export const App: React.FC = () => {
 
   const renderCurrentPage = () => {
     switch (currentPath) {
+      // MISSION
       case '/dashboard':
         return <Dashboard onNavigate={handleNavigate} />;
       case '/digital-twin':
-        return <DigitalTwinPage />;
+        return <DigitalTwinPage onNavigate={handleNavigate} />;
       case '/telemetry':
         return <TelemetryPage />;
       case '/alerts':
         return <AlertsPage onNavigate={handleNavigate} />;
-      case '/thresholds':
-        return <ThresholdsPage />;
-      case '/zones':
-      case '/habitat-zones':
-        return <HabitatZonesPage />;
-      case '/inventory':
-        return <InventoryPage />;
-      case '/maintenance':
-        return <MaintenancePage />;
+
+      // LIFE SUPPORT
+      case '/atmosphere':
+        return <AtmospherePage />;
+      case '/oxygen':
+        return <OxygenPage />;
+      case '/water':
+        return <WaterPage />;
       case '/reclamation':
       case '/resource-reclamation':
         return <ResourceReclamationPage />;
+      case '/scrubbers':
+        return <ScrubbersPage />;
+      case '/maintenance':
+        return <MaintenancePage />;
+
+      // OPERATIONS
+      case '/inventory':
+        return <InventoryPage />;
       case '/contacts':
         return <ContactsPage />;
       case '/products':
@@ -95,6 +107,8 @@ export const App: React.FC = () => {
         return <InvoicesPage />;
       case '/payments':
         return <PaymentsPage />;
+
+      // FINANCE
       case '/accounts':
         return <AccountsPage />;
       case '/journals':
@@ -112,12 +126,21 @@ export const App: React.FC = () => {
       case '/reports/environment':
       case '/reports/resources':
         return <ReportsPage />;
+
+      // SYSTEM
+      case '/zones':
+      case '/habitat-zones':
+      case '/modules':
+        return <HabitatZonesPage />;
+      case '/thresholds':
+        return <ThresholdsPage />;
       case '/audit-logs':
         return <AuditLogsPage />;
       case '/users':
         return <UsersPage />;
       case '/settings':
         return <SettingsPage />;
+
       default:
         return <Dashboard onNavigate={handleNavigate} />;
     }

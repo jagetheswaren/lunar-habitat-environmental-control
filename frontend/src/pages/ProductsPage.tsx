@@ -3,14 +3,15 @@ import { api } from '../api/client';
 import * as T from '../api/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataTable, Column } from '../components/ui/DataTable';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { Package, RefreshCw } from 'lucide-react';
 
 export const ProductsPage: React.FC = () => {
   const [data, setData] = useState<T.Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchProducts = async () => {
-    setLoading(true);
     try {
       const records = await api.products.getAll();
       setData(records);
@@ -18,6 +19,7 @@ export const ProductsPage: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -27,60 +29,92 @@ export const ProductsPage: React.FC = () => {
 
   const columns: Column<T.Product>[] = [
     {
-      header: 'SKU',
+      header: 'CODE',
+      render: r => (
+        <span className="text-[#06B6D4] font-bold">
+          {r.sku}
+        </span>
+      ),
       accessorKey: 'sku',
-      className: 'w-24 text-cyan-400 font-bold',
     },
     {
-      header: 'Resource / Service Name',
+      header: 'PRODUCT',
+      render: r => (
+        <div>
+          <span className="font-bold text-[#F1F4F6] block">{r.name}</span>
+          <span className="text-[10px] text-[#657184] truncate block max-w-xs">{(r as any).description || 'ECLSS Resource'}</span>
+        </div>
+      ),
       accessorKey: 'name',
-      className: 'font-semibold text-white',
     },
     {
-      header: 'Category',
-      accessorKey: 'category',
-      className: 'text-slate-300',
-    },
-    {
-      header: 'Unit of Measure',
-      accessorKey: 'unitOfMeasure',
-      className: 'text-slate-400 font-mono text-xs',
-    },
-    {
-      header: 'Standard Cost',
-      render: (r) => `$${Number(r.standardCost || 0).toFixed(2)}`,
-    },
-    {
-      header: 'Billing Rate / List Price',
-      render: (r) => (
-        <span className="font-semibold text-emerald-400">
-          ${Number(r.listPrice || 0).toFixed(2)}
+      header: 'TYPE',
+      render: r => (
+        <span className="text-[#98A3B3] uppercase text-[10px]">
+          {r.category || 'CONSUMABLE'}
         </span>
       ),
     },
     {
-      header: 'Catalog Status',
-      render: (r) => (
-        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-          ACTIVE
+      header: 'UNIT',
+      render: r => (
+        <span className="text-[#657184] uppercase">
+          {r.unitOfMeasure || 'L'}
         </span>
       ),
+    },
+    {
+      header: 'SALE PRICE',
+      render: r => (
+        <span className="text-[#10B981] font-bold tabular-nums">
+          ₹{Number(r.listPrice || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        </span>
+      ),
+      align: 'right',
+      accessorKey: 'listPrice',
+    },
+    {
+      header: 'COST',
+      render: r => (
+        <span className="text-[#F1F4F6] tabular-nums">
+          ₹{Number(r.standardCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+        </span>
+      ),
+      align: 'right',
+      accessorKey: 'standardCost',
+    },
+    {
+      header: 'STOCK',
+      render: r => (
+        <span className="text-[#06B6D4] font-bold tabular-nums">
+          {((r as any).stockOnHand || 1200).toLocaleString()}
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'STATUS',
+      render: () => <StatusBadge status="ACTIVE" size="sm" />,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="Resource & Consumables Catalog"
-        subtitle="Standardized life-support consumables, scrubbers, nitrogen gases, and reclamation service tariffs"
+        title="RESOURCE & COMMODITY PRODUCTS"
+        subtitle="MASTER TARIFF CATALOG // STANDARDIZED LIFE-SUPPORT CONSUMABLES & SERVICES"
         icon={Package}
         badge="TARIFF MASTER"
         actions={
           <button
-            onClick={fetchProducts}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono border border-slate-700 bg-space-850 text-slate-300 hover:text-white"
+            onClick={() => {
+              setRefreshing(true);
+              fetchProducts();
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             REFRESH
           </button>
         }
@@ -90,7 +124,10 @@ export const ProductsPage: React.FC = () => {
         columns={columns}
         data={data}
         loading={loading}
-        emptyMessage="No catalog items found."
+        emptyMessage="NO COMMODITY PRODUCTS FOUND IN MASTER TARIFF"
+        searchable
+        searchPlaceholder="SEARCH PRODUCTS (CODE, NAME, CATEGORY)..."
+        pageSize={25}
       />
     </div>
   );

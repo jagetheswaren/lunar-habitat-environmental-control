@@ -3,14 +3,17 @@ import { api } from '../api/client';
 import * as T from '../api/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataTable, Column } from '../components/ui/DataTable';
-import { Boxes, RefreshCw, AlertCircle, Search, Filter } from 'lucide-react';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { Drawer } from '../components/ui/Drawer';
+import { Boxes, RefreshCw, AlertTriangle, CheckCircle2, Box } from 'lucide-react';
 
 export const InventoryPage: React.FC = () => {
   const [data, setData] = useState<T.InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [selectedItem, setSelectedItem] = useState<T.InventoryItem | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const fetchInventory = async () => {
     try {
@@ -28,171 +31,228 @@ export const InventoryPage: React.FC = () => {
     fetchInventory();
   }, []);
 
-  const categories = ['ALL', ...Array.from(new Set(data.map(i => i.product?.category || 'CONSUMABLE').filter(Boolean)))];
+  const categories = ['ALL', ...Array.from(new Set(data.map(i => i.product?.category || 'RESOURCE').filter(Boolean)))];
 
-  const filtered = data.filter((item) => {
-    const matchesSearch =
-      !search ||
-      item.product?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      item.product?.sku?.toLowerCase().includes(search.toLowerCase()) ||
-      item.location?.toLowerCase().includes(search.toLowerCase());
-    const matchesCat = categoryFilter === 'ALL' || item.product?.category === categoryFilter;
-    return matchesSearch && matchesCat;
+  const filtered = data.filter(item => {
+    if (categoryFilter === 'ALL') return true;
+    return item.product?.category === categoryFilter;
   });
-
-  const lowStockCount = data.filter(r => Number(r.quantityOnHand) <= Number(r.safetyStockLevel)).length;
 
   const columns: Column<T.InventoryItem>[] = [
     {
-      header: 'Stock Item & SKU',
-      render: (r) => (
-        <div>
-          <div className="font-semibold text-[#F0F4F8]">{r.product?.name || 'Resource Consumable'}</div>
-          <div className="text-[10px] text-[#06B6D4] font-mono">SKU: {r.product?.sku || 'SKU-LUN'}</div>
-        </div>
+      header: 'ITEM',
+      render: r => (
+        <span className="font-bold text-[#F1F4F6]">
+          {r.product?.name || 'Resource Consumable'}
+        </span>
       ),
     },
     {
-      header: 'Category',
-      render: (r) => <span className="text-[#8C9BAE] text-[11px] uppercase">{r.product?.category || 'CONSUMABLE'}</span>,
+      header: 'CODE',
+      render: r => (
+        <span className="text-[#06B6D4] font-bold">
+          {r.product?.sku || `RES-${r.id}`}
+        </span>
+      ),
     },
     {
-      header: 'Quantity on Hand',
-      render: (r) => {
+      header: 'CATEGORY',
+      render: r => (
+        <span className="text-[#98A3B3] uppercase text-[10px]">
+          {r.product?.category || 'RESOURCE'}
+        </span>
+      ),
+    },
+    {
+      header: 'AVAILABLE',
+      render: r => {
         const q = Number(r.quantityOnHand || 0);
         const s = Number(r.safetyStockLevel || 0);
         const isLow = q <= s;
-        const pct = s > 0 ? Math.min(100, Math.round((q / (s * 2)) * 100)) : 100;
         return (
-          <div className="space-y-1">
-            <span className={`font-bold font-mono tabular-nums flex items-center gap-1 ${isLow ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
-              {isLow && <AlertCircle className="w-3.5 h-3.5 text-[#F59E0B]" />}
-              {q.toFixed(1)} {r.unit || r.product?.unitOfMeasure || 'units'}
-            </span>
-            <div className="w-24 bg-[#0B0E14] h-1 rounded overflow-hidden">
-              <div
-                className={`h-1 ${isLow ? 'bg-[#F59E0B]' : 'bg-[#10B981]'}`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
+          <span className={`font-bold tabular-nums ${isLow ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
+            {q.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+          </span>
         );
       },
+      align: 'right',
+      accessorKey: 'quantityOnHand',
     },
     {
-      header: 'Safety Stock',
-      render: (r) => (
-        <span className="tabular-nums text-[#8C9BAE]">
-          {r.safetyStockLevel} {r.unit || 'units'}
+      header: 'MIN',
+      render: r => (
+        <span className="text-[#657184] tabular-nums">
+          {Number(r.safetyStockLevel || 0).toLocaleString()}
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'REORDER',
+      render: r => (
+        <span className="text-[#F59E0B] tabular-nums">
+          {Number(r.reorderPoint || (Number(r.safetyStockLevel || 0) * 1.5)).toLocaleString()}
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'MAX',
+      render: r => (
+        <span className="text-[#98A3B3] tabular-nums">
+          {Number(r.safetyStockLevel ? Number(r.safetyStockLevel) * 3 : 5000).toLocaleString()}
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'UNIT',
+      render: r => (
+        <span className="text-[#657184] uppercase">
+          {r.unit || r.product?.unitOfMeasure || 'L'}
         </span>
       ),
     },
     {
-      header: 'Reorder Point',
-      render: (r) => (
-        <span className="tabular-nums text-[#8C9BAE]">
-          {r.reorderPoint} {r.unit || 'units'}
+      header: 'LOCATION',
+      render: r => (
+        <span className="text-[#98A3B3]">
+          {r.location || 'STOR-SILO-01'}
         </span>
       ),
     },
     {
-      header: 'Storage Location',
-      accessorKey: 'location',
-      className: 'text-[#8C9BAE] text-[11px]',
-    },
-    {
-      header: 'Last Audit Update (UTC)',
-      accessorKey: 'lastUpdated',
-      className: 'text-[#5A677B] text-[11px] tabular-nums',
+      header: 'STATUS',
+      render: r => {
+        const q = Number(r.quantityOnHand || 0);
+        const s = Number(r.safetyStockLevel || 0);
+        const status = q <= s ? 'LOW_STOCK' : 'NOMINAL';
+        return <StatusBadge status={status} size="sm" />;
+      },
     },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="Resource Inventory & Reserves"
-        subtitle="Critical consumable buffers, oxygen cylinders, water reserves, and scrubber chemical cartridges"
+        title="RESOURCE BUFFER & INVENTORY STOCKS"
+        subtitle="TABLE-FIRST INVENTORY CONTROL // CRITICAL CONSUMABLES & BUFFER THRESHOLDS"
         icon={Boxes}
-        badge="LOGISTICS BUFFER"
+        badge="SCADA ERP"
         actions={
-          <button
-            onClick={() => {
-              setRefreshing(true);
-              fetchInventory();
-            }}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono border border-[#1E2638] bg-[#111622] text-[#8C9BAE] hover:text-[#F0F4F8] hover:border-[#06B6D4]/40 transition-colors"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#06B6D4]' : ''}`} />
-            REFRESH
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                setRefreshing(true);
+                fetchInventory();
+              }}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              REFRESH
+            </button>
+          </div>
         }
       />
 
-      {/* KPI Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 font-mono text-xs">
-        <div className="p-3 rounded bg-[#111622] border border-[#1E2638]">
-          <span className="text-[10px] text-[#8C9BAE] uppercase block">Total Catalog Items</span>
-          <span className="text-xl font-bold text-[#F0F4F8] tabular-nums">{data.length}</span>
-        </div>
-        <div className="p-3 rounded bg-[#111622] border border-[#1E2638]">
-          <span className="text-[10px] text-[#8C9BAE] uppercase block">Safe Reserve Items</span>
-          <span className="text-xl font-bold text-[#10B981] tabular-nums">{data.length - lowStockCount}</span>
-        </div>
-        <div className={`p-3 rounded border ${
-          lowStockCount > 0 ? 'bg-[#F59E0B]/10 border-[#F59E0B]/40 text-[#F59E0B]' : 'bg-[#111622] border-[#1E2638] text-[#8C9BAE]'
-        }`}>
-          <span className="text-[10px] uppercase block">Low Stock Warnings</span>
-          <span className="text-xl font-bold tabular-nums">{lowStockCount}</span>
-        </div>
-        <div className="p-3 rounded bg-[#111622] border border-[#1E2638]">
-          <span className="text-[10px] text-[#8C9BAE] uppercase block">Logistics Health</span>
-          <span className="text-xl font-bold text-[#06B6D4]">
-            {data.length > 0 ? Math.round(((data.length - lowStockCount) / data.length) * 100) : 100}%
-          </span>
-        </div>
+      {/* Category Filter Strip */}
+      <div className="flex items-center gap-1.5 p-1 bg-[#111820] border border-[#283443] rounded w-fit text-[11px]">
+        {categories.map(cat => (
+          <button
+            key={cat}
+            onClick={() => setCategoryFilter(cat)}
+            className={`px-3 py-1 rounded font-bold uppercase transition-colors ${
+              categoryFilter === cat
+                ? 'bg-[#161F2A] border border-[#06B6D4] text-[#06B6D4]'
+                : 'text-[#98A3B3] hover:text-[#F1F4F6]'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
-      {/* Search and Category Filters */}
-      <div className="bg-[#111622] p-2.5 rounded border border-[#1E2638] font-mono text-xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-1 max-w-sm">
-          <div className="relative w-full">
-            <Search className="w-3.5 h-3.5 text-[#5A677B] absolute left-2.5 top-2" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search stock item, SKU, location..."
-              className="w-full pl-8 pr-3 py-1 rounded bg-[#0B0E14] border border-[#1E2638] text-xs text-[#F0F4F8] placeholder-[#5A677B] focus:outline-none focus:border-[#06B6D4]"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <Filter className="w-3.5 h-3.5 text-[#06B6D4]" />
-          <span className="text-[10px] uppercase text-[#8C9BAE] font-bold">Category:</span>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
-                categoryFilter === cat
-                  ? 'bg-[#161D2B] text-[#06B6D4] font-bold border border-[#06B6D4]/30'
-                  : 'text-[#8C9BAE] hover:text-[#F0F4F8]'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
+      {/* Table-First Design */}
       <DataTable
         columns={columns}
         data={filtered}
         loading={loading}
-        emptyMessage="No stock items match your search or filter parameters."
+        emptyMessage="NO INVENTORY ITEMS MATCHING CURRENT QUERY"
+        searchable
+        searchPlaceholder="SEARCH ITEMS (NAME, SKU, LOCATION)..."
+        onRowClick={row => {
+          setSelectedItem(row);
+          setIsDrawerOpen(true);
+        }}
+        selectedRowId={selectedItem?.id}
+        pageSize={25}
       />
+
+      {/* Item Detail Drawer */}
+      <Drawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        title={selectedItem?.product?.name || 'INVENTORY ITEM'}
+        subtitle={`SKU: ${selectedItem?.product?.sku || 'SKU-001'} // LOCATION: ${selectedItem?.location || 'SILO-01'}`}
+        badge={Number(selectedItem?.quantityOnHand || 0) <= Number(selectedItem?.safetyStockLevel || 0) ? 'LOW' : 'NOMINAL'}
+        badgeType={Number(selectedItem?.quantityOnHand || 0) <= Number(selectedItem?.safetyStockLevel || 0) ? 'warning' : 'nominal'}
+        footer={
+          <div className="flex items-center justify-between w-full text-[11px]">
+            <span className="text-[#657184]">RECORD ID: #{selectedItem?.id}</span>
+            <button
+              onClick={() => setIsDrawerOpen(false)}
+              className="px-3 py-1.5 rounded bg-[#161F2A] hover:bg-[#1B2531] border border-[#283443] text-[#F1F4F6] font-bold uppercase"
+            >
+              CLOSE
+            </button>
+          </div>
+        }
+      >
+        {selectedItem && (
+          <div className="space-y-4 font-mono text-xs">
+            <div className="p-3 bg-[#0C1118] border border-[#283443] rounded space-y-2">
+              <span className="text-[10px] text-[#657184] uppercase font-bold block">
+                STOCK RESERVES SPECIFICATION
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-[9px] text-[#657184] block">QUANTITY AVAILABLE</span>
+                  <span className="font-bold text-[#F1F4F6] tabular-nums">
+                    {Number(selectedItem.quantityOnHand).toLocaleString()} {selectedItem.unit || 'L'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-[#657184] block">MINIMUM SAFETY STOCK</span>
+                  <span className="font-bold text-[#F59E0B] tabular-nums">
+                    {Number(selectedItem.safetyStockLevel).toLocaleString()} {selectedItem.unit || 'L'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-[#657184] block">REORDER THRESHOLD</span>
+                  <span className="font-bold text-[#06B6D4] tabular-nums">
+                    {Number(selectedItem.reorderPoint).toLocaleString()} {selectedItem.unit || 'L'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-[#657184] block">STORAGE LOCATION</span>
+                  <span className="font-bold text-[#F1F4F6]">{selectedItem.location || 'SILO-01'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-[#0C1118] border border-[#283443] rounded space-y-1.5">
+              <span className="text-[10px] text-[#657184] uppercase font-bold block">
+                COMMODITY DESCRIPTION
+              </span>
+              <p className="text-[11px] text-[#98A3B3]">
+                {(selectedItem.product as any)?.description ||
+                  'Critical lunar life-support and habitat consumable maintained under automated replenishment thresholds.'}
+              </p>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };

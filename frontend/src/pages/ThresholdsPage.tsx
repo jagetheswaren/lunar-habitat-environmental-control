@@ -3,14 +3,15 @@ import { api } from '../api/client';
 import * as T from '../api/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataTable, Column } from '../components/ui/DataTable';
-import { Sliders, RefreshCw } from 'lucide-react';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { Sliders, RefreshCw, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export const ThresholdsPage: React.FC = () => {
   const [data, setData] = useState<T.EnvironmentalThreshold[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchThresholds = async () => {
-    setLoading(true);
     try {
       const records = await api.thresholds.getAll();
       setData(records);
@@ -18,6 +19,7 @@ export const ThresholdsPage: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -27,64 +29,78 @@ export const ThresholdsPage: React.FC = () => {
 
   const columns: Column<T.EnvironmentalThreshold>[] = [
     {
-      header: 'Rule ID',
+      header: 'RULE ID',
+      render: r => (
+        <span className="font-bold text-[#06B6D4]">
+          #THR-{r.id}
+        </span>
+      ),
       accessorKey: 'id',
-      className: 'w-20 text-cyan-400 font-bold',
-      render: (r) => `#THR-${r.id}`,
     },
     {
-      header: 'Metric Type',
+      header: 'METRIC TYPE',
+      render: r => (
+        <span className="font-bold text-[#F1F4F6]">
+          {r.metricType}
+        </span>
+      ),
       accessorKey: 'metricType',
-      className: 'font-semibold text-white',
     },
     {
-      header: 'Zone Sector',
-      render: (r) => r.habitatZone?.name || 'ALL HABITAT DCORES',
+      header: 'SECTOR ZONE',
+      render: r => (
+        <span className="text-[#06B6D4] font-semibold">
+          {r.habitatZone?.name || 'ALL HABITAT MODULES'}
+        </span>
+      ),
     },
     {
-      header: 'Safe Operating Window',
-      render: (r) => (
-        <span>
+      header: 'SAFE OPERATING WINDOW',
+      render: r => (
+        <span className="tabular-nums text-[#10B981] font-semibold">
           {r.warningLow ?? '—'} to {r.warningHigh ?? '—'} {r.unit}
         </span>
       ),
     },
     {
-      header: 'Critical Breach Limit',
-      render: (r) => (
-        <span className="text-red-400 font-semibold">
+      header: 'CRITICAL BREACH LIMIT',
+      render: r => (
+        <span className="text-[#EF4444] font-bold tabular-nums">
           {r.criticalLow ? `< ${r.criticalLow}` : ''} {r.criticalHigh ? `> ${r.criticalHigh}` : ''} {r.unit}
         </span>
       ),
     },
     {
-      header: 'Automated Action Protocol',
-      accessorKey: 'actionProtocol',
-      className: 'text-slate-300 text-xs max-w-xs',
-    },
-    {
-      header: 'Active',
-      render: (r) => (
-        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-          ACTIVE
+      header: 'AUTONOMOUS ACTION PROTOCOL',
+      render: r => (
+        <span className="text-[#98A3B3] text-[11px] block max-w-sm truncate">
+          {r.actionProtocol || 'Dispatch catalytic scrubber boost and log audit incident.'}
         </span>
       ),
+    },
+    {
+      header: 'STATUS',
+      render: () => <StatusBadge status="ACTIVE" size="sm" />,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="Atmospheric Safety Threshold Rules"
-        subtitle="Automated environmental constraints triggering autonomous scrubber routines and alarms"
+        title="ATMOSPHERIC SAFETY THRESHOLDS"
+        subtitle="AUTONOMOUS TRIGGER CONSTRAINTS // LIFE-SUPPORT AUTOMATION & INCIDENT CEILINGS"
         icon={Sliders}
-        badge="FLYWAY SEEDED"
+        badge="SCADA CONSTRAINTS"
         actions={
           <button
-            onClick={fetchThresholds}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono border border-slate-700 bg-space-850 text-slate-300 hover:text-white"
+            onClick={() => {
+              setRefreshing(true);
+              fetchThresholds();
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             REFRESH
           </button>
         }
@@ -94,7 +110,10 @@ export const ThresholdsPage: React.FC = () => {
         columns={columns}
         data={data}
         loading={loading}
-        emptyMessage="No safety thresholds defined in database."
+        emptyMessage="NO SAFETY THRESHOLDS CONFIGURED"
+        searchable
+        searchPlaceholder="SEARCH THRESHOLDS (METRIC, SECTOR, ACTION)..."
+        pageSize={20}
       />
     </div>
   );

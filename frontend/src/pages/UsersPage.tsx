@@ -3,14 +3,15 @@ import { api } from '../api/client';
 import * as T from '../api/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataTable, Column } from '../components/ui/DataTable';
+import { StatusBadge } from '../components/ui/StatusBadge';
 import { UserCheck, RefreshCw, Shield } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
   const [data, setData] = useState<T.User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchUsers = async () => {
-    setLoading(true);
     try {
       const records = await api.users.getAll();
       setData(records);
@@ -18,6 +19,7 @@ export const UsersPage: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -27,58 +29,70 @@ export const UsersPage: React.FC = () => {
 
   const columns: Column<T.User>[] = [
     {
-      header: 'Operator Call-Sign',
+      header: 'OPERATOR CALL-SIGN',
+      render: r => (
+        <span className="font-bold text-[#06B6D4]">
+          {r.username?.toUpperCase()}
+        </span>
+      ),
       accessorKey: 'username',
-      className: 'font-bold text-cyan-400 font-mono',
     },
     {
-      header: 'Full Legal Identity',
+      header: 'FULL LEGAL IDENTITY',
+      render: r => (
+        <span className="font-bold text-[#F1F4F6]">
+          {r.fullName}
+        </span>
+      ),
       accessorKey: 'fullName',
-      className: 'font-semibold text-white',
     },
     {
-      header: 'Mission Email',
+      header: 'MISSION EMAIL',
+      render: r => (
+        <span className="text-[#98A3B3]">
+          {r.email}
+        </span>
+      ),
       accessorKey: 'email',
-      className: 'text-slate-300',
     },
     {
-      header: 'Assigned Security Roles',
-      render: (r) => (
+      header: 'RBAC CLEARANCE ROLES',
+      render: r => (
         <div className="flex flex-wrap gap-1">
           {r.roles?.map((role, idx) => (
             <span
               key={idx}
-              className="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
+              className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#161F2A] text-[#06B6D4] border border-[#283443] uppercase"
             >
               {role.replace('ROLE_', '')}
             </span>
-          )) || <span className="text-slate-500">OPERATOR</span>}
+          )) || <span className="text-[#657184]">OPERATOR</span>}
         </div>
       ),
     },
     {
-      header: 'Authentication Status',
-      render: (r) => (
-        <span className="px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-          ACTIVE
-        </span>
-      ),
+      header: 'STATUS',
+      render: () => <StatusBadge status="ACTIVE" size="sm" />,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="Personnel & Role Administration"
-        subtitle="Mission operator clearance tiers, RBAC security roles, and user directory"
+        title="PERSONNEL & ROLE ADMINISTRATION"
+        subtitle="RBAC ACCESS CONTROL // OPERATOR CLEARANCE TIERS & CREDENTIAL GOVERNANCE"
         icon={UserCheck}
         badge="RBAC LEVEL 4"
         actions={
           <button
-            onClick={fetchUsers}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono border border-slate-700 bg-space-850 text-slate-300 hover:text-white"
+            onClick={() => {
+              setRefreshing(true);
+              fetchUsers();
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             REFRESH
           </button>
         }
@@ -88,7 +102,10 @@ export const UsersPage: React.FC = () => {
         columns={columns}
         data={data}
         loading={loading}
-        emptyMessage="No personnel records found."
+        emptyMessage="NO PERSONNEL RECORDS FOUND"
+        searchable
+        searchPlaceholder="SEARCH OPERATORS (CALL-SIGN, NAME)..."
+        pageSize={20}
       />
     </div>
   );

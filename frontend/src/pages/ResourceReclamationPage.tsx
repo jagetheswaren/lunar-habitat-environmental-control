@@ -3,19 +3,20 @@ import {
   Wind,
   Droplets,
   Activity,
-  Flame,
-  ArrowRight,
-  ShieldAlert,
-  Gauge,
-  Sparkles,
-  Zap,
   RefreshCw,
   AlertTriangle,
   Play,
   RotateCcw,
+  CheckCircle2,
+  ArrowRight,
+  ArrowDown,
+  Layers,
+  Cpu,
 } from 'lucide-react';
 import { api } from '../api/client';
 import * as T from '../api/types';
+import { PageHeader } from '../components/ui/PageHeader';
+import { StatusBadge } from '../components/ui/StatusBadge';
 
 type ScrubberState = 'OFF' | 'STANDBY' | 'ACTIVE' | 'BOOST' | 'MAINTENANCE';
 
@@ -24,14 +25,16 @@ export const ResourceReclamationPage: React.FC = () => {
   const [zones, setZones] = useState<T.HabitatZoneV2[]>([]);
   const [selectedZoneId, setSelectedZoneId] = useState<number>(1);
   const [scrubberState, setScrubberState] = useState<ScrubberState>('ACTIVE');
-  const [automationLogs, setAutomationLogs] = useState<Array<{
-    time: string;
-    trigger: string;
-    zone: string;
-    telemetry: string;
-    action: string;
-    result: string;
-  }>>([
+  const [automationLogs, setAutomationLogs] = useState<
+    Array<{
+      time: string;
+      trigger: string;
+      zone: string;
+      telemetry: string;
+      action: string;
+      result: string;
+    }>
+  >([
     {
       time: '15:24:10 UTC',
       trigger: 'CO2 Threshold (>950 ppm)',
@@ -43,7 +46,7 @@ export const ResourceReclamationPage: React.FC = () => {
     {
       time: '14:50:00 UTC',
       trigger: 'Greywater Return Sensor',
-      zone: 'Hydroponic Sub-surface Farm',
+      zone: 'Hydroponics Dome Beta',
       telemetry: '99.4% Purity / 240 L input',
       action: 'Catalytic Oxidation + RO Filter',
       result: '232.8 L Potable Water Reclaimed (97.0% Eff)',
@@ -91,406 +94,217 @@ export const ResourceReclamationPage: React.FC = () => {
   const handleScrubberChange = async (newState: ScrubberState) => {
     setScrubberState(newState);
     setOverrideActive(true);
-    const activeZone = zones.find((z) => z.id === selectedZoneId)?.name || 'Habitat Dome Alpha';
+    const activeZone = zones.find(z => z.id === selectedZoneId)?.name || 'Habitat Dome Alpha';
     const newLog = {
-      time: new Date().toLocaleTimeString() + ' UTC',
+      time: new Date().toISOString().substring(11, 19) + ' UTC',
       trigger: 'Operator Manual Override',
       zone: activeZone,
-      telemetry: `${telemetry?.co2LevelPpm?.toFixed(1) || '740.0'} ppm CO2`,
+      telemetry: `${telemetry?.co2LevelPpm ? Number(telemetry.co2LevelPpm).toFixed(1) : '740.0'} ppm CO2`,
       action: `Scrubber Mode -> ${newState}`,
-      result: `Status verified. Actuators commanded to ${newState}.`,
+      result: `Manual command dispatched to equipment loop (${newState})`,
     };
-    setAutomationLogs((prev) => [newLog, ...prev.slice(0, 9)]);
-    setSuccessMessage(`Scrubber mode set to ${newState} for ${activeZone}. Telemetry synchronized.`);
+    setAutomationLogs(prev => [newLog, ...prev.slice(0, 9)]);
+    setSuccessMessage(`Scrubber command [${newState}] accepted by ECLSS subsystem.`);
     setTimeout(() => setSuccessMessage(null), 4000);
   };
 
-  // Derive dynamic metrics from real telemetry or active baseline
-  const co2 = telemetry?.co2LevelPpm || 740.0;
-  const o2 = telemetry?.o2PartialPressureKpa || 21.0;
-  const purity = telemetry?.waterPurityPercent || 99.4;
-  const pressure = telemetry?.atmosphericPressureKpa || 101.3;
+  const co2Val = telemetry?.co2LevelPpm ? Math.round(Number(telemetry.co2LevelPpm)) : 742;
+  const o2Val = '21.0';
+  const waterPurity = telemetry?.waterPurityPercent ? Number(telemetry.waterPurityPercent).toFixed(1) : '99.4';
 
-  const o2Production = 28.4; // m3/day
-  const o2Consumption = telemetry?.oxygenConsumptionM3 ? Number(telemetry.oxygenConsumptionM3) : 18.2;
-  const o2Reclaimed = 26.8;
-  const o2Reserve = 4500.0; // m3
-  const o2Efficiency = 94.4; // %
-
-  const waterInput = 1200.0; // L/day
-  const waterConsumed = telemetry?.waterConsumptionLiters ? Number(telemetry.waterConsumptionLiters) : 480.0;
-  const waterRecovered = 1164.0;
-  const waterEfficiency = 97.0; // %
-
-  const co2Scrubbed = 24.6; // kg/day
-  const scrubberEfficiency = co2 > 950 ? 98.2 : 95.8;
+  const flowLanes = [
+    {
+      name: 'OXYGEN PROCESS LANE',
+      color: '#06B6D4',
+      steps: [
+        { title: 'CREW / TENANTS', value: '12 Active Crew', note: '14.5 LPM demand' },
+        { title: 'RESOURCE USE', value: 'Metabolic Respiration', note: 'O2 consumption' },
+        { title: 'WASTE STREAM', value: 'Depleted Atmosphere', note: '19.8% O2 returned' },
+        { title: 'RECLAMATION', value: 'Water Electrolysis (OGS)', note: '18.2 LPM output' },
+        { title: 'TREATMENT', value: 'Catalytic Sabatier Loop', note: 'CO2 + 4H2 -> CH4 + 2H2O' },
+        { title: 'STORAGE', value: '84,200 L Reserve', note: 'Cryogenic Dewars' },
+        { title: 'REDISTRIBUTION', value: 'Atmosphere Ingress', note: '21.0% regulation' },
+      ],
+    },
+    {
+      name: 'WATER PROCESS LANE',
+      color: '#38BDF8',
+      steps: [
+        { title: 'CREW / TENANTS', value: '12 Active Crew', note: '3.2 LPM potable use' },
+        { title: 'RESOURCE USE', value: 'Hygiene & Respiration', note: 'Condensate capture' },
+        { title: 'WASTE STREAM', value: '2.95 LPM Greywater', note: 'Collected in sump' },
+        { title: 'RECLAMATION', value: 'Vapor Compression (VCD)', note: '65.2 °C vacuum boil' },
+        { title: 'TREATMENT', value: 'UV + Catalytic Oxidation', note: `${waterPurity}% Purity (TDS < 5)` },
+        { title: 'STORAGE', value: '42,800 L Potable Tank', note: 'Pressurized reservoir' },
+        { title: 'REDISTRIBUTION', value: 'Potable Water Loop', note: 'Domestic + Agri delivery' },
+      ],
+    },
+    {
+      name: 'CO2 PROCESS LANE',
+      color: '#F59E0B',
+      steps: [
+        { title: 'CREW / TENANTS', value: '12 Active Crew', note: 'Exhaled CO2' },
+        { title: 'RESOURCE USE', value: 'Cabin Exhalation', note: `${co2Val} ppm baseline` },
+        { title: 'WASTE STREAM', value: 'Return Air Ducting', note: '420 LPM blower' },
+        { title: 'RECLAMATION', value: 'Amine / LiOH Scrubbers', note: `Mode: ${scrubberState}` },
+        { title: 'TREATMENT', value: 'Sabatier Reduction', note: 'Methane vent / H2 recycle' },
+        { title: 'STORAGE', value: '12,400 L CO2 Buffer', note: 'Intermediate holding' },
+        { title: 'REDISTRIBUTION', value: 'Balanced Return Air', note: '< 600 ppm re-injected' },
+      ],
+    },
+  ];
 
   return (
-    <div className="p-4 md:p-6 space-y-6 max-w-7xl mx-auto text-[#F0F4F8]">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1E2638] pb-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-[#06B6D4] uppercase tracking-wider mb-1">
-            <RefreshCw className="w-3.5 h-3.5 animate-spin" style={{ animationDuration: '6s' }} />
-            <span>Closed-Loop Environmental Life Support Subsystem</span>
-          </div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white font-mono uppercase">
-            Resource Reclamation & Scrubber Controls
-          </h1>
-          <p className="text-xs text-[#8C9BAE] mt-0.5">
-            Realtime atmospheric recycling, potable water recovery, and catalytic CO2 scrubber automation.
-          </p>
-        </div>
-
-        {/* Zone Selector */}
-        <div className="flex items-center gap-3 bg-[#111622] p-1.5 rounded-lg border border-[#1E2638]">
-          <span className="text-xs font-mono text-[#8C9BAE] pl-2">ACTIVE SECTOR:</span>
-          <select
-            value={selectedZoneId}
-            onChange={(e) => setSelectedZoneId(Number(e.target.value))}
-            className="bg-[#0B0E14] text-xs font-mono border border-[#1E2638] rounded px-3 py-1.5 text-white focus:outline-none focus:border-[#06B6D4]"
+    <div className="space-y-4 font-mono text-xs select-none">
+      <PageHeader
+        title="RESOURCE RECLAMATION & INDUSTRIAL PROCESS FLOW"
+        subtitle="ECLSS INDUSTRIAL CLOSED-LOOP RECLAMATION // OXYGEN, WATER & CO2 MULTI-STAGE LANES"
+        icon={RefreshCw}
+        badge="ECLSS CLOSED-LOOP"
+        actions={
+          <button
+            onClick={fetchData}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
           >
-            {zones.map((z) => (
-              <option key={z.id} value={z.id}>
-                {z.name} ({z.code})
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+            <RefreshCw className="w-3.5 h-3.5" />
+            REFRESH
+          </button>
+        }
+      />
 
       {successMessage && (
-        <div className="bg-[#06B6D4]/10 border border-[#06B6D4]/40 text-[#06B6D4] px-4 py-2.5 rounded text-xs font-mono flex items-center gap-2">
-          <Sparkles className="w-4 h-4 flex-shrink-0" />
+        <div className="p-2.5 rounded bg-[#10B981]/10 border border-[#10B981]/40 text-[#10B981] flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4" />
           <span>{successMessage}</span>
         </div>
       )}
 
-      {/* Closed-Loop Visual Lifecycle Flow */}
-      <div className="bg-[#111622] border border-[#1E2638] rounded-lg p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#1E2638]/70 pb-3">
-          <div className="flex items-center gap-2">
-            <RotateCcw className="w-4 h-4 text-[#06B6D4]" />
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
-              Continuous Closed-Loop Biosphere Material Flow
-            </span>
-          </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30">
-            EQUILIBRIUM NOMINAL (96.4%)
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-3 pt-2">
-          {/* Node 1: Crew / Tenant */}
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-3 text-center space-y-1 relative">
-            <span className="text-[10px] font-mono text-[#8C9BAE] uppercase">Node 01</span>
-            <div className="text-xs font-bold text-white font-mono">Crew / Tenants</div>
-            <p className="text-[10px] text-[#5A677B]">Metabolic demand</p>
-            <div className="mt-2 text-[11px] font-mono text-[#06B6D4]">32 Personnel</div>
-          </div>
-
-          {/* Node 2: Consumption */}
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-3 text-center space-y-1">
-            <span className="text-[10px] font-mono text-[#8C9BAE] uppercase">Node 02</span>
-            <div className="text-xs font-bold text-white font-mono">Consumption</div>
-            <p className="text-[10px] text-[#5A677B]">O2, Potable H2O</p>
-            <div className="mt-2 text-[11px] font-mono text-[#F59E0B]">
-              {o2Consumption.toFixed(1)} m³ / {waterConsumed.toFixed(0)} L
-            </div>
-          </div>
-
-          {/* Node 3: Waste & Exhale */}
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-3 text-center space-y-1">
-            <span className="text-[10px] font-mono text-[#8C9BAE] uppercase">Node 03</span>
-            <div className="text-xs font-bold text-white font-mono">Waste / CO2</div>
-            <p className="text-[10px] text-[#5A677B]">Exhaled gas & greywater</p>
-            <div className="mt-2 text-[11px] font-mono text-[#EF4444]">
-              {co2.toFixed(0)} ppm CO2
-            </div>
-          </div>
-
-          {/* Node 4: Reclamation Systems */}
-          <div className="bg-[#0B0E14] border border-[#06B6D4]/40 rounded p-3 text-center space-y-1 shadow-[0_0_12px_rgba(6,182,212,0.15)]">
-            <span className="text-[10px] font-mono text-[#06B6D4] uppercase">Node 04</span>
-            <div className="text-xs font-bold text-[#06B6D4] font-mono">Reclamation Units</div>
-            <p className="text-[10px] text-[#8C9BAE]">Sabatier + RO Scrubbers</p>
-            <div className="mt-2 text-[11px] font-mono text-[#10B981]">
-              Scrubber: {scrubberState}
-            </div>
-          </div>
-
-          {/* Node 5: Pure Storage */}
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-3 text-center space-y-1">
-            <span className="text-[10px] font-mono text-[#8C9BAE] uppercase">Node 05</span>
-            <div className="text-xs font-bold text-white font-mono">Habitat Storage</div>
-            <p className="text-[10px] text-[#5A677B]">Cryo & Potable Tanks</p>
-            <div className="mt-2 text-[11px] font-mono text-[#10B981]">
-              4,500 m³ / 12,800 L
-            </div>
-          </div>
-
-          {/* Node 6: Closed-Loop Reuse */}
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-3 text-center space-y-1">
-            <span className="text-[10px] font-mono text-[#8C9BAE] uppercase">Node 06</span>
-            <div className="text-xs font-bold text-white font-mono">Direct Reuse</div>
-            <p className="text-[10px] text-[#5A677B]">Atmosphere & Agronomy</p>
-            <div className="mt-2 text-[11px] font-mono text-[#06B6D4]">
-              Recycled: 96.4%
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-[#8C9BAE] pt-2">
-          <span>CREW DEMAND</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#06B6D4]" />
-          <span>CONSUMPTION</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#06B6D4]" />
-          <span>CATALYTIC EXTRACTION</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#06B6D4]" />
-          <span>CRYO STORAGE</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#06B6D4]" />
-          <span className="text-[#10B981]">RECIRCULATION LOOP</span>
-        </div>
-      </div>
-
-      {/* Subsystem Metric Readouts: O2, Water, CO2 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Oxygen Loop */}
-        <div className="bg-[#111622] border border-[#1E2638] rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-[#1E2638] pb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/20">
-                <Wind className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-mono font-bold text-white uppercase">Oxygen Reclamation</span>
-            </div>
-            <span className="text-xs font-mono font-bold text-[#10B981]">{o2Efficiency}% EFF</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Production Rate</div>
-              <div className="text-sm font-bold text-white mt-0.5">{o2Production} m³/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Consumption</div>
-              <div className="text-sm font-bold text-[#F59E0B] mt-0.5">{o2Consumption.toFixed(1)} m³/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Reclaimed Volume</div>
-              <div className="text-sm font-bold text-[#10B981] mt-0.5">{o2Reclaimed} m³/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Cryo Reserve</div>
-              <div className="text-sm font-bold text-[#06B6D4] mt-0.5">{o2Reserve} m³</div>
-            </div>
-          </div>
-
-          <div className="pt-1">
-            <div className="flex justify-between text-[11px] font-mono text-[#8C9BAE] mb-1">
-              <span>Atmospheric O2 Partial Pressure</span>
-              <span className="text-white font-bold">{o2.toFixed(1)} kPa</span>
-            </div>
-            <div className="h-1.5 bg-[#0B0E14] rounded-full overflow-hidden border border-[#1E2638]">
-              <div className="h-full bg-[#10B981]" style={{ width: `${Math.min(100, (o2 / 24) * 100)}%` }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Water Loop */}
-        <div className="bg-[#111622] border border-[#1E2638] rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-[#1E2638] pb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20">
-                <Droplets className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-mono font-bold text-white uppercase">Water Closed-Loop</span>
-            </div>
-            <span className="text-xs font-mono font-bold text-[#10B981]">{waterEfficiency}% EFF</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Input Greywater</div>
-              <div className="text-sm font-bold text-white mt-0.5">{waterInput} L/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Consumed</div>
-              <div className="text-sm font-bold text-[#F59E0B] mt-0.5">{waterConsumed.toFixed(0)} L/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Recovered Pure H2O</div>
-              <div className="text-sm font-bold text-[#10B981] mt-0.5">{waterRecovered} L/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Potable Purity</div>
-              <div className="text-sm font-bold text-[#06B6D4] mt-0.5">{purity.toFixed(2)}%</div>
-            </div>
-          </div>
-
-          <div className="pt-1">
-            <div className="flex justify-between text-[11px] font-mono text-[#8C9BAE] mb-1">
-              <span>Distillation Quality Index</span>
-              <span className="text-white font-bold">{purity.toFixed(1)}% Potable</span>
-            </div>
-            <div className="h-1.5 bg-[#0B0E14] rounded-full overflow-hidden border border-[#1E2638]">
-              <div className="h-full bg-[#06B6D4]" style={{ width: `${Math.min(100, purity)}%` }} />
-            </div>
-          </div>
-        </div>
-
-        {/* CO2 Scrubbing */}
-        <div className="bg-[#111622] border border-[#1E2638] rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between border-b border-[#1E2638] pb-2.5">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20">
-                <Flame className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-mono font-bold text-white uppercase">CO2 Scrubber Loop</span>
-            </div>
-            <span className="text-xs font-mono font-bold text-[#10B981]">{scrubberEfficiency}% CAPTURE</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Detected Ambient CO2</div>
-              <div className={`text-sm font-bold mt-0.5 ${co2 > 950 ? 'text-[#EF4444]' : 'text-white'}`}>
-                {co2.toFixed(1)} ppm
-              </div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Scrubbed Rate</div>
-              <div className="text-sm font-bold text-[#10B981] mt-0.5">{co2Scrubbed} kg/d</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Active Filter Loop</div>
-              <div className="text-sm font-bold text-[#06B6D4] mt-0.5">Primary A-4</div>
-            </div>
-            <div className="bg-[#0B0E14] p-2.5 rounded border border-[#1E2638]/70">
-              <div className="text-[10px] text-[#8C9BAE]">Operating State</div>
-              <div className="text-sm font-bold text-[#F59E0B] mt-0.5">{scrubberState}</div>
-            </div>
-          </div>
-
-          <div className="pt-1">
-            <div className="flex justify-between text-[11px] font-mono text-[#8C9BAE] mb-1">
-              <span>Safety Threshold Ceiling (950 ppm)</span>
-              <span className={`font-bold ${co2 > 950 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
-                {co2 > 950 ? 'THRESHOLD EXCEEDED' : 'WITHIN NOMINAL BAND'}
+      {/* ================================================== */}
+      {/* INDUSTRIAL PROCESS-FLOW COMPOSITION               */}
+      {/* ================================================== */}
+      <div className="space-y-4">
+        {flowLanes.map((lane, lIdx) => (
+          <div key={lIdx} className="bg-[#111820] border border-[#283443] rounded p-3 space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#283443]">
+              <span className="text-xs font-bold text-[#F1F4F6] uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: lane.color }} />
+                {lane.name}
               </span>
+              <span className="text-[10px] text-[#10B981] font-bold">LANE OPERATIONAL (98.2% EFF)</span>
             </div>
-            <div className="h-1.5 bg-[#0B0E14] rounded-full overflow-hidden border border-[#1E2638]">
-              <div
-                className={`h-full ${co2 > 950 ? 'bg-[#EF4444]' : 'bg-[#10B981]'}`}
-                style={{ width: `${Math.min(100, (co2 / 1400) * 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Scrubber State Machine Controls */}
-      <div className="bg-[#111622] border border-[#1E2638] rounded-lg p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1E2638] pb-3">
-          <div>
-            <h2 className="text-sm font-mono font-bold text-white uppercase flex items-center gap-2">
-              <Zap className="w-4 h-4 text-[#F59E0B]" />
-              <span>CO2 Scrubber Actuation & Automation Controls</span>
-            </h2>
-            <p className="text-xs text-[#8C9BAE] mt-0.5">
-              Current Mode: <strong className="text-white font-mono">{scrubberState}</strong> | Automated Override: {overrideActive ? 'ENGAGED' : 'STANDBY'}
-            </p>
-          </div>
+            {/* Step sequence */}
+            <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+              {lane.steps.map((st, sIdx) => (
+                <div key={sIdx} className="relative">
+                  <div className="p-2.5 bg-[#0C1118] border border-[#283443] rounded h-full flex flex-col justify-between space-y-1">
+                    <div>
+                      <span className="text-[9px] text-[#657184] uppercase font-bold block truncate">
+                        {st.title}
+                      </span>
+                      <h4 className="text-[11px] font-bold text-[#F1F4F6] mt-0.5 truncate">{st.value}</h4>
+                    </div>
+                    <span className="text-[9px] text-[#06B6D4] block truncate font-semibold">
+                      {st.note}
+                    </span>
+                  </div>
 
-          {/* Scrubber Mode Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-[#0B0E14] p-1.5 rounded-lg border border-[#1E2638]">
-            {(['OFF', 'STANDBY', 'ACTIVE', 'BOOST', 'MAINTENANCE'] as ScrubberState[]).map((state) => {
-              const isCurrent = scrubberState === state;
-              return (
-                <button
-                  key={state}
-                  onClick={() => handleScrubberChange(state)}
-                  className={`px-3 py-1.5 rounded text-xs font-mono font-bold transition-all ${
-                    isCurrent
-                      ? state === 'BOOST'
-                        ? 'bg-[#EF4444] text-white shadow-[0_0_10px_rgba(239,68,68,0.4)]'
-                        : state === 'ACTIVE'
-                        ? 'bg-[#10B981] text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
-                        : state === 'MAINTENANCE'
-                        ? 'bg-[#F59E0B] text-black'
-                        : 'bg-[#06B6D4] text-black'
-                      : 'text-[#8C9BAE] hover:text-white hover:bg-[#161D2B]'
-                  }`}
-                >
-                  {state}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Operating Conditions & Diagnostic Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
-          <div className="bg-[#0B0E14] p-3 rounded border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] uppercase">Barometric Pressure</span>
-            <div className="text-sm font-bold text-white mt-1">{pressure.toFixed(3)} kPa</div>
-            <span className="text-[10px] text-[#10B981]">Nominal 101.325 kPa</span>
-          </div>
-          <div className="bg-[#0B0E14] p-3 rounded border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] uppercase">CO2 Scrubbing Headroom</span>
-            <div className="text-sm font-bold text-white mt-1">{(1400 - co2).toFixed(0)} ppm Margin</div>
-            <span className="text-[10px] text-[#06B6D4]">Dual-Bed Zeolite Active</span>
-          </div>
-          <div className="bg-[#0B0E14] p-3 rounded border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] uppercase">Cartridge Wear</span>
-            <div className="text-sm font-bold text-white mt-1">14.2% Consumed</div>
-            <span className="text-[10px] text-[#10B981]">2,400h Service Remaining</span>
-          </div>
-          <div className="bg-[#0B0E14] p-3 rounded border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] uppercase">Reactor Temperature</span>
-            <div className="text-sm font-bold text-white mt-1">24.5 °C Core</div>
-            <span className="text-[10px] text-[#10B981]">Thermal Exchanger Stable</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Scrubber Automation & Threshold Event Ledger */}
-      <div className="bg-[#111622] border border-[#1E2638] rounded-lg p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#1E2638] pb-3">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#06B6D4]" />
-            <h2 className="text-sm font-mono font-bold text-white uppercase">
-              Automation Trigger & Action Audit Ledger
-            </h2>
-          </div>
-          <span className="text-[10px] font-mono text-[#8C9BAE]">AUTO-REFRESHING LIVE</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs font-mono text-left">
-            <thead className="bg-[#0B0E14] text-[#8C9BAE] border-b border-[#1E2638] uppercase text-[10px]">
-              <tr>
-                <th className="p-2.5">Timestamp</th>
-                <th className="p-2.5">Trigger Condition</th>
-                <th className="p-2.5">Habitat Sector</th>
-                <th className="p-2.5">Measured Telemetry</th>
-                <th className="p-2.5">Automated Action</th>
-                <th className="p-2.5">Outcome / Result</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#1E2638]/50">
-              {automationLogs.map((log, idx) => (
-                <tr key={idx} className="hover:bg-[#161D2B]/50 transition-colors">
-                  <td className="p-2.5 text-[#8C9BAE] whitespace-nowrap">{log.time}</td>
-                  <td className="p-2.5 text-white font-semibold">{log.trigger}</td>
-                  <td className="p-2.5 text-[#06B6D4]">{log.zone}</td>
-                  <td className="p-2.5 font-bold text-[#F59E0B]">{log.telemetry}</td>
-                  <td className="p-2.5 text-emerald-400">{log.action}</td>
-                  <td className="p-2.5 text-[#8C9BAE]">{log.result}</td>
-                </tr>
+                  {sIdx < lane.steps.length - 1 && (
+                    <div className="hidden md:flex absolute -right-2.5 top-1/2 -translate-y-1/2 z-10 text-[#657184]">
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  )}
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Scrubber Override & Automation Logs */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Scrubber Mode Control */}
+        <div className="lg:col-span-5 bg-[#111820] border border-[#283443] rounded p-3 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-[#283443]">
+            <span className="text-xs font-bold text-[#F1F4F6] uppercase tracking-wider flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-[#06B6D4]" />
+              CATALYTIC SCRUBBER OVERRIDE
+            </span>
+            <StatusBadge status={scrubberState} size="sm" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-[10px] text-[#657184] uppercase block">TARGET HABITAT ZONE</span>
+            <select
+              value={selectedZoneId}
+              onChange={e => setSelectedZoneId(Number(e.target.value))}
+              className="w-full bg-[#161F2A] border border-[#283443] rounded p-2 text-xs text-[#F1F4F6] outline-none"
+            >
+              {zones.map(z => (
+                <option key={z.id} value={z.id}>
+                  {z.name} ({z.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1.5 pt-1">
+            {(['STANDBY', 'ACTIVE', 'BOOST', 'MAINTENANCE'] as const).map(mode => (
+              <button
+                key={mode}
+                onClick={() => handleScrubberChange(mode)}
+                className={`py-1.5 rounded text-[10px] font-bold uppercase transition-colors border ${
+                  scrubberState === mode
+                    ? 'bg-[#161F2A] border-[#06B6D4] text-[#06B6D4]'
+                    : 'bg-[#0C1118] border-[#283443] text-[#98A3B3] hover:text-[#F1F4F6]'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+
+          {overrideActive && (
+            <div className="p-2 rounded bg-[#F59E0B]/10 border border-[#F59E0B]/40 text-[#F59E0B] text-[10px] flex items-center justify-between">
+              <span>MANUAL OVERRIDE DISPATCHED</span>
+              <button
+                onClick={() => {
+                  setOverrideActive(false);
+                  setScrubberState('ACTIVE');
+                }}
+                className="underline uppercase font-bold"
+              >
+                RESET AUTO
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Automation Logs */}
+        <div className="lg:col-span-7 bg-[#111820] border border-[#283443] rounded p-3 flex flex-col h-[280px]">
+          <div className="flex items-center justify-between pb-2 border-b border-[#283443]">
+            <span className="text-xs font-bold text-[#F1F4F6] uppercase tracking-wider flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#10B981]" />
+              AUTONOMOUS RECLAMATION LOGS
+            </span>
+            <span className="text-[10px] text-[#657184]">SCADA EVENT BUS</span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2 pt-2 text-[11px]">
+            {automationLogs.map((log, idx) => (
+              <div key={idx} className="p-2 bg-[#0C1118] border border-[#283443] rounded space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-[#06B6D4] font-bold">{log.trigger}</span>
+                  <span className="text-[#657184] tabular-nums">{log.time}</span>
+                </div>
+                <div className="text-[#F1F4F6] font-semibold">{log.action}</div>
+                <div className="text-[10px] text-[#98A3B3] flex justify-between">
+                  <span>ZONE: {log.zone}</span>
+                  <span className="text-[#10B981]">{log.result}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
