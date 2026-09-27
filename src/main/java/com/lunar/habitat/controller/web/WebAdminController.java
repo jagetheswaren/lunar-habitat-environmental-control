@@ -52,7 +52,7 @@ public class WebAdminController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @GetMapping("/habitat-zones")
+    @GetMapping({"/habitat-zones", "/zones", "/admin/zones", "/admin/habitat-zones"})
     public String zonesPage(Model model) {
         List<HabitatZone> zones = habitatZoneService.getAllZones();
         model.addAttribute("zones", zones);
@@ -61,7 +61,7 @@ public class WebAdminController {
         return "admin/habitat-zones";
     }
 
-    @PostMapping("/habitat-zones")
+    @PostMapping({"/habitat-zones", "/zones", "/admin/zones", "/admin/habitat-zones"})
     public String createZone(@ModelAttribute HabitatZoneRequest request, RedirectAttributes redirectAttributes) {
         try {
             habitatZoneService.createZone(request);
