@@ -6,27 +6,27 @@
 
 :root {
   --bg-void: #080B10;
-  --bg-root: #080B10;
-  --bg-panel: #10151D;
-  --bg-secondary: #151B24;
-  --bg-elevated: #19212C;
-  --border: #273142;
-  --border-active: #38465C;
-  --text: #F2F5F7;
-  --text-secondary: #98A2B3;
-  --text-muted: #667085;
-  --cyan: #06B6D4;
-  --emerald: #10B981;
-  --amber: #F59E0B;
-  --red: #EF4444;
-  --slate: #64748B;
+  --bg-workspace: #0C1118;
+  --bg-surface: #111820;
+  --bg-elevated: #161F2A;
+  --bg-secondary: #1B2531;
+  --border: #283443;
+  --border-active: #3D4F65;
+  --text-primary: #F1F4F6;
+  --text-secondary: #98A3B3;
+  --text-muted: #657184;
+  --color-live: #06B6D4;
+  --color-nominal: #10B981;
+  --color-warning: #F59E0B;
+  --color-critical: #EF4444;
+  --color-offline: #64748B;
   color-scheme: dark;
 }
 
 body {
   margin: 0;
   background-color: #080B10;
-  color: #F2F5F7;
+  color: #F1F4F6;
   font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -38,11 +38,33 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Aerospace Technical Surfaces */
+/* Lunar Operations System Surfaces */
+.ops-workspace {
+  background-color: #0C1118;
+}
+
+.ops-surface {
+  background-color: #111820;
+  border: 1px solid #283443;
+  border-radius: 4px;
+}
+
+.ops-elevated {
+  background-color: #161F2A;
+  border: 1px solid #283443;
+  border-radius: 4px;
+}
+
+.ops-secondary {
+  background-color: #1B2531;
+  border: 1px solid #283443;
+  border-radius: 4px;
+}
+
 .panel-card {
-  background-color: #10151D;
-  border: 1px solid #273142;
-  border-radius: 6px;
+  background-color: #111820;
+  border: 1px solid #283443;
+  border-radius: 4px;
 }
 
 .panel-card-hover {
@@ -50,13 +72,13 @@ body {
 }
 
 .panel-card-hover:hover {
-  border-color: #38465C;
-  background-color: #151B24;
+  border-color: #3D4F65;
+  background-color: #161F2A;
 }
 
 /* Subtle Technical Grid Lines */
 .tactical-border {
-  border: 1px solid #273142;
+  border: 1px solid #283443;
 }
 
 .tactical-border-b {

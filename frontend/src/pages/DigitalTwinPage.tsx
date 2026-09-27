@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import * as T from '../api/types';
-import { LunarDome3D } from '../components/3d/LunarDome3D';
+import { LunarDome3D, ModuleData } from '../components/3d/LunarDome3D';
+import { ModuleInspectorDrawer } from '../components/intelligence/ModuleInspectorDrawer';
 import { PageHeader } from '../components/ui/PageHeader';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import {
@@ -14,17 +15,22 @@ import {
   Sliders,
   Maximize2,
   Minimize2,
+  Camera,
+  Layers,
 } from 'lucide-react';
 
-export const DigitalTwinPage: React.FC = () => {
+interface Props {
+  onNavigate?: (path: string) => void;
+}
+
+export const DigitalTwinPage: React.FC<Props> = ({ onNavigate = () => {} }) => {
   const [zones, setZones] = useState<T.HabitatZone[]>([]);
   const [telemetry, setTelemetry] = useState<T.Telemetry[]>([]);
   const [alerts, setAlerts] = useState<T.EnvironmentalAlert[]>([]);
   const [maintenance, setMaintenance] = useState<T.MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [selectedModuleId, setSelectedModuleId] = useState<string>('dome-alpha');
-  const [fullTacticalMode, setFullTacticalMode] = useState<boolean>(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   const fetchData = async () => {
     try {
@@ -39,10 +45,9 @@ export const DigitalTwinPage: React.FC = () => {
       setAlerts(aList);
       setMaintenance(mList);
     } catch (err) {
-      console.error('Failed to load Digital Twin telemetry', err);
+      console.error('Failed to load Digital Twin data', err);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
@@ -53,277 +58,230 @@ export const DigitalTwinPage: React.FC = () => {
   }, []);
 
   const latestTelemetry = telemetry.length > 0 ? telemetry[telemetry.length - 1] : null;
+  const activeAlerts = alerts.filter(a => a.status !== 'RESOLVED');
 
-  // Active module mapping
-  const zoneMapping: Record<string, { code: string; defaultName: string; sector: string }> = {
-    'dome-alpha': { code: 'DOME-ALPHA', defaultName: 'Habitat Dome Alpha', sector: 'SECTOR-01-CREW' },
-    'dome-beta': { code: 'DOME-BETA', defaultName: 'Hydroponics Dome Beta', sector: 'SECTOR-02-AGRI' },
-    'sector-gamma': { code: 'SECTOR-GAMMA', defaultName: 'Life Support Reclamation Gamma', sector: 'SECTOR-03-ECLSS' },
-    'grid-delta': { code: 'GRID-DELTA', defaultName: 'Solar Array & Power Hub Delta', sector: 'SECTOR-04-ENERGY' },
+  const moduleDefinitions: Record<string, ModuleData> = {
+    'dome-alpha': {
+      id: 'dome-alpha',
+      name: 'Habitat Dome Alpha',
+      code: 'DOME-A01',
+      sector: 'SECTOR-01-CREW',
+      position: [-2.6, 0, -0.8],
+      pressure: Number(latestTelemetry?.atmosphericPressureKpa || 101.325),
+      oxygen: '21.0 %',
+      co2: Number(latestTelemetry?.co2LevelPpm || 742),
+      temperature: Number(latestTelemetry?.temperatureCelsius || 22.4),
+      humidity: Number(latestTelemetry?.humidityPercent || 48),
+      waterPurity: Number(latestTelemetry?.waterPurityPercent || 99.4),
+      lifeSupport: 'OPERATIONAL',
+      scrubber: latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'BOOST' : 'STANDBY',
+      power: 'STABLE',
+      status: latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'CRITICAL' : 'NOMINAL',
+      statusMessage: 'Primary residential enclosure. Atmospheric recycling active.',
+    },
+    'dome-beta': {
+      id: 'dome-beta',
+      name: 'Hydroponics Dome Beta',
+      code: 'AGRI-B02',
+      sector: 'SECTOR-02-AGRI',
+      position: [2.5, 0, -1.2],
+      pressure: 101.25,
+      oxygen: '21.4 %',
+      co2: 410,
+      temperature: 23.5,
+      humidity: 62,
+      waterPurity: 99.8,
+      lifeSupport: 'OPERATIONAL',
+      scrubber: 'STANDBY',
+      power: 'STABLE',
+      status: 'NOMINAL',
+      statusMessage: 'Closed-loop crop cultivation and biogenic oxygen generation.',
+    },
+    'life-support': {
+      id: 'life-support',
+      name: 'Life Support Reclamation',
+      code: 'ECLSS-G03',
+      sector: 'SECTOR-03-ECLSS',
+      position: [0, 0, 1.8],
+      pressure: 101.4,
+      oxygen: '20.9 %',
+      co2: 380,
+      temperature: 21.0,
+      humidity: 42,
+      waterPurity: 99.9,
+      lifeSupport: 'OPERATIONAL',
+      scrubber: 'ACTIVE',
+      power: 'STABLE',
+      status: 'NOMINAL',
+      statusMessage: 'Multi-stage catalytic scrubbers and electrochemical water purification.',
+    },
+    'power-plant': {
+      id: 'power-plant',
+      name: 'Nuclear & Solar Power Hub',
+      code: 'PWR-D04',
+      sector: 'SECTOR-04-ENERGY',
+      position: [4.8, 0, 1.5],
+      pressure: 100.0,
+      oxygen: '20.5 %',
+      co2: 350,
+      temperature: 19.5,
+      humidity: 35,
+      waterPurity: 99.0,
+      lifeSupport: 'OPERATIONAL',
+      scrubber: 'STANDBY',
+      power: 'STABLE',
+      status: 'NOMINAL',
+      statusMessage: 'Micro-fission reactor core and dual bifacial photovoltaic tracking arrays.',
+    },
+    'airlock': {
+      id: 'airlock',
+      name: 'EVA Airlock & Logistics',
+      code: 'EVA-E05',
+      sector: 'SECTOR-05-LOGISTICS',
+      position: [-4.2, 0, 1.2],
+      pressure: 101.0,
+      oxygen: '21.0 %',
+      co2: 415,
+      temperature: 20.2,
+      humidity: 40,
+      waterPurity: 99.2,
+      lifeSupport: 'OPERATIONAL',
+      scrubber: 'STANDBY',
+      power: 'STABLE',
+      status: 'NOMINAL',
+      statusMessage: 'Outer surface ingress/egress hyperbaric lock and suit re-charging.',
+    },
+    'storage': {
+      id: 'storage',
+      name: 'Resource Processing & Storage',
+      code: 'STOR-F06',
+      sector: 'SECTOR-06-RESERVES',
+      position: [0, 0, -3.2],
+      pressure: 101.1,
+      oxygen: '21.2 %',
+      co2: 420,
+      temperature: 18.8,
+      humidity: 38,
+      waterPurity: 99.5,
+      lifeSupport: 'OPERATIONAL',
+      scrubber: 'STANDBY',
+      power: 'STABLE',
+      status: 'NOMINAL',
+      statusMessage: 'Cryogenic liquid oxygen tanks and high-pressure potable water reservoirs.',
+    },
   };
 
-  const currentMeta = zoneMapping[selectedModuleId] || zoneMapping['dome-alpha'];
-  const matchedZone = zones.find(z => z.code === currentMeta.code || z.name?.toLowerCase().includes(selectedModuleId.split('-')[1]));
+  const selectedModule = moduleDefinitions[selectedModuleId] || moduleDefinitions['dome-alpha'];
 
-  // Telemetry for selected module
-  const zoneTelemetry = telemetry.filter(t => t.habitatZone?.code === currentMeta.code || t.habitatZone?.id === matchedZone?.id);
-  const currentZoneLatest = zoneTelemetry.length > 0 ? zoneTelemetry[zoneTelemetry.length - 1] : latestTelemetry;
-
-  // Alerts for selected module
-  const zoneAlerts = alerts.filter(a => a.habitatZone?.code === currentMeta.code || a.habitatZone?.id === matchedZone?.id);
-  const activeZoneAlerts = zoneAlerts.filter(a => a.status !== 'RESOLVED');
-
-  // Maintenance for selected module
-  const zoneMaintenance = maintenance.filter(m => m.equipmentName?.toLowerCase().includes(selectedModuleId.split('-')[1]) || m.equipmentName?.includes(currentMeta.code));
-
-  // Determine module status
-  const currentStatus: 'NOMINAL' | 'WARNING' | 'CRITICAL' =
-    activeZoneAlerts.some(a => a.severity === 'CRITICAL')
-      ? 'CRITICAL'
-      : activeZoneAlerts.length > 0
-      ? 'WARNING'
-      : 'NOMINAL';
-
-  const handleAcknowledgeAlert = async (id: number) => {
-    try {
-      await api.alerts.acknowledge(id, 'Acknowledged via 3D Digital Twin inspection terminal');
-      fetchData();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleResolveAlert = async (id: number) => {
-    try {
-      await api.alerts.resolve(id, 'Resolved via 3D Digital Twin inspection terminal');
-      fetchData();
-    } catch (err) {
-      console.error(err);
-    }
+  const handleModuleClick = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    setIsDrawerOpen(true);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="3D Habitat Digital Twin"
-        subtitle="WebGL Telemetry Mesh • Spatial Asset Inspection • Real-time Hardware Twin"
+        title="3D DIGITAL TWIN"
+        subtitle="INTERACTIVE SPATIAL DIGITAL TWIN // SCADA STRUCTURAL TELEMETRY"
         icon={Box}
-        badge="REALTIME SYNC"
+        badge="SCADA 3D"
         actions={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setRefreshing(true);
-                fetchData();
-              }}
-              disabled={refreshing}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono border border-[#1E2638] bg-[#111622] text-[#8C9BAE] hover:text-[#F0F4F8] hover:border-[#06B6D4]/40 transition-colors"
+              onClick={() => setIsDrawerOpen(true)}
+              className="px-2.5 py-1.5 rounded bg-[#161F2A] hover:bg-[#1B2531] border border-[#283443] text-[#06B6D4] font-bold uppercase transition-colors"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#06B6D4]' : ''}`} />
-              SYNC TWIN
+              OPEN INSPECTOR
             </button>
             <button
-              onClick={() => setFullTacticalMode(!fullTacticalMode)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono border border-[#1E2638] bg-[#111622] text-[#8C9BAE] hover:text-[#F0F4F8] hover:border-[#06B6D4]/40 transition-colors"
+              onClick={fetchData}
+              className="p-1.5 rounded bg-[#161F2A] border border-[#283443] text-[#98A3B3] hover:text-[#F1F4F6] transition-colors"
+              title="Refresh telemetry"
             >
-              {fullTacticalMode ? <Minimize2 className="w-3.5 h-3.5 text-[#06B6D4]" /> : <Maximize2 className="w-3.5 h-3.5 text-[#06B6D4]" />}
-              {fullTacticalMode ? 'RESTORE VIEW' : 'EXPAND TWIN'}
+              <RefreshCw className="w-3.5 h-3.5" />
             </button>
           </div>
         }
       />
 
-      {/* Main 3D Canvas Viewport */}
-      <div className={`transition-all duration-200 ${fullTacticalMode ? 'h-[620px]' : 'h-[460px]'}`}>
-        <LunarDome3D
-          status={currentStatus === 'CRITICAL' ? 'CRITICAL' : currentStatus === 'WARNING' ? 'WARNING' : 'NORMAL'}
-          zoneName={matchedZone?.name || currentMeta.defaultName}
-          co2Level={currentZoneLatest ? Number(currentZoneLatest.co2LevelPpm) : 428}
-          pressure={currentZoneLatest ? Number(currentZoneLatest.atmosphericPressureKpa) : 101.32}
-          waterPurity={currentZoneLatest ? Number(currentZoneLatest.waterPurityPercent) : 99.4}
-          temperature={currentZoneLatest ? Number(currentZoneLatest.temperatureCelsius) : 22.1}
-          humidity={currentZoneLatest ? Number(currentZoneLatest.humidityPercent) : 46}
-          onSelectModule={(id) => setSelectedModuleId(id)}
-        />
-      </div>
-
-      {/* Module Inspection Terminal (Phase 18 Requirements) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Module Telemetry Dossier */}
-        <div className="bg-[#111622] border border-[#1E2638] rounded p-4 font-mono text-xs text-[#F0F4F8]">
-          <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#1E2638]">
-            <div className="flex items-center gap-2">
-              <Radio className="w-3.5 h-3.5 text-[#06B6D4]" />
-              <span className="font-bold uppercase tracking-wider text-[#F0F4F8]">
-                {currentMeta.code} TELEMETRY DOSSIER
-              </span>
-            </div>
-            <StatusBadge status={currentStatus} />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Zone Name:</span>
-              <span className="font-semibold text-[#F0F4F8]">{matchedZone?.name || currentMeta.defaultName}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Zone Code:</span>
-              <span className="font-semibold text-[#06B6D4]">{currentMeta.code}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Sector Designation:</span>
-              <span className="text-[#F0F4F8]">{currentMeta.sector}</span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Atmospheric Pressure:</span>
-              <span className="tabular-nums font-semibold text-[#06B6D4]">
-                {currentZoneLatest?.atmosphericPressureKpa ? `${Number(currentZoneLatest.atmosphericPressureKpa).toFixed(1)} kPa` : '101.3 kPa'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">CO₂ Concentration:</span>
-              <span className={`tabular-nums font-semibold ${
-                (currentZoneLatest?.co2LevelPpm || 428) > 950 ? 'text-[#EF4444]' : (currentZoneLatest?.co2LevelPpm || 428) > 800 ? 'text-[#F59E0B]' : 'text-[#10B981]'
-              }`}>
-                {currentZoneLatest?.co2LevelPpm ? `${Number(currentZoneLatest.co2LevelPpm).toFixed(0)} ppm` : '428 ppm'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Thermal Equilibrium:</span>
-              <span className="tabular-nums text-[#F0F4F8]">
-                {currentZoneLatest?.temperatureCelsius ? `${Number(currentZoneLatest.temperatureCelsius).toFixed(1)} °C` : '22.1 °C'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Relative Humidity:</span>
-              <span className="tabular-nums text-[#F0F4F8]">
-                {currentZoneLatest?.humidityPercent ? `${Number(currentZoneLatest.humidityPercent).toFixed(0)} %` : '46 %'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Water Loop Purity:</span>
-              <span className="tabular-nums font-semibold text-[#10B981]">
-                {currentZoneLatest?.waterPurityPercent ? `${Number(currentZoneLatest.waterPurityPercent).toFixed(1)} %` : '99.4 %'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1 border-b border-[#1E2638]/50">
-              <span className="text-[#8C9BAE]">Scrubber Automation:</span>
-              <span className={`font-semibold ${
-                (currentZoneLatest?.co2LevelPpm || 428) > 950 ? 'text-[#F59E0B]' : 'text-[#10B981]'
-              }`}>
-                {(currentZoneLatest?.co2LevelPpm || 428) > 950 ? 'BOOST SCRUBBER ACTIVE' : 'NOMINAL RECIRCULATION'}
-              </span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-[#8C9BAE]">Latest Reading UTC:</span>
-              <span className="tabular-nums text-[#5A677B]">
-                {currentZoneLatest?.recordedAt || 'REALTIME LOOP'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Zone Open Alerts Panel */}
-        <div className="bg-[#111622] border border-[#1E2638] rounded p-4 font-mono text-xs flex flex-col">
-          <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#1E2638]">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className={`w-3.5 h-3.5 ${activeZoneAlerts.length > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`} />
-              <span className="font-bold uppercase tracking-wider text-[#F0F4F8]">
-                Zone Incident Status
-              </span>
-            </div>
-            <span className="text-[10px] text-[#8C9BAE]">{activeZoneAlerts.length} ACTIVE</span>
-          </div>
-
-          <div className="flex-1 space-y-2 overflow-y-auto max-h-64 pr-1">
-            {activeZoneAlerts.length === 0 ? (
-              <div className="h-44 flex flex-col items-center justify-center text-center">
-                <CheckCircle className="w-7 h-7 text-[#10B981] mb-1.5" />
-                <span className="font-bold text-[#F0F4F8] text-[11px] uppercase">
-                  ZERO ACTIVE INCIDENTS
-                </span>
-                <span className="text-[10px] text-[#5A677B] mt-0.5">
-                  Threshold compliance verified on {currentMeta.code}
-                </span>
-              </div>
-            ) : (
-              activeZoneAlerts.map(alert => (
-                <div
-                  key={alert.id}
-                  className={`p-2.5 rounded border ${
-                    alert.severity === 'CRITICAL'
-                      ? 'bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]'
-                      : 'bg-[#F59E0B]/10 border-[#F59E0B]/30 text-[#F59E0B]'
+      {/* Main 3D Canvas Container */}
+      <div className="bg-[#111820] border border-[#283443] rounded overflow-hidden flex flex-col h-[650px] relative">
+        {/* Top Spatial HUD Bar */}
+        <div className="p-2.5 bg-[#0C1118] border-b border-[#283443] flex flex-wrap items-center justify-between gap-2 z-10">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#657184] uppercase mr-1">SECTORS:</span>
+            {Object.keys(moduleDefinitions).map(mKey => {
+              const m = moduleDefinitions[mKey];
+              const isSelected = selectedModuleId === mKey;
+              return (
+                <button
+                  key={mKey}
+                  onClick={() => handleModuleClick(mKey)}
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-colors border ${
+                    isSelected
+                      ? 'bg-[#161F2A] border-[#06B6D4] text-[#06B6D4]'
+                      : 'bg-[#111820] border-[#283443] text-[#98A3B3] hover:text-[#F1F4F6]'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold uppercase text-[10px]">{alert.alertType}</span>
-                    <StatusBadge status={alert.status} size="sm" />
-                  </div>
-                  <p className="text-[11px] text-[#F0F4F8] mb-2">{alert.message}</p>
-                  <div className="flex items-center justify-end gap-1.5 pt-1.5 border-t border-[#1E2638]">
-                    {alert.status === 'ACTIVE' && (
-                      <button
-                        onClick={() => handleAcknowledgeAlert(alert.id)}
-                        className="px-2 py-0.5 rounded bg-[#F59E0B]/20 hover:bg-[#F59E0B]/30 text-[#F59E0B] text-[10px] border border-[#F59E0B]/40"
-                      >
-                        ACKNOWLEDGE
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleResolveAlert(alert.id)}
-                      className="px-2 py-0.5 rounded bg-[#10B981]/20 hover:bg-[#10B981]/30 text-[#10B981] text-[10px] border border-[#10B981]/40"
-                    >
-                      RESOLVE
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                  {m.code}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-3 text-[10px]">
+            <span className="text-[#657184]">
+              SELECTED: <strong className="text-[#F1F4F6]">{selectedModule.name}</strong>
+            </span>
+            <span className="text-[#283443]">•</span>
+            <StatusBadge status={selectedModule.status} size="sm" />
           </div>
         </div>
 
-        {/* Zone Maintenance & Actuators */}
-        <div className="bg-[#111622] border border-[#1E2638] rounded p-4 font-mono text-xs flex flex-col">
-          <div className="flex items-center justify-between pb-2 mb-3 border-b border-[#1E2638]">
-            <div className="flex items-center gap-2">
-              <Wrench className="w-3.5 h-3.5 text-[#06B6D4]" />
-              <span className="font-bold uppercase tracking-wider text-[#F0F4F8]">
-                Life Support Maintenance
-              </span>
+        {/* Central Three.js Scene */}
+        <div className="flex-1 relative bg-[#080B10]">
+          <LunarDome3D
+            status={selectedModule.status === 'CRITICAL' ? 'CRITICAL' : selectedModule.status === 'WARNING' ? 'WARNING' : 'NORMAL'}
+            zoneName={selectedModule.name}
+            co2Level={selectedModule.co2}
+            pressure={selectedModule.pressure}
+            waterPurity={selectedModule.waterPurity}
+            temperature={selectedModule.temperature}
+            humidity={selectedModule.humidity}
+            selectedModuleId={selectedModuleId}
+            onSelectModule={handleModuleClick}
+          />
+
+          {/* Technical HUD Corner Overlays */}
+          <div className="absolute top-3 left-3 p-2.5 rounded bg-[#0C1118]/85 border border-[#283443] pointer-events-none space-y-1 text-[10px]">
+            <span className="text-[9px] text-[#657184] uppercase block font-bold">
+              SPATIAL TELEMETRY OVERLAY
+            </span>
+            <div className="text-[#98A3B3]">
+              SURFACE ELEVATION: <span className="text-[#F1F4F6]">0.00 M (MARE TRANQUILLITATIS)</span>
             </div>
-            <span className="text-[10px] text-[#8C9BAE]">LOGS</span>
+            <div className="text-[#98A3B3]">
+              INTER-MODULE PIPELINES: <span className="text-[#10B981]">PRESSURE REGULATED</span>
+            </div>
+            <div className="text-[#98A3B3]">
+              SOLAR TRACKING: <span className="text-[#06B6D4]">AZIMUTH 142.8°</span>
+            </div>
           </div>
 
-          <div className="flex-1 space-y-2 overflow-y-auto max-h-64 pr-1">
-            {zoneMaintenance.length === 0 ? (
-              <div className="h-44 flex flex-col items-center justify-center text-center">
-                <CheckCircle className="w-7 h-7 text-[#06B6D4] mb-1.5" />
-                <span className="font-bold text-[#F0F4F8] text-[11px] uppercase">
-                  EQUIPMENT HEALTHY
-                </span>
-                <span className="text-[10px] text-[#5A677B] mt-0.5">
-                  Scheduled PM cycles current for {currentMeta.code}
-                </span>
-              </div>
-            ) : (
-              zoneMaintenance.map(rec => (
-                <div key={rec.id} className="p-2.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[11px]">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-[#F0F4F8]">{rec.equipmentName}</span>
-                    <StatusBadge status={rec.status} size="sm" />
-                  </div>
-                  <p className="text-[#8C9BAE] text-[10px] mb-1">{rec.technicianNotes || rec.taskType}</p>
-                  <div className="flex items-center justify-between text-[9px] text-[#5A677B]">
-                    <span>TASK: {rec.taskType}</span>
-                    <span>SCHEDULED: {rec.scheduledDate ? new Date(rec.scheduledDate).toLocaleDateString() : 'PENDING'}</span>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="absolute bottom-3 left-3 px-2.5 py-1.5 rounded bg-[#0C1118]/85 border border-[#283443] text-[10px] text-[#98A3B3]">
+            CLICK ANY DOME, AIRLOCK, OR STORAGE SILO TO FOCUS & INSPECT
           </div>
         </div>
       </div>
+
+      {/* Module Inspector Drawer */}
+      <ModuleInspectorDrawer
+        module={selectedModule}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onNavigate={onNavigate}
+        unresolvedAlertsCount={activeAlerts.length}
+      />
     </div>
   );
 };

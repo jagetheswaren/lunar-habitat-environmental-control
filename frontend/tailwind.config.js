@@ -35,6 +35,23 @@ export default {
           muted: '#98A2B3',
           subtext: '#667085',
           text: '#F2F5F7',
+        },
+        ops: {
+          void: '#080B10',
+          workspace: '#0C1118',
+          surface: '#111820',
+          elevated: '#161F2A',
+          secondary: '#1B2531',
+          border: '#283443',
+          'border-active': '#3D4F65',
+          'text-primary': '#F1F4F6',
+          'text-secondary': '#98A3B3',
+          'text-muted': '#657184',
+          live: '#06B6D4',
+          nominal: '#10B981',
+          warning: '#F59E0B',
+          critical: '#EF4444',
+          offline: '#64748B',
         }
       },
       fontFamily: {

@@ -4,14 +4,17 @@ import * as T from '../api/types';
 import { PageHeader } from '../components/ui/PageHeader';
 import { DataTable, Column } from '../components/ui/DataTable';
 import { StatusBadge } from '../components/ui/StatusBadge';
-import { Globe2, RefreshCw, Users, Box, Wind } from 'lucide-react';
+import { Drawer } from '../components/ui/Drawer';
+import { Globe2, RefreshCw, Users, Box, Wind, ShieldCheck } from 'lucide-react';
 
 export const HabitatZonesPage: React.FC = () => {
   const [zones, setZones] = useState<T.HabitatZone[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<T.HabitatZone | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const fetchZones = async () => {
-    setLoading(true);
     try {
       const data = await api.zones.getAll();
       setZones(data);
@@ -19,6 +22,7 @@ export const HabitatZonesPage: React.FC = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -28,92 +32,169 @@ export const HabitatZonesPage: React.FC = () => {
 
   const columns: Column<T.HabitatZone>[] = [
     {
-      header: 'Code',
-      accessorKey: 'code',
-      className: 'w-24 text-cyan-400 font-bold',
-    },
-    {
-      header: 'Biosphere Zone Name',
-      accessorKey: 'name',
-      className: 'font-semibold text-white',
-    },
-    {
-      header: 'Description',
-      accessorKey: 'description',
-      className: 'text-slate-400 text-xs max-w-sm',
-    },
-    {
-      header: 'Target Pressure',
-      render: (r) => `${r.targetPressureKpa ?? 101.3} kPa`,
-    },
-    {
-      header: 'Max CO₂ Limit',
-      render: (r) => `${r.maxCo2Ppm ?? 950} PPM`,
-    },
-    {
-      header: 'Min Water Purity',
-      render: (r) => `${r.minWaterPurityPercent ?? 98}%`,
-    },
-    {
-      header: 'Operational Status',
-      render: (r) => <StatusBadge status={r.operationalStatus || 'OPERATIONAL'} />,
-    },
-    {
-      header: 'Occupancy',
-      render: (r) => (
-        <span className="flex items-center gap-1 text-slate-300">
-          <Users className="w-3.5 h-3.5 text-cyan-400" />
-          {r.occupancyCount ?? 6} CREW
+      header: 'CODE',
+      render: r => (
+        <span className="font-bold text-[#06B6D4]">
+          {r.code}
         </span>
       ),
+      accessorKey: 'code',
+    },
+    {
+      header: 'HABITAT MODULE',
+      render: r => (
+        <div>
+          <span className="font-bold text-[#F1F4F6] block">{r.name}</span>
+          <span className="text-[10px] text-[#657184] truncate block max-w-sm">{r.description || 'Closed-loop sector'}</span>
+        </div>
+      ),
+      accessorKey: 'name',
+    },
+    {
+      header: 'TARGET PRESSURE',
+      render: r => (
+        <span className="tabular-nums text-[#F1F4F6]">
+          {r.targetPressureKpa ?? 101.3} kPa
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'MAX CO2 LIMIT',
+      render: r => (
+        <span className="tabular-nums font-bold text-[#F59E0B]">
+          {r.maxCo2Ppm ?? 800} ppm
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'MIN WATER PURITY',
+      render: r => (
+        <span className="tabular-nums text-[#06B6D4]">
+          {r.minWaterPurityPercent ?? 98.0}%
+        </span>
+      ),
+      align: 'right',
+    },
+    {
+      header: 'OCCUPANCY',
+      render: r => (
+        <span className="flex items-center gap-1.5 text-[#98A3B3]">
+          <Users className="w-3.5 h-3.5 text-[#06B6D4]" />
+          <strong className="text-[#F1F4F6] tabular-nums">{r.occupancyCount ?? 6}</strong> CREW
+        </span>
+      ),
+    },
+    {
+      header: 'STATUS',
+      render: r => <StatusBadge status={r.operationalStatus || 'OPERATIONAL'} size="sm" />,
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 font-mono text-xs select-none">
       <PageHeader
-        title="Habitat Biosphere Sectors"
-        subtitle="Physical pressurized zones, life-support modular biomes, and crew sectors"
+        title="HABITAT MODULES & PRESSURIZED SECTORS"
+        subtitle="PHYSICAL ENCLOSURES // ENVIRONMENTAL ENVELOPES & OCCUPANCY CAPACITY"
         icon={Globe2}
-        badge="PRESSURIZED SECTORS"
+        badge="PRESSURIZED BIOMES"
         actions={
           <button
-            onClick={fetchZones}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-mono border border-slate-700 bg-space-850 text-slate-300 hover:text-white"
+            onClick={() => {
+              setRefreshing(true);
+              fetchZones();
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-[#283443] bg-[#161F2A] hover:bg-[#1B2531] text-[#98A3B3] hover:text-[#F1F4F6] uppercase font-bold"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             REFRESH
           </button>
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {zones.map((z) => (
-          <div key={z.id} className="bg-[#111622] rounded p-4 border border-[#1E2638] font-mono">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#06B6D4] font-bold">{z.code}</span>
-              <StatusBadge status={z.operationalStatus || 'OPERATIONAL'} size="sm" />
-            </div>
-            <h4 className="text-sm font-bold text-[#F0F4F8] mb-1">{z.name}</h4>
-            <p className="text-[11px] text-[#8C9BAE] mb-3 leading-relaxed">
-              {z.description || 'Pressurized lunar biome sector.'}
-            </p>
-            <div className="grid grid-cols-2 gap-1.5 text-[10px] border-t border-[#1E2638] pt-2.5 text-[#8C9BAE]">
-              <div>PRESSURE: <span className="text-[#F0F4F8] font-semibold">{z.targetPressureKpa || 101.3} kPa</span></div>
-              <div>MAX CO₂: <span className="text-[#F0F4F8] font-semibold">{z.maxCo2Ppm || 950} ppm</span></div>
-              <div>VOLUME: <span className="text-[#F0F4F8] font-semibold">{z.totalVolumeM3 || 4500} m³</span></div>
-              <div>OCCUPANCY: <span className="text-[#06B6D4] font-semibold">{z.occupancyCount || 4} CREW</span></div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       <DataTable
         columns={columns}
         data={zones}
         loading={loading}
-        emptyMessage="No habitat sectors registered."
+        emptyMessage="NO HABITAT MODULES DEFINED"
+        searchable
+        searchPlaceholder="SEARCH HABITAT MODULES (CODE, NAME)..."
+        onRowClick={row => {
+          setSelectedZone(row);
+          setIsDrawerOpen(true);
+        }}
+        selectedRowId={selectedZone?.id}
+        pageSize={20}
       />
+
+      {/* Module Drawer */}
+      <Drawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        title={selectedZone?.name || 'HABITAT MODULE'}
+        subtitle={`MODULE ID: ${selectedZone?.code || 'DOME-A01'} // OCCUPANCY: ${selectedZone?.occupancyCount ?? 6} CREW`}
+        badge={selectedZone?.operationalStatus || 'OPERATIONAL'}
+        badgeType="nominal"
+        footer={
+          <div className="flex items-center justify-between w-full text-[11px]">
+            <span className="text-[#657184]">ZONE ID: #{selectedZone?.id}</span>
+            <button
+              onClick={() => setIsDrawerOpen(false)}
+              className="px-3 py-1.5 rounded bg-[#161F2A] hover:bg-[#1B2531] border border-[#283443] text-[#F1F4F6] font-bold uppercase"
+            >
+              CLOSE
+            </button>
+          </div>
+        }
+      >
+        {selectedZone && (
+          <div className="space-y-4 font-mono text-xs">
+            <div className="p-3 bg-[#0C1118] border border-[#283443] rounded space-y-2">
+              <span className="text-[10px] text-[#657184] uppercase font-bold block">
+                ENVIRONMENTAL ENVELOPE BASELINES
+              </span>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-[9px] text-[#657184] block">TARGET BAROMETRIC PRESSURE</span>
+                  <span className="font-bold text-[#F1F4F6] tabular-nums">
+                    {selectedZone.targetPressureKpa ?? 101.325} kPa
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-[#657184] block">MAXIMUM CO2 CEILING</span>
+                  <span className="font-bold text-[#F59E0B] tabular-nums">
+                    {selectedZone.maxCo2Ppm ?? 800} ppm
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-[#657184] block">MINIMUM POTABLE PURITY</span>
+                  <span className="font-bold text-[#06B6D4] tabular-nums">
+                    {selectedZone.minWaterPurityPercent ?? 98.0}%
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] text-[#657184] block">ACTIVE OCCUPANCY</span>
+                  <span className="font-bold text-[#F1F4F6] tabular-nums">
+                    {selectedZone.occupancyCount ?? 6} Astronauts
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 bg-[#0C1118] border border-[#283443] rounded space-y-1.5">
+              <span className="text-[10px] text-[#657184] uppercase font-bold block">
+                SECTOR ARCHITECTURE & PURPOSE
+              </span>
+              <p className="text-[11px] text-[#98A3B3]">
+                {selectedZone.description ||
+                  'Pressurized titanium-composite dome structural shell providing closed-loop environmental life support.'}
+              </p>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };
