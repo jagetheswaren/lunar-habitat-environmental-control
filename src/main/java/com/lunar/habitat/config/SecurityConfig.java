@@ -33,11 +33,14 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final com.lunar.habitat.security.BearerTokenAuthFilter bearerTokenAuthFilter;
+    private final org.springframework.core.env.Environment environment;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService,
-                          com.lunar.habitat.security.BearerTokenAuthFilter bearerTokenAuthFilter) {
+                          com.lunar.habitat.security.BearerTokenAuthFilter bearerTokenAuthFilter,
+                          org.springframework.core.env.Environment environment) {
         this.userDetailsService = userDetailsService;
         this.bearerTokenAuthFilter = bearerTokenAuthFilter;
+        this.environment = environment;
     }
 
     @Bean
@@ -149,30 +152,49 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        List<String> origins = new ArrayList<>(List.of(
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-            "http://localhost:8081",
-            "http://127.0.0.1:8081",
-            "https://jagetheswaren.github.io"
-        ));
-        if (frontendUrl != null && !frontendUrl.isBlank()) {
-            for (String origin : frontendUrl.split(",")) {
-                String trimmed = origin.trim();
-                if (!trimmed.isEmpty() && !origins.contains(trimmed)) {
-                    origins.add(trimmed);
+        boolean isProd = Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(p -> "prod".equalsIgnoreCase(p) || "production".equalsIgnoreCase(p));
+
+        List<String> origins = new ArrayList<>();
+        if (isProd) {
+            // Strict exact production origin enforcement
+            origins.add("https://jagetheswaren.github.io");
+            if (frontendUrl != null && !frontendUrl.isBlank()) {
+                for (String origin : frontendUrl.split(",")) {
+                    String trimmed = origin.trim();
+                    if (!trimmed.isEmpty() && !origins.contains(trimmed)) {
+                        origins.add(trimmed);
+                    }
                 }
             }
+            configuration.setAllowedOrigins(origins);
+            // No wildcard allowedOriginPatterns in production environment
+        } else {
+            // Development origins
+            origins.addAll(List.of(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:8081",
+                "http://127.0.0.1:8081",
+                "https://jagetheswaren.github.io"
+            ));
+            if (frontendUrl != null && !frontendUrl.isBlank()) {
+                for (String origin : frontendUrl.split(",")) {
+                    String trimmed = origin.trim();
+                    if (!trimmed.isEmpty() && !origins.contains(trimmed)) {
+                        origins.add(trimmed);
+                    }
+                }
+            }
+            configuration.setAllowedOrigins(origins);
+            configuration.setAllowedOriginPatterns(List.of(
+                "https://*.trycloudflare.com",
+                "https://*.loca.lt",
+                "https://*.onrender.com",
+                "https://*.railway.app"
+            ));
         }
-        configuration.setAllowedOrigins(origins);
-        configuration.setAllowedOriginPatterns(List.of(
-            "https://*.trycloudflare.com",
-            "https://*.loca.lt",
-            "https://*.github.io",
-            "https://*.vercel.app",
-            "https://*.onrender.com",
-            "https://*.railway.app"
-        ));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setExposedHeaders(List.of("Authorization"));
