@@ -139,7 +139,7 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
         {/* External Swagger Link */}
         <div className="pt-2 border-t border-[#1E2638] px-1">
           <a
-            href="http://localhost:8081/swagger-ui/index.html"
+            href={(import.meta.env.VITE_API_URL || '') + '/swagger-ui/index.html'}
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono text-[#8C9BAE] hover:text-[#06B6D4] hover:bg-[#111622] transition-colors border border-[#1E2638]"
@@ -155,7 +155,7 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
 
       {/* Footer System Telemetry Status */}
       <div className="p-2.5 border-t border-[#1E2638] bg-[#070A0F] text-[10px] font-mono text-[#8C9BAE] flex items-center justify-between">
-        <span className="text-[#5A677B]">PORT 8081</span>
+        <span className="text-[#5A677B]">{import.meta.env.PROD ? 'PROD CLUSTER' : 'DEV CLUSTER'}</span>
         <span className="flex items-center gap-1.5 text-[#10B981]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
           SYS SYNCED

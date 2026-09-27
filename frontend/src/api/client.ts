@@ -1,7 +1,9 @@
 import axios from 'axios';
 import * as T from './types';
 
-const API_BASE = 'http://localhost:8081/api/v1/lunar';
+const BACKEND_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = BACKEND_BASE ? `${BACKEND_BASE}/api/v1/lunar` : '/api/v1/lunar';
+const API_V2_BASE = BACKEND_BASE ? `${BACKEND_BASE}/api/v2` : '/api/v2';
 
 export const apiClient = axios.create({
   baseURL: API_BASE,
@@ -9,6 +11,22 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
+});
+
+export const apiV2Client = axios.create({
+  baseURL: API_V2_BASE,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+});
+
+apiV2Client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('lunar_token');
+  if (token) {
+    config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
+  return config;
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -202,23 +220,23 @@ export const api = {
   },
   v2: {
     getHealth: async (): Promise<T.LunarCoreHealth> => {
-      const res = await axios.get<T.LunarCoreHealth>('http://localhost:8081/api/v2/lunar-core/health');
+      const res = await apiV2Client.get<T.LunarCoreHealth>('/lunar-core/health');
       return res.data;
     },
     diagnose: async (query: string): Promise<T.DiagnosticQueryResult> => {
-      const res = await axios.get<T.DiagnosticQueryResult>('http://localhost:8081/api/v2/lunar-core/diagnose', {
+      const res = await apiV2Client.get<T.DiagnosticQueryResult>('/lunar-core/diagnose', {
         params: { q: query },
       });
       return res.data;
     },
     getZones: async (): Promise<T.HabitatZoneV2[]> => {
-      const res = await axios.get<T.HabitatZoneV2[]>('http://localhost:8081/api/v2/zones');
+      const res = await apiV2Client.get<T.HabitatZoneV2[]>('/zones');
       return res.data || [];
     },
     getLatestTelemetry: async () => {
-      const res = await axios.get('http://localhost:8081/api/v2/telemetry/latest');
+      const res = await apiV2Client.get('/telemetry/latest');
       return res.data;
     },
-    getStreamUrl: () => 'http://localhost:8081/api/v2/telemetry/stream',
+    getStreamUrl: () => `${API_V2_BASE}/telemetry/stream`,
   },
 };

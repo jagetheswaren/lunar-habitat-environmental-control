@@ -37,6 +37,8 @@ export const Login: React.FC<Props> = ({ onLoginSuccess }) => {
     setPassword(p);
   };
 
+  const showDevCredentials = !import.meta.env.PROD && import.meta.env.VITE_ENABLE_DEMO_CREDENTIALS !== 'false';
+
   return (
     <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4 relative overflow-hidden select-none">
       <StarfieldCanvas />
@@ -119,36 +121,38 @@ export const Login: React.FC<Props> = ({ onLoginSuccess }) => {
             </button>
           </form>
 
-          {/* Quick Demo Credentials */}
-          <div className="mt-5 pt-3.5 border-t border-[#1E2638]">
-            <div className="text-[10px] text-[#8C9BAE] mb-2 flex items-center gap-1.5 uppercase font-semibold">
-              <ShieldCheck className="w-3 h-3 text-[#06B6D4]" />
-              <span>TEST CREDENTIALS (CLICK TO AUTOFILL):</span>
+          {/* Quick Demo Credentials - Development Profile Only */}
+          {showDevCredentials && (
+            <div className="mt-5 pt-3.5 border-t border-[#1E2638]">
+              <div className="text-[10px] text-[#8C9BAE] mb-2 flex items-center gap-1.5 uppercase font-semibold">
+                <ShieldCheck className="w-3 h-3 text-[#06B6D4]" />
+                <span>DEV TEST CREDENTIALS:</span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setDemoCredentials('admin', 'admin123')}
+                  className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
+                >
+                  ADMIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDemoCredentials('operator', 'admin123')}
+                  className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
+                >
+                  OPERATOR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDemoCredentials('accountant', 'admin123')}
+                  className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
+                >
+                  FINANCE
+                </button>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-              <button
-                type="button"
-                onClick={() => setDemoCredentials('admin', 'admin123')}
-                className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
-              >
-                ADMIN
-              </button>
-              <button
-                type="button"
-                onClick={() => setDemoCredentials('operator', 'admin123')}
-                className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
-              >
-                OPERATOR
-              </button>
-              <button
-                type="button"
-                onClick={() => setDemoCredentials('accountant', 'admin123')}
-                className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
-              >
-                FINANCE
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

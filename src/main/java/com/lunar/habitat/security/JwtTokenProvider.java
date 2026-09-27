@@ -20,7 +20,17 @@ public class JwtTokenProvider {
     private final long refreshTokenValiditySeconds = 86400 * 7; // 7 days
     private final Set<String> revokedTokens = ConcurrentHashMap.newKeySet();
 
-    public JwtTokenProvider(@Value("${JWT_SECRET:${jwt.secret:LunarHabitatMissionOperationsSecretKey2026SecureHmacSha256Signature}}") String secret) {
+    public JwtTokenProvider(
+            @Value("${JWT_SECRET:${jwt.secret:}}") String secret,
+            @Value("${spring.profiles.active:local}") String activeProfile) {
+        if ("prod".equalsIgnoreCase(activeProfile) || "production".equalsIgnoreCase(activeProfile)) {
+            if (secret == null || secret.isBlank() || secret.equals("LunarHabitatMissionOperationsSecretKey2026SecureHmacSha256Signature")) {
+                throw new IllegalStateException("CRITICAL SECURITY ERROR: Production deployment requires a cryptographically strong JWT_SECRET environment variable. Fallback keys are prohibited in production profile.");
+            }
+        }
+        if (secret == null || secret.isBlank()) {
+            secret = "LunarHabitatMissionOperationsSecretKey2026SecureHmacSha256Signature";
+        }
         byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         if (secretBytes.length < 32) {
             byte[] padded = new byte[32];

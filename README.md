@@ -437,6 +437,8 @@ lunar-habitat-leap/
 
 ---
 
+---
+
 ## 🌐 17. GitHub Repository Information
 
 - **Repository:** [https://github.com/jagetheswaren/lunar-habitat-environmental-control](https://github.com/jagetheswaren/lunar-habitat-environmental-control)
@@ -445,9 +447,24 @@ lunar-habitat-leap/
 
 ---
 
+## 🚀 18. Public Cloud Deployment & Live Endpoints
+
+The Lunar Habitat platform is equipped for production deployment with decoupled frontend/backend services:
+
+- **Public Frontend (Cloudflare HTTPS):** [https://slowly-compliance-spend-awards.trycloudflare.com](https://slowly-compliance-spend-awards.trycloudflare.com)
+- **Public Frontend (GitHub Pages):** [https://jagetheswaren.github.io/lunar-habitat-environmental-control/](https://jagetheswaren.github.io/lunar-habitat-environmental-control/)
+- **Public Backend API Gateway:** [https://flame-respective-thunder-netscape.trycloudflare.com](https://flame-respective-thunder-netscape.trycloudflare.com)
+- **Public Health Probe:** `https://flame-respective-thunder-netscape.trycloudflare.com/actuator/health`
+- **Realtime Telemetry Stream:** `https://flame-respective-thunder-netscape.trycloudflare.com/api/v2/telemetry/stream`
+
+For complete containerization, environment variable specifications, and multi-cloud recipes, refer to [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+---
+
 ## 🏆 Full Working Project Status
 
 ```
-FULL WORKING PROJECT STATUS: READY
+FULL WORKING PROJECT STATUS: READY (DEPLOYMENT VERIFIED)
 ```
+
 

@@ -30,8 +30,8 @@ export const SettingsPage: React.FC = () => {
               <span className="text-white font-semibold">Java 17 / 21 LTS</span>
             </div>
             <div className="flex justify-between py-1 border-b border-lunar-border/60">
-              <span className="text-slate-400">Backend Port</span>
-              <span className="text-cyan-400 font-bold">http://localhost:8081</span>
+              <span className="text-slate-400">Backend API URL</span>
+              <span className="text-cyan-400 font-bold">{import.meta.env.VITE_API_URL || 'http://localhost:8081'}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-lunar-border/60">
               <span className="text-slate-400">REST API Prefix</span>
@@ -96,8 +96,8 @@ export const SettingsPage: React.FC = () => {
               <span className="text-emerald-400 font-semibold">Three.js WebGL Geodesic Biosphere</span>
             </div>
             <div className="flex justify-between py-1">
-              <span className="text-slate-400">Frontend Port</span>
-              <span className="text-cyan-400 font-bold">http://localhost:5173</span>
+              <span className="text-slate-400">Frontend Client URL</span>
+              <span className="text-cyan-400 font-bold">{typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'}</span>
             </div>
           </div>
         </div>
