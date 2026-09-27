@@ -27,13 +27,16 @@ public class TelemetryV2ApiController {
     private final TelemetryRepository telemetryRepository;
     private final TelemetryService telemetryService;
     private final TelemetryStreamService telemetryStreamService;
+    private final com.lunar.habitat.security.JwtTokenProvider jwtTokenProvider;
 
     public TelemetryV2ApiController(TelemetryRepository telemetryRepository,
                                   TelemetryService telemetryService,
-                                  TelemetryStreamService telemetryStreamService) {
+                                  TelemetryStreamService telemetryStreamService,
+                                  com.lunar.habitat.security.JwtTokenProvider jwtTokenProvider) {
         this.telemetryRepository = telemetryRepository;
         this.telemetryService = telemetryService;
         this.telemetryStreamService = telemetryStreamService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @PostMapping
@@ -66,6 +69,18 @@ public class TelemetryV2ApiController {
         Optional<Telemetry> latest = telemetryRepository.findTopByOrderByRecordedAtDesc();
         return latest.map(t -> ResponseEntity.ok(telemetryStreamService.toV2(t)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/stream-token")
+    @Operation(summary = "Generate Scoped SSE Stream Ticket", description = "Generates a 60-second single-use ticket for secure SSE stream establishment without exposing normal access tokens in URLs")
+    public ResponseEntity<java.util.Map<String, Object>> generateStreamTicket(java.security.Principal principal) {
+        String username = (principal != null && principal.getName() != null) ? principal.getName() : "operator";
+        String ticket = jwtTokenProvider.generateStreamToken(username);
+        return ResponseEntity.ok(java.util.Map.of(
+            "streamToken", ticket,
+            "expiresInSeconds", 60,
+            "purpose", "SSE_STREAM_TICKET"
+        ));
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

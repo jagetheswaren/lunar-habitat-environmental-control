@@ -5,14 +5,16 @@
 @tailwind utilities;
 
 :root {
-  --bg-void: #070A0F;
-  --bg-root: #0B0E14;
-  --bg-panel: #111622;
-  --bg-card: #161D2B;
-  --border: #1E2638;
-  --border-active: #2B374E;
-  --text: #F0F4F8;
-  --text-muted: #8C9BAE;
+  --bg-void: #080B10;
+  --bg-root: #080B10;
+  --bg-panel: #10151D;
+  --bg-secondary: #151B24;
+  --bg-elevated: #19212C;
+  --border: #273142;
+  --border-active: #38465C;
+  --text: #F2F5F7;
+  --text-secondary: #98A2B3;
+  --text-muted: #667085;
   --cyan: #06B6D4;
   --emerald: #10B981;
   --amber: #F59E0B;
@@ -23,8 +25,8 @@
 
 body {
   margin: 0;
-  background-color: #0B0E14;
-  color: #F0F4F8;
+  background-color: #080B10;
+  color: #F2F5F7;
   font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -38,9 +40,9 @@ body {
 
 /* Aerospace Technical Surfaces */
 .panel-card {
-  background-color: #111622;
-  border: 1px solid #1E2638;
-  border-radius: 4px;
+  background-color: #10151D;
+  border: 1px solid #273142;
+  border-radius: 6px;
 }
 
 .panel-card-hover {
@@ -48,21 +50,21 @@ body {
 }
 
 .panel-card-hover:hover {
-  border-color: #2B374E;
-  background-color: #161D2B;
+  border-color: #38465C;
+  background-color: #151B24;
 }
 
 /* Subtle Technical Grid Lines */
 .tactical-border {
-  border: 1px solid #1E2638;
+  border: 1px solid #273142;
 }
 
 .tactical-border-b {
-  border-bottom: 1px solid #1E2638;
+  border-bottom: 1px solid #273142;
 }
 
 .tactical-border-r {
-  border-right: 1px solid #1E2638;
+  border-right: 1px solid #273142;
 }
 
 /* Custom Tactical Scrollbars */
@@ -72,30 +74,30 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0E14;
+  background: #080B10;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E2638;
-  border-radius: 2px;
+  background: #273142;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #2B374E;
+  background: #38465C;
 }
 
 /* Controlled Surface Styling */
 .lunar-glass {
-  background: rgba(17, 22, 34, 0.92);
+  background: rgba(16, 21, 29, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid #1E2638;
+  border: 1px solid #273142;
 }
 
 .lunar-glass-card {
-  background: #111622;
-  border: 1px solid #1E2638;
-  border-radius: 4px;
+  background: #10151D;
+  border: 1px solid #273142;
+  border-radius: 6px;
 }
 
 /* Precise Status Pulse (used strictly on critical alert indicators) */

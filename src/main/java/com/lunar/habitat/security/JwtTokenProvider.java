@@ -83,6 +83,62 @@ public class JwtTokenProvider {
         }
     }
 
+    public String generateStreamToken(String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 60 * 1000); // 60-second single-purpose stream ticket
+
+        return Jwts.builder()
+                .subject(username)
+                .claim("purpose", "SSE_STREAM_TICKET")
+                .claim("roles", Collections.singletonList("STREAM_CLIENT"))
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+
+    public boolean validateStreamToken(String token) {
+        if (token == null || token.isBlank()) {
+            return false;
+        }
+        String cleanToken = token.trim();
+        if (revokedTokens.contains(cleanToken)) {
+            return false;
+        }
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(cleanToken)
+                    .getPayload();
+
+            String purpose = claims.get("purpose", String.class);
+            if (!"SSE_STREAM_TICKET".equals(purpose)) {
+                return false;
+            }
+            Date expiration = claims.getExpiration();
+            return expiration != null && expiration.after(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public String getUsernameFromStreamToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token.trim())
+                    .getPayload();
+            if (!"SSE_STREAM_TICKET".equals(claims.get("purpose", String.class))) {
+                return null;
+            }
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public void revokeToken(String token) {
         if (token != null && !token.isBlank()) {
             revokedTokens.add(token.trim());

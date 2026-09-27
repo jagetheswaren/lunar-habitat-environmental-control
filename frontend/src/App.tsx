@@ -68,7 +68,7 @@ export const App: React.FC = () => {
       case '/telemetry':
         return <TelemetryPage />;
       case '/alerts':
-        return <AlertsPage />;
+        return <AlertsPage onNavigate={handleNavigate} />;
       case '/thresholds':
         return <ThresholdsPage />;
       case '/zones':

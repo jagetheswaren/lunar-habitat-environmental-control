@@ -28,16 +28,11 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String token = null;
+        String uri = request.getRequestURI();
 
+        // 1. Standard Authorization: Bearer header (Primary mechanism for REST and Authenticated Fetch Streaming)
         if (authHeader != null && (authHeader.startsWith("Bearer ") || authHeader.startsWith("bearer "))) {
-            token = authHeader.substring(7).trim();
-        } else if (request.getParameter("token") != null && !request.getParameter("token").isBlank()) {
-            token = request.getParameter("token").trim();
-        }
-
-        if (token != null) {
-            // Strict cryptographic signature and expiry validation
+            String token = authHeader.substring(7).trim();
             if (jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -50,8 +45,28 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
                     }
                 }
             }
-            // No fallback, no plain Base64 decoding, no unauthenticated username loading.
-            // Forged, expired, or invalid tokens fail validation and authentication remains null.
+        } else if (uri != null && uri.contains("/api/v2/telemetry/stream")) {
+            // 2. Dedicated Single-Purpose 60-second Stream Ticket (URL Query parameter for EventSource)
+            // Access tokens are strictly prohibited in URLs to prevent credential leakage in logs or referrers.
+            String streamTicket = request.getParameter("ticket");
+            if (streamTicket == null || streamTicket.isBlank()) {
+                streamTicket = request.getParameter("stream_token");
+            }
+            if (streamTicket != null && !streamTicket.isBlank()) {
+                String cleanTicket = streamTicket.trim();
+                if (jwtTokenProvider.validateStreamToken(cleanTicket)) {
+                    String username = jwtTokenProvider.getUsernameFromStreamToken(cleanTicket);
+                    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                        if (userDetails != null && userDetails.isEnabled()) {
+                            UsernamePasswordAuthenticationToken authentication =
+                                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            SecurityContextHolder.getContext().setAuthentication(authentication);
+                        }
+                    }
+                }
+            }
         }
 
         filterChain.doFilter(request, response);

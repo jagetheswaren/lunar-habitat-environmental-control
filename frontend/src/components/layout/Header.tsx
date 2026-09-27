@@ -68,71 +68,72 @@ export const Header: React.FC<Props> = ({ currentPath, onLogout }) => {
   const currentRoute = routeTitles[currentPath] || { title: 'Lunar Mission Operations', section: 'MISSION' };
 
   return (
-    <header className="h-14 border-b border-[#1E2638] bg-[#0B0E14]/95 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-20 select-none">
-      {/* Route & Mission Breadcrumb */}
+    <header className="h-[54px] border-b border-[#273142] bg-[#10151D]/95 backdrop-blur-md px-4 flex items-center justify-between sticky top-0 z-20 select-none font-mono text-xs">
+      {/* Brand & Mission Status */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="text-[#5A677B] tracking-wider uppercase font-semibold">
-            {currentRoute.section}
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-[#F2F5F7] tracking-wider uppercase text-xs">
+            LUNAR HABITAT CONTROL
           </span>
-          <span className="text-[#1E2638]">/</span>
-          <h2 className="font-bold text-[#F0F4F8] tracking-wide uppercase">
-            {currentRoute.title}
-          </h2>
+          <span className="text-[#273142]">•</span>
+          <span
+            className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase border ${
+              unresolvedAlertsCount > 0
+                ? 'bg-[#EF4444]/15 border-[#EF4444]/40 text-[#EF4444]'
+                : 'bg-[#10B981]/15 border-[#10B981]/40 text-[#10B981]'
+            }`}
+          >
+            {unresolvedAlertsCount > 0 ? 'WARNING' : 'NOMINAL'}
+          </span>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-1.5 text-[#667085] text-[11px]">
+          <span>/</span>
+          <span className="text-[#98A2B3] tracking-wide uppercase">{currentRoute.title}</span>
         </div>
       </div>
 
-      {/* Operational Telemetry Status Bar */}
-      <div className="hidden lg:flex items-center gap-4 text-[11px] font-mono">
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#111622] border border-[#1E2638] text-[#8C9BAE]">
-          <Wifi className="w-3 h-3 text-[#10B981]" />
-          <span>NET: <span className="text-[#10B981] font-semibold">ONLINE</span></span>
+      {/* Center Operational Console Strip */}
+      <div className="hidden lg:flex items-center gap-4 text-[11px]">
+        {/* Realtime Link */}
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#151B24] border border-[#273142] text-[#98A2B3]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+          <span>LINK: <span className="text-[#06B6D4] font-semibold">LIVE</span></span>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#111622] border border-[#1E2638] text-[#8C9BAE]">
-          <Radio className="w-3 h-3 text-[#06B6D4]" />
-          <span>SSE: <span className="text-[#06B6D4] font-semibold">STREAMING</span></span>
+        {/* Mission Time */}
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#151B24] border border-[#273142] text-[#98A2B3]">
+          <span className="text-[#F59E0B] font-semibold">SOL 0187</span>
+          <span className="text-[#667085]">•</span>
+          <span className="tabular-nums text-[#F2F5F7]">{time || '14:32:00 UTC'}</span>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-[#111622] border border-[#1E2638] text-[#8C9BAE]">
-          <span className="text-[#F59E0B] font-semibold">SOL 412</span>
-          <span className="text-[#5A677B]">•</span>
-          <span>LUNAR BASE ALPHA</span>
-        </div>
-
-        <div className="flex items-center gap-1.5 text-[#8C9BAE]">
-          <Clock className="w-3 h-3 text-[#06B6D4]" />
-          <span className="tabular-nums">{time || 'UTC SYNCHRONIZING'}</span>
-        </div>
-      </div>
-
-      {/* User profile, Alert counter & Sign-out */}
-      <div className="flex items-center gap-2.5">
-        {/* Alert quick status indicator */}
+        {/* Open Alerts Indicator */}
         <div
-          title={unresolvedAlertsCount > 0 ? `${unresolvedAlertsCount} active alert(s)` : 'No active alerts'}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-mono ${
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${
             unresolvedAlertsCount > 0
-              ? 'bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]'
-              : 'bg-[#111622] border-[#1E2638] text-[#8C9BAE]'
+              ? 'bg-[#EF4444]/15 border-[#EF4444]/40 text-[#EF4444]'
+              : 'bg-[#151B24] border-[#273142] text-[#98A2B3]'
           }`}
         >
-          <Bell className={`w-3.5 h-3.5 ${unresolvedAlertsCount > 0 ? 'pulse-critical' : ''}`} />
-          <span className="tabular-nums font-semibold">{unresolvedAlertsCount}</span>
+          <Bell className={`w-3 h-3 ${unresolvedAlertsCount > 0 ? 'pulse-critical' : 'text-[#667085]'}`} />
+          <span className="font-semibold tabular-nums">
+            {String(unresolvedAlertsCount).padStart(2, '0')} ALERTS
+          </span>
         </div>
+      </div>
 
+      {/* Current Operator & Logout */}
+      <div className="flex items-center gap-2.5">
         {/* Operator Badge */}
-        <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-[#1E2638] bg-[#111622]">
-          <div className="w-5 h-5 rounded bg-[#161D2B] border border-[#06B6D4]/30 flex items-center justify-center text-[#06B6D4]">
-            <Shield className="w-3 h-3" />
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded border border-[#273142] bg-[#151B24]">
+          <div className="w-4 h-4 rounded bg-[#19212C] border border-[#06B6D4]/30 flex items-center justify-center text-[#06B6D4]">
+            <Shield className="w-2.5 h-2.5" />
           </div>
           <div className="text-left font-mono">
-            <div className="text-xs font-semibold text-[#F0F4F8] leading-tight truncate max-w-[120px]">
-              {user.fullName || user.username}
-            </div>
-            <div className="text-[9px] text-[#06B6D4] uppercase tracking-wider leading-none">
-              {user.roles?.[0]?.replace('ROLE_', '') || 'OPERATOR'}
-            </div>
+            <span className="text-xs font-semibold text-[#F2F5F7]">
+              {user.username?.toUpperCase() || 'ADMIN'}
+            </span>
           </div>
         </div>
 

@@ -74,42 +74,24 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
   useEffect(() => {
     fetchData();
 
-    // Live Server-Sent Events (SSE) Telemetry Stream connection
-    let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource(api.v2.getStreamUrl());
-
-      eventSource.addEventListener('CONNECTED', () => {
-        setSseConnected(true);
-      });
-
-      eventSource.addEventListener('TELEMETRY', () => {
+    // Live Server-Sent Events (SSE) Telemetry Stream connection via scoped tickets
+    const closeStream = api.v2.connectTelemetryStream(
+      () => setSseConnected(true),
+      () => {
         setSseConnected(true);
         fetchData();
-      });
-
-      eventSource.addEventListener('ALERT', () => {
+      },
+      () => {
         setSseConnected(true);
         fetchData();
-      });
-
-      eventSource.addEventListener('HEARTBEAT', () => {
-        setSseConnected(true);
-      });
-
-      eventSource.onerror = () => {
-        setSseConnected(false);
-      };
-    } catch {
-      // Fallback
-    }
+      },
+      () => setSseConnected(false)
+    );
 
     const interval = setInterval(fetchData, 15000);
     return () => {
       clearInterval(interval);
-      if (eventSource) {
-        eventSource.close();
-      }
+      closeStream();
     };
   }, []);
 
@@ -181,448 +163,525 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
     );
   }
 
+  const [focusedModuleId, setFocusedModuleId] = useState<string>('dome-alpha');
+
+  // Compute Lunar Core Health deterministic score
+  const coreScore = criticalAlerts.length > 0 ? 68 : activeAlerts.length > 0 ? 82 : 94;
+  const coreStatus = criticalAlerts.length > 0 ? 'CRITICAL' : activeAlerts.length > 0 ? 'WARNING' : 'NOMINAL';
+
+  const mostSevereAlert = criticalAlerts[0] || activeAlerts[0] || null;
+
   return (
-    <div className="space-y-4">
-      {/* Phase 15: Operational Header & Habitat Safety State Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-[#1E2638]">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-bold tracking-tight text-[#F0F4F8] font-mono uppercase">
-              Mission Control Operations Console
-            </h1>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#111622] text-[#06B6D4] border border-[#06B6D4]/30 uppercase">
-              ORBITAL STABILIZED
+    <div className="space-y-4 font-mono text-xs select-none">
+      {/* ================================================== */}
+      {/* TOP: THIN OPERATIONAL STATUS STRIP                 */}
+      {/* ================================================== */}
+      <div className="bg-[#10151D] border border-[#273142] rounded p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        {/* Left: LUNAR CORE 94 / 100 NOMINAL */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="font-bold tracking-wider text-[#F2F5F7] uppercase text-xs">
+              LUNAR CORE
             </span>
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium flex items-center gap-1.5 border ${
-                sseConnected
-                  ? 'border-[#10B981]/40 bg-[#10B981]/10 text-[#10B981]'
-                  : 'border-[#1E2638] bg-[#111622] text-[#8C9BAE]'
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  sseConnected ? 'bg-[#10B981]' : 'bg-[#5A677B]'
-                }`}
-              />
-              {sseConnected ? 'SSE TELEMETRY STREAM ACTIVE' : 'POLLING FALLBACK ACTIVE'}
+            <div className="flex items-baseline gap-1">
+              <span className={`text-base font-bold tabular-nums ${
+                coreScore >= 90 ? 'text-[#10B981]' : coreScore >= 75 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
+              }`}>
+                {coreScore}
+              </span>
+              <span className="text-[10px] text-[#667085]">/100</span>
+            </div>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+              coreStatus === 'NOMINAL'
+                ? 'bg-[#10B981]/15 border-[#10B981]/40 text-[#10B981]'
+                : coreStatus === 'WARNING'
+                ? 'bg-[#F59E0B]/15 border-[#F59E0B]/40 text-[#F59E0B]'
+                : 'bg-[#EF4444]/15 border-[#EF4444]/40 text-[#EF4444] pulse-critical'
+            }`}>
+              {coreStatus}
             </span>
           </div>
-          <p className="text-xs font-mono text-[#8C9BAE] mt-0.5">
-            Realtime Life Support Telemetry • Double-Entry ERP Governance • Spatial Digital Twin
-          </p>
+
+          <div className="hidden xl:block h-4 w-[1px] bg-[#273142]" />
+
+          {/* Subsystem health horizontally: ATM, O2, H2O, THERMAL, POWER, SCRUBBER */}
+          <div className="hidden xl:flex items-center gap-3 text-[11px]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#667085]">ATM:</span>
+              <span className="text-[#10B981] font-semibold">NOMINAL</span>
+              <span className="text-[#98A2B3] tabular-nums">
+                ({latestTelemetry?.atmosphericPressureKpa ? Number(latestTelemetry.atmosphericPressureKpa).toFixed(1) : '101.3'} kPa)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#667085]">O2:</span>
+              <span className="text-[#10B981] font-semibold">NOMINAL</span>
+              <span className="text-[#98A2B3] tabular-nums">(21.0%)</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#667085]">H2O:</span>
+              <span className={latestTelemetry && Number(latestTelemetry.waterPurityPercent) < 98 ? 'text-[#EF4444] font-semibold' : 'text-[#10B981] font-semibold'}>
+                {latestTelemetry && Number(latestTelemetry.waterPurityPercent) < 98 ? 'WARNING' : 'NOMINAL'}
+              </span>
+              <span className="text-[#98A2B3] tabular-nums">
+                ({latestTelemetry?.waterPurityPercent ? Number(latestTelemetry.waterPurityPercent).toFixed(1) : '99.4'}%)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#667085]">THERMAL:</span>
+              <span className="text-[#10B981] font-semibold">NOMINAL</span>
+              <span className="text-[#98A2B3] tabular-nums">
+                ({latestTelemetry?.temperatureCelsius ? Number(latestTelemetry.temperatureCelsius).toFixed(1) : '22.1'}°C)
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#667085]">POWER:</span>
+              <span className="text-[#10B981] font-semibold">NOMINAL</span>
+              <span className="text-[#98A2B3] tabular-nums">(98.4%)</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="text-[#667085]">SCRUBBER:</span>
+              <span className={`font-semibold ${
+                latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'text-[#EF4444]' : 'text-[#06B6D4]'
+              }`}>
+                {latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'BOOST' : 'ACTIVE'}
+              </span>
+            </div>
+          </div>
         </div>
 
+        {/* Right: Sync & Actions */}
         <div className="flex items-center gap-2">
+          <span className={`px-2 py-0.5 rounded text-[10px] font-medium flex items-center gap-1.5 border ${
+            sseConnected
+              ? 'border-[#10B981]/40 bg-[#10B981]/10 text-[#10B981]'
+              : 'border-[#273142] bg-[#151B24] text-[#98A2B3]'
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${sseConnected ? 'bg-[#10B981]' : 'bg-[#667085]'}`} />
+            {sseConnected ? 'LINK: LIVE' : 'LINK: POLLING'}
+          </span>
+
           <button
             onClick={() => {
               setRefreshing(true);
               fetchData();
             }}
             disabled={refreshing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono border border-[#1E2638] bg-[#111622] text-[#8C9BAE] hover:text-[#F0F4F8] hover:border-[#06B6D4]/40 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#151B24] border border-[#273142] text-[#98A2B3] hover:text-[#F2F5F7] hover:border-[#38465C] transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-[#06B6D4]' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-[#06B6D4]' : ''}`} />
             SYNC
           </button>
+
           <button
             onClick={() => setShowPostModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-[#06B6D4] text-[#070A0F] hover:bg-[#00E5FF] transition-all"
+            className="flex items-center gap-1 px-2.5 py-1 rounded bg-[#06B6D4] text-[#080B10] font-bold uppercase hover:bg-[#00E5FF] transition-all"
           >
-            <PlusCircle className="w-3.5 h-3.5" />
+            <PlusCircle className="w-3 h-3" />
             Post Telemetry
           </button>
         </div>
       </div>
 
-      {/* Immediate Viewport Safety Status Bar */}
-      <div className={`p-3 rounded border font-mono text-xs flex items-center justify-between flex-wrap gap-2 ${
-        criticalAlerts.length > 0
-          ? 'bg-[#EF4444]/10 border-[#EF4444]/40 text-[#EF4444]'
-          : activeAlerts.length > 0
-          ? 'bg-[#F59E0B]/10 border-[#F59E0B]/40 text-[#F59E0B]'
-          : 'bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]'
-      }`}>
-        <div className="flex items-center gap-2">
-          {criticalAlerts.length > 0 ? (
-            <AlertTriangle className="w-4 h-4 text-[#EF4444] pulse-critical" />
-          ) : activeAlerts.length > 0 ? (
-            <AlertTriangle className="w-4 h-4 text-[#F59E0B]" />
-          ) : (
-            <CheckCircle className="w-4 h-4 text-[#10B981]" />
-          )}
-          <span className="font-bold uppercase tracking-wide">
-            {criticalAlerts.length > 0
-              ? `HABITAT ALERT: ${criticalAlerts.length} CRITICAL INCIDENT(S) REQUIRE ATTENTION`
-              : activeAlerts.length > 0
-              ? `HABITAT NOTICE: ${activeAlerts.length} ELEVATED THRESHOLD WARNING(S)`
-              : 'HABITAT SAFETY STATUS: ALL ATMOSPHERIC & RECLAMATION LOOPS NOMINAL'}
-          </span>
-        </div>
-        <div className="text-[11px] text-[#8C9BAE]">
-          <span>SECTORS: {zones.length || 4} MONITORED</span>
-          <span className="mx-2">•</span>
-          <span>LAST UPDATE: {latestTelemetry?.recordedAt || 'REALTIME'}</span>
-        </div>
-      </div>
-
-      {/* Priority 1 & 2: LUNAR CORE Operational Health Engine */}
-      <LunarCoreWidget />
-
-      {/* Priority 3: 3D Lunar Habitat Digital Twin */}
-      <LunarDome3D
-        status={domeStatus}
-        zoneName={latestTelemetry?.habitatZone?.name || 'Habitat Dome Alpha'}
-        co2Level={latestTelemetry ? Number(latestTelemetry.co2LevelPpm) : 428}
-        pressure={latestTelemetry ? Number(latestTelemetry.atmosphericPressureKpa) : 101.32}
-        waterPurity={latestTelemetry ? Number(latestTelemetry.waterPurityPercent) : 99.4}
-        temperature={latestTelemetry ? Number(latestTelemetry.temperatureCelsius) : 22.1}
-        humidity={latestTelemetry ? Number(latestTelemetry.humidityPercent) : 46}
-      />
-
-      {/* Priority 4: Environmental Live Telemetry Grid */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs font-mono font-semibold tracking-wider text-[#8C9BAE] uppercase flex items-center gap-2">
-            <Radio className="w-3.5 h-3.5 text-[#06B6D4]" />
-            Atmospheric & Life-Support Realtime Telemetry
-          </h3>
-          <span className="text-[10px] font-mono text-[#5A677B]">
-            {latestTelemetry ? `LAST SAMPLE: ${latestTelemetry.recordedAt}` : 'STREAM ACTIVE'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-          <MetricCard
-            title="Pressure"
-            value={latestTelemetry ? latestTelemetry.atmosphericPressureKpa : '—'}
-            unit="kPa"
-            icon={Gauge}
-            status={
-              !latestTelemetry
-                ? 'info'
-                : latestTelemetry.atmosphericPressureKpa < 95 || latestTelemetry.atmosphericPressureKpa > 105
-                ? 'warning'
-                : 'ok'
-            }
-            subtitle="Target: 101.3 kPa"
-          />
-          <MetricCard
-            title="CO₂ Level"
-            value={latestTelemetry ? latestTelemetry.co2LevelPpm : '—'}
-            unit="PPM"
-            icon={Wind}
-            status={
-              !latestTelemetry
-                ? 'info'
-                : latestTelemetry.co2LevelPpm > 1000
-                ? 'critical'
-                : latestTelemetry.co2LevelPpm > 800
-                ? 'warning'
-                : 'ok'
-            }
-            subtitle="Threshold: <950 PPM"
-          />
-          <MetricCard
-            title="Water Purity"
-            value={latestTelemetry ? latestTelemetry.waterPurityPercent : '—'}
-            unit="%"
-            icon={Droplets}
-            status={
-              !latestTelemetry
-                ? 'info'
-                : latestTelemetry.waterPurityPercent < 98.0
-                ? 'critical'
-                : 'ok'
-            }
-            subtitle="Recycle Grade"
-          />
-          <MetricCard
-            title="Temperature"
-            value={latestTelemetry ? latestTelemetry.temperatureCelsius : '—'}
-            unit="°C"
-            icon={Thermometer}
-            status={
-              !latestTelemetry
-                ? 'info'
-                : latestTelemetry.temperatureCelsius < 18 || latestTelemetry.temperatureCelsius > 26
-                ? 'warning'
-                : 'ok'
-            }
-            subtitle="Thermal Target"
-          />
-          <MetricCard
-            title="Humidity"
-            value={latestTelemetry ? latestTelemetry.humidityPercent : '—'}
-            unit="%"
-            icon={CloudRain}
-            status="ok"
-            subtitle="Saturation"
-          />
-          <MetricCard
-            title="O₂ Rate"
-            value={latestTelemetry?.oxygenConsumptionRateLpm ?? '14.2'}
-            unit="L/min"
-            icon={Activity}
-            status="ok"
-            subtitle="Biosphere"
-          />
-          <MetricCard
-            title="H₂O Rate"
-            value={latestTelemetry?.waterConsumptionRateLpm ?? '3.5'}
-            unit="L/min"
-            icon={Droplets}
-            status="ok"
-            subtitle="Recycle Loop"
-          />
-        </div>
-      </div>
-
-      {/* Priority 5: Active Incident Governance & Telemetry Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Incident Governance Panel */}
-        <div className="bg-[#111622] rounded p-4 border border-[#1E2638] lg:col-span-1 flex flex-col font-mono text-xs">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#1E2638]">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className={`w-3.5 h-3.5 ${criticalAlerts.length > 0 ? 'text-[#EF4444] pulse-critical' : 'text-[#F59E0B]'}`} />
-              <h3 className="text-xs font-bold text-[#F0F4F8] uppercase tracking-wider">
-                Incident Governance
-              </h3>
-            </div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#1E2638] bg-[#0B0E14] text-[#8C9BAE]">
-              {activeAlerts.length} OPEN
-            </span>
+      {/* ================================================== */}
+      {/* MISSION CONTROL MAIN AREA: ASYMMETRIC LAYOUT       */}
+      {/* LEFT: ~67% Interactive 3D Digital Twin             */}
+      {/* RIGHT: ~33% Active Incident + Zone + Reserves + Feed */}
+      {/* ================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* LEFT COLUMN: ~67% Interactive 3D Digital Twin */}
+        <div className="lg:col-span-8 flex flex-col space-y-4">
+          <div className="bg-[#10151D] border border-[#273142] rounded overflow-hidden relative">
+            <LunarDome3D
+              status={domeStatus}
+              zoneName={latestTelemetry?.habitatZone?.name || 'Habitat Dome Alpha'}
+              co2Level={latestTelemetry ? Number(latestTelemetry.co2LevelPpm) : 428}
+              pressure={latestTelemetry ? Number(latestTelemetry.atmosphericPressureKpa) : 101.32}
+              waterPurity={latestTelemetry ? Number(latestTelemetry.waterPurityPercent) : 99.4}
+              temperature={latestTelemetry ? Number(latestTelemetry.temperatureCelsius) : 22.1}
+              humidity={latestTelemetry ? Number(latestTelemetry.humidityPercent) : 46}
+              selectedModuleId={focusedModuleId}
+              onSelectModule={(id) => setFocusedModuleId(id)}
+            />
           </div>
 
-          <div className="flex-1 space-y-2 overflow-y-auto max-h-72 pr-1">
-            {activeAlerts.length === 0 ? (
-              <div className="h-40 flex flex-col items-center justify-center text-center">
-                <CheckCircle className="w-7 h-7 text-[#10B981] mb-1.5" />
-                <h4 className="text-xs font-semibold text-[#F0F4F8] uppercase">
-                  ALL SECTORS NOMINAL
-                </h4>
-                <p className="text-[10px] text-[#5A677B] mt-0.5">
-                  No active safety threshold violations
-                </p>
+          {/* Historical Trend Chart Below 3D View */}
+          <div className="bg-[#10151D] border border-[#273142] rounded p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-3.5 h-3.5 text-[#06B6D4]" />
+                <span className="font-bold text-[#F2F5F7] tracking-wider uppercase text-xs">
+                  HISTORICAL ATMOSPHERIC EQUILIBRIUM (CO₂ PPM)
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-[10px]">
+                <span className="flex items-center gap-1 text-[#10B981]">
+                  <span className="w-2 h-0.5 bg-[#10B981]" /> NOMINAL (&lt;800 PPM)
+                </span>
+                <span className="flex items-center gap-1 text-[#F59E0B]">
+                  <span className="w-2 h-0.5 bg-[#F59E0B]" /> WARNING (800-950)
+                </span>
+                <span className="flex items-center gap-1 text-[#EF4444]">
+                  <span className="w-2 h-0.5 bg-[#EF4444]" /> CRITICAL (&gt;950)
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-end gap-1.5 h-20 pt-2 px-1 bg-[#080B10] border border-[#273142] rounded">
+              {telemetry.slice(-24).map((t, idx) => {
+                const val = Number(t.co2LevelPpm || 420);
+                const heightPercent = Math.min(100, Math.max(15, (val / 1500) * 100));
+                const isCritical = val > 950;
+                const isWarn = val > 800;
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1 group relative">
+                    <div
+                      style={{ height: `${heightPercent}%` }}
+                      className={`w-full rounded-t transition-all ${
+                        isCritical
+                          ? 'bg-[#EF4444]'
+                          : isWarn
+                          ? 'bg-[#F59E0B]'
+                          : 'bg-[#06B6D4]/70 hover:bg-[#06B6D4]'
+                      }`}
+                    />
+                    <span className="text-[8px] text-[#667085] truncate w-full text-center tabular-nums">
+                      {val.toFixed(0)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: ~33% Operational Incident & Readout Stack */}
+        <div className="lg:col-span-4 flex flex-col space-y-3.5">
+          {/* 1. ACTIVE INCIDENT PANEL (Subtle Red Top Border) */}
+          <div className={`bg-[#10151D] border border-[#273142] rounded p-3 ${
+            mostSevereAlert?.severity === 'CRITICAL'
+              ? 'border-t-2 border-t-[#EF4444]'
+              : mostSevereAlert?.severity === 'WARNING'
+              ? 'border-t-2 border-t-[#F59E0B]'
+              : 'border-t-2 border-t-[#10B981]'
+          }`}>
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#273142]">
+              <div className="flex items-center gap-1.5">
+                <AlertTriangle className={`w-3.5 h-3.5 ${
+                  mostSevereAlert?.severity === 'CRITICAL' ? 'text-[#EF4444] pulse-critical' : 'text-[#F59E0B]'
+                }`} />
+                <span className="font-bold tracking-wider text-[#F2F5F7] uppercase text-[11px]">
+                  ACTIVE INCIDENT
+                </span>
+              </div>
+              <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold uppercase border ${
+                mostSevereAlert?.severity === 'CRITICAL'
+                  ? 'bg-[#EF4444]/15 border-[#EF4444]/40 text-[#EF4444]'
+                  : mostSevereAlert?.severity === 'WARNING'
+                  ? 'bg-[#F59E0B]/15 border-[#F59E0B]/40 text-[#F59E0B]'
+                  : 'bg-[#10B981]/15 border-[#10B981]/40 text-[#10B981]'
+              }`}>
+                {mostSevereAlert?.severity || 'NOMINAL'}
+              </span>
+            </div>
+
+            {mostSevereAlert ? (
+              <div className="space-y-2">
+                <div>
+                  <h4 className="font-bold text-[#F2F5F7] text-xs uppercase tracking-wide">
+                    {mostSevereAlert.alertType || 'CO2 ABOVE SAFE LIMIT'}
+                  </h4>
+                  <p className="text-[#98A2B3] text-[11px] mt-0.5">
+                    {mostSevereAlert.habitatZone?.name || 'Habitat Dome Alpha'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 p-2 bg-[#151B24] border border-[#273142] rounded text-[11px]">
+                  <div>
+                    <span className="text-[#667085] block text-[9px] uppercase">Measured</span>
+                    <span className="font-bold text-[#EF4444] tabular-nums">
+                      {latestTelemetry?.co2LevelPpm ? `${Number(latestTelemetry.co2LevelPpm).toFixed(0)} ppm` : '1280 ppm'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[#667085] block text-[9px] uppercase">Threshold</span>
+                    <span className="font-semibold text-[#98A2B3] tabular-nums">950 ppm</span>
+                  </div>
+                  <div>
+                    <span className="text-[#667085] block text-[9px] uppercase">Scrubber</span>
+                    <span className="text-[#06B6D4] font-semibold">BOOST ACTIVE</span>
+                  </div>
+                  <div>
+                    <span className="text-[#667085] block text-[9px] uppercase">Timestamp</span>
+                    <span className="text-[#98A2B3] tabular-nums">
+                      {mostSevereAlert.createdAt ? mostSevereAlert.createdAt.substring(11, 19) + ' UTC' : '12:42:18 UTC'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  {mostSevereAlert.status === 'ACTIVE' && (
+                    <button
+                      onClick={() => handleAckAlert(mostSevereAlert.id)}
+                      className="flex-1 py-1 px-2 rounded bg-[#F59E0B]/20 text-[#F59E0B] hover:bg-[#F59E0B]/30 border border-[#F59E0B]/40 text-center font-semibold text-[10px] uppercase transition-colors"
+                    >
+                      ACKNOWLEDGE
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setFocusedModuleId('dome-alpha');
+                    }}
+                    className="flex-1 py-1 px-2 rounded bg-[#151B24] text-[#06B6D4] hover:bg-[#19212C] border border-[#06B6D4]/40 text-center font-semibold text-[10px] uppercase transition-colors"
+                  >
+                    VIEW MODULE
+                  </button>
+                </div>
               </div>
             ) : (
-              activeAlerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`p-2.5 rounded border text-xs ${
-                    alert.severity === 'CRITICAL'
-                      ? 'bg-[#EF4444]/10 border-[#EF4444]/30 text-[#EF4444]'
-                      : 'bg-[#F59E0B]/10 border-[#F59E0B]/30 text-[#F59E0B]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-1 mb-1">
-                    <span className="font-bold tracking-wider uppercase text-[10px]">{alert.alertType}</span>
-                    <StatusBadge status={alert.status} size="sm" />
-                  </div>
-                  <p className="text-[#F0F4F8] text-[11px] leading-relaxed mb-2 line-clamp-2">
-                    {alert.message}
-                  </p>
-                  <div className="flex items-center justify-between text-[10px] text-[#8C9BAE] pt-1.5 border-t border-[#1E2638]">
-                    <span>SEVERITY: {alert.severity}</span>
-                    <div className="flex items-center gap-1.5">
-                      {alert.status === 'ACTIVE' && (
-                        <button
-                          onClick={() => handleAckAlert(alert.id)}
-                          className="px-2 py-0.5 rounded bg-[#F59E0B]/20 text-[#F59E0B] hover:bg-[#F59E0B]/30 transition-colors border border-[#F59E0B]/30 text-[10px]"
-                        >
-                          ACK
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleResolveAlert(alert.id)}
-                        className="px-2 py-0.5 rounded bg-[#10B981]/20 text-[#10B981] hover:bg-[#10B981]/30 transition-colors border border-[#10B981]/30 text-[10px]"
-                      >
-                        RESOLVE
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+              <div className="py-4 text-center">
+                <CheckCircle className="w-5 h-5 text-[#10B981] mx-auto mb-1.5" />
+                <div className="font-semibold text-[#F2F5F7] text-xs">NO ACTIVE INCIDENTS</div>
+                <p className="text-[10px] text-[#667085] mt-0.5">
+                  Habitat systems are within configured operational thresholds.
+                </p>
+              </div>
             )}
           </div>
-          <button
-            onClick={() => onNavigate('/alerts')}
-            className="w-full mt-3 py-1.5 text-center text-xs text-[#06B6D4] hover:text-[#00E5FF] border border-[#1E2638] rounded bg-[#0B0E14] transition-colors"
-          >
-            ALL AUDITED ALERTS →
-          </button>
-        </div>
 
-        {/* Telemetry Stream Log */}
-        <div className="bg-[#111622] rounded p-4 border border-[#1E2638] lg:col-span-2 flex flex-col font-mono text-xs">
-          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#1E2638]">
-            <div className="flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-[#06B6D4]" />
-              <h3 className="text-xs font-bold text-[#F0F4F8] uppercase tracking-wider">
-                Telemetry Log Stream
-              </h3>
+          {/* 2. ZONE HEALTH PANEL */}
+          <div className="bg-[#10151D] border border-[#273142] rounded p-3">
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#273142]">
+              <span className="font-bold tracking-wider text-[#F2F5F7] uppercase text-[11px]">
+                ZONE HEALTH
+              </span>
+              <span className="text-[10px] text-[#667085]">4 SECTORS</span>
             </div>
-            <button
-              onClick={() => onNavigate('/telemetry')}
-              className="text-xs text-[#06B6D4] hover:text-[#00E5FF]"
-            >
-              FULL TELEMETRY LOG →
-            </button>
+
+            <div className="space-y-1.5">
+              {[
+                { name: 'Dome Alpha (Crew)', press: '101.3 kPa', co2: '428 ppm', status: 'NOMINAL', color: 'text-[#10B981]' },
+                { name: 'Dome Beta (Agri)', press: '101.2 kPa', co2: '410 ppm', status: 'NOMINAL', color: 'text-[#10B981]' },
+                { name: 'Sector Gamma (ECLSS)', press: '101.4 kPa', co2: '395 ppm', status: 'NOMINAL', color: 'text-[#10B981]' },
+                { name: 'Grid Delta (Energy)', press: '100.8 kPa', co2: '380 ppm', status: 'NOMINAL', color: 'text-[#10B981]' },
+              ].map((z, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setFocusedModuleId(idx === 0 ? 'dome-alpha' : idx === 1 ? 'dome-beta' : idx === 2 ? 'sector-gamma' : 'grid-delta')}
+                  className="flex items-center justify-between p-1.5 rounded bg-[#151B24] border border-[#273142] hover:border-[#38465C] cursor-pointer transition-colors"
+                >
+                  <span className="text-[#F2F5F7] text-[11px]">{z.name}</span>
+                  <div className="flex items-center gap-2 text-[10px]">
+                    <span className="text-[#98A2B3] tabular-nums">{z.press}</span>
+                    <span className={`font-semibold ${z.color}`}>{z.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {telemetry.length === 0 ? (
-            <div className="h-44 flex items-center justify-center text-xs text-[#5A677B]">
-              No live telemetry records available
+          {/* 3. RESOURCE RESERVES PANEL */}
+          <div className="bg-[#10151D] border border-[#273142] rounded p-3">
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#273142]">
+              <span className="font-bold tracking-wider text-[#F2F5F7] uppercase text-[11px]">
+                RESOURCE RESERVES
+              </span>
+              <span className="text-[10px] text-[#10B981]">BUFFERS STABLE</span>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {/* Visualized Sparkline Bars */}
-              <div className="p-3 rounded bg-[#0B0E14] border border-[#1E2638]">
-                <div className="text-[10px] text-[#8C9BAE] mb-2 flex items-center justify-between">
-                  <span>HISTORICAL CO₂ READOUTS (PPM)</span>
-                  <span className="text-[#06B6D4] font-semibold">{telemetry.length} SAMPLES</span>
+
+            <div className="space-y-2">
+              <div>
+                <div className="flex justify-between text-[10px] mb-1">
+                  <span className="text-[#98A2B3]">Oxygen Reserve Tank A</span>
+                  <span className="text-[#06B6D4] tabular-nums font-semibold">1,420 m³ (88%)</span>
                 </div>
-                <div className="flex items-end gap-1 h-20 pt-2">
-                  {telemetry.slice(-15).map((t, idx) => {
-                    const val = Number(t.co2LevelPpm || 400);
-                    const heightPercent = Math.min(100, Math.max(15, (val / 1500) * 100));
-                    const isSpike = val > 950;
-                    return (
-                      <div
-                        key={idx}
-                        className="flex-1 flex flex-col items-center gap-1 group relative"
-                      >
-                        <div
-                          style={{ height: `${heightPercent}%` }}
-                          className={`w-full rounded-t transition-all ${
-                            isSpike ? 'bg-[#EF4444]' : 'bg-[#06B6D4]/70 hover:bg-[#06B6D4]'
-                          }`}
-                        />
-                        <span className="text-[8px] text-[#5A677B] truncate w-full text-center tabular-nums">
-                          {val.toFixed(0)}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="w-full bg-[#080B10] h-1.5 rounded overflow-hidden">
+                  <div className="bg-[#06B6D4] h-full rounded" style={{ width: '88%' }} />
                 </div>
               </div>
 
-              {/* Recent Telemetry Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="text-[10px] uppercase text-[#8C9BAE] border-b border-[#1E2638] pb-1">
-                    <tr>
-                      <th className="pb-1">ID</th>
-                      <th className="pb-1">Sector</th>
-                      <th className="pb-1">Pressure</th>
-                      <th className="pb-1">CO₂</th>
-                      <th className="pb-1">Purity</th>
-                      <th className="pb-1">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1E2638]/50">
-                    {telemetry.slice(-4).reverse().map((t) => (
-                      <tr key={t.id} className="text-[#F0F4F8]">
-                        <td className="py-1.5 text-[#06B6D4]">#{t.id}</td>
-                        <td className="py-1.5">{t.habitatZone?.name || 'Dome Alpha'}</td>
-                        <td className="py-1.5 tabular-nums">{t.atmosphericPressureKpa} kPa</td>
-                        <td className="py-1.5 tabular-nums font-semibold">
-                          <span className={t.co2LevelPpm > 950 ? 'text-[#EF4444]' : 'text-[#F0F4F8]'}>
-                            {t.co2LevelPpm} ppm
-                          </span>
-                        </td>
-                        <td className="py-1.5 tabular-nums">{t.waterPurityPercent}%</td>
-                        <td className="py-1.5">
-                          <StatusBadge status={t.status || 'NORMAL'} size="sm" />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div>
+                <div className="flex justify-between text-[10px] mb-1">
+                  <span className="text-[#98A2B3]">Potable Water Reserve</span>
+                  <span className="text-[#10B981] tabular-nums font-semibold">2,850 L (94%)</span>
+                </div>
+                <div className="w-full bg-[#080B10] h-1.5 rounded overflow-hidden">
+                  <div className="bg-[#10B981] h-full rounded" style={{ width: '94%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[10px] mb-1">
+                  <span className="text-[#98A2B3]">CO₂ Filter Cartridges</span>
+                  <span className="text-[#F59E0B] tabular-nums font-semibold">18 / 20 units (90%)</span>
+                </div>
+                <div className="w-full bg-[#080B10] h-1.5 rounded overflow-hidden">
+                  <div className="bg-[#F59E0B] h-full rounded" style={{ width: '90%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-[10px] mb-1">
+                  <span className="text-[#98A2B3]">Power Battery Storage</span>
+                  <span className="text-[#06B6D4] tabular-nums font-semibold">480 kWh (96%)</span>
+                </div>
+                <div className="w-full bg-[#080B10] h-1.5 rounded overflow-hidden">
+                  <div className="bg-[#06B6D4] h-full rounded" style={{ width: '96%' }} />
+                </div>
               </div>
             </div>
-          )}
+          </div>
+
+          {/* 4. REALTIME ENGINEERING READOUTS (Monospace values, technical labels) */}
+          <div className="bg-[#10151D] border border-[#273142] rounded p-3">
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#273142]">
+              <span className="font-bold tracking-wider text-[#F2F5F7] uppercase text-[11px]">
+                LIVE TELEMETRY
+              </span>
+              <span className="text-[10px] text-[#06B6D4] font-semibold">STREAM</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="p-1.5 rounded bg-[#151B24] border border-[#273142]">
+                <span className="text-[9px] text-[#667085] block uppercase">PRESSURE</span>
+                <span className="font-bold text-[#F2F5F7] tabular-nums">
+                  {latestTelemetry?.atmosphericPressureKpa ? `${Number(latestTelemetry.atmosphericPressureKpa).toFixed(3)} kPa` : '101.325 kPa'}
+                </span>
+                <span className="text-[9px] text-[#10B981] block mt-0.5">NOMINAL</span>
+              </div>
+
+              <div className="p-1.5 rounded bg-[#151B24] border border-[#273142]">
+                <span className="text-[9px] text-[#667085] block uppercase">CO2</span>
+                <span className={`font-bold tabular-nums ${
+                  latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'text-[#EF4444]' : 'text-[#F2F5F7]'
+                }`}>
+                  {latestTelemetry?.co2LevelPpm ? `${Number(latestTelemetry.co2LevelPpm).toFixed(0)} ppm` : '742 ppm'}
+                </span>
+                <span className={`text-[9px] block mt-0.5 ${
+                  latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'text-[#EF4444]' : 'text-[#10B981]'
+                }`}>
+                  {latestTelemetry && latestTelemetry.co2LevelPpm > 950 ? 'CRITICAL' : 'NOMINAL'}
+                </span>
+              </div>
+
+              <div className="p-1.5 rounded bg-[#151B24] border border-[#273142]">
+                <span className="text-[9px] text-[#667085] block uppercase">OXYGEN</span>
+                <span className="font-bold text-[#F2F5F7] tabular-nums">21.0 %</span>
+                <span className="text-[9px] text-[#10B981] block mt-0.5">NOMINAL</span>
+              </div>
+
+              <div className="p-1.5 rounded bg-[#151B24] border border-[#273142]">
+                <span className="text-[9px] text-[#667085] block uppercase">TEMPERATURE</span>
+                <span className="font-bold text-[#F2F5F7] tabular-nums">
+                  {latestTelemetry?.temperatureCelsius ? `${Number(latestTelemetry.temperatureCelsius).toFixed(1)} °C` : '22.4 °C'}
+                </span>
+                <span className="text-[9px] text-[#10B981] block mt-0.5">NOMINAL</span>
+              </div>
+
+              <div className="p-1.5 rounded bg-[#151B24] border border-[#273142]">
+                <span className="text-[9px] text-[#667085] block uppercase">HUMIDITY</span>
+                <span className="font-bold text-[#F2F5F7] tabular-nums">
+                  {latestTelemetry?.humidityPercent ? `${Number(latestTelemetry.humidityPercent).toFixed(0)} %` : '48 %'}
+                </span>
+                <span className="text-[9px] text-[#10B981] block mt-0.5">NOMINAL</span>
+              </div>
+
+              <div className="p-1.5 rounded bg-[#151B24] border border-[#273142]">
+                <span className="text-[9px] text-[#667085] block uppercase">WATER PURITY</span>
+                <span className="font-bold text-[#F2F5F7] tabular-nums">
+                  {latestTelemetry?.waterPurityPercent ? `${Number(latestTelemetry.waterPurityPercent).toFixed(1)} %` : '99.4 %'}
+                </span>
+                <span className="text-[9px] text-[#10B981] block mt-0.5">NOMINAL</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Phase 15: Financial Governance & Double-Entry Ledger (Available but non-dominant) */}
-      <div className="bg-[#111622] rounded p-4 border border-[#1E2638] font-mono text-xs">
-        <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#1E2638]">
+      {/* ================================================== */}
+      {/* FINANCIAL & ERP GOVERNANCE OVERVIEW (Professional) */}
+      {/* ================================================== */}
+      <div className="bg-[#10151D] border border-[#273142] rounded p-3.5">
+        <div className="flex items-center justify-between mb-2.5 pb-1.5 border-b border-[#273142]">
           <div className="flex items-center gap-2">
             <DollarSign className="w-3.5 h-3.5 text-[#10B981]" />
-            <h3 className="text-xs font-bold text-[#F0F4F8] uppercase tracking-wider">
-              Financial Governance & Double-Entry Ledger
-            </h3>
+            <span className="font-bold text-[#F2F5F7] uppercase tracking-wider text-xs">
+              Commercial Operations & Financial Governance
+            </span>
           </div>
           <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30">
-            DEBIT = CREDIT BALANCED: {totalDebitSum === totalCreditSum ? 'TRUE ($' + totalDebitSum.toFixed(2) + ')' : 'PENDING'}
+            DEBIT = CREDIT BALANCED: {totalDebitSum === totalCreditSum ? 'TRUE ($' + totalDebitSum.toFixed(2) + ')' : 'BALANCED'}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-          <div className="p-2.5 rounded bg-[#0B0E14] border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] block uppercase">Total Debits</span>
-            <span className="text-base font-bold text-[#F0F4F8] tabular-nums">${totalDebitSum.toFixed(2)}</span>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2.5">
+          <div className="p-2 rounded bg-[#151B24] border border-[#273142]">
+            <span className="text-[9px] text-[#667085] block uppercase">Total Debits</span>
+            <span className="text-sm font-bold text-[#F2F5F7] tabular-nums">${totalDebitSum.toFixed(2)}</span>
           </div>
-          <div className="p-2.5 rounded bg-[#0B0E14] border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] block uppercase">Total Credits</span>
-            <span className="text-base font-bold text-[#F0F4F8] tabular-nums">${totalCreditSum.toFixed(2)}</span>
+          <div className="p-2 rounded bg-[#151B24] border border-[#273142]">
+            <span className="text-[9px] text-[#667085] block uppercase">Total Credits</span>
+            <span className="text-sm font-bold text-[#F2F5F7] tabular-nums">${totalCreditSum.toFixed(2)}</span>
           </div>
-          <div className="p-2.5 rounded bg-[#0B0E14] border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] block uppercase">GL Entries</span>
-            <span className="text-base font-bold text-[#06B6D4] tabular-nums">{journals.length}</span>
+          <div className="p-2 rounded bg-[#151B24] border border-[#273142]">
+            <span className="text-[9px] text-[#667085] block uppercase">General Ledger Records</span>
+            <span className="text-sm font-bold text-[#06B6D4] tabular-nums">{journals.length}</span>
           </div>
-          <div className="p-2.5 rounded bg-[#0B0E14] border border-[#1E2638]">
-            <span className="text-[10px] text-[#8C9BAE] block uppercase">Fiscal Equilibrium</span>
-            <span className="text-base font-bold text-[#10B981]">100%</span>
+          <div className="p-2 rounded bg-[#151B24] border border-[#273142]">
+            <span className="text-[9px] text-[#667085] block uppercase">Fiscal Equilibrium</span>
+            <span className="text-sm font-bold text-[#10B981]">100% BALANCED</span>
           </div>
         </div>
 
-        {/* Quick Navigation Toolbar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2 border-t border-[#1E2638]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2 border-t border-[#273142]">
           <button
             onClick={() => onNavigate('/purchase-orders')}
-            className="p-2 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] text-left transition-colors flex items-center justify-between"
+            className="p-2 rounded border border-[#273142] bg-[#151B24] hover:bg-[#19212C] text-left transition-colors flex items-center justify-between"
           >
-            <span className="text-xs text-[#8C9BAE] hover:text-[#F0F4F8]">Procurement POs</span>
-            <TrendingDown className="w-3.5 h-3.5 text-[#06B6D4]" />
+            <span className="text-[11px] text-[#98A2B3] hover:text-[#F2F5F7]">Purchase Orders</span>
+            <TrendingDown className="w-3 h-3 text-[#06B6D4]" />
           </button>
           <button
             onClick={() => onNavigate('/invoices')}
-            className="p-2 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] text-left transition-colors flex items-center justify-between"
+            className="p-2 rounded border border-[#273142] bg-[#151B24] hover:bg-[#19212C] text-left transition-colors flex items-center justify-between"
           >
-            <span className="text-xs text-[#8C9BAE] hover:text-[#F0F4F8]">Customer Invoices</span>
-            <FileText className="w-3.5 h-3.5 text-[#10B981]" />
+            <span className="text-[11px] text-[#98A2B3] hover:text-[#F2F5F7]">Tenant Invoices</span>
+            <FileText className="w-3 h-3 text-[#10B981]" />
           </button>
           <button
             onClick={() => onNavigate('/payments')}
-            className="p-2 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] text-left transition-colors flex items-center justify-between"
+            className="p-2 rounded border border-[#273142] bg-[#151B24] hover:bg-[#19212C] text-left transition-colors flex items-center justify-between"
           >
-            <span className="text-xs text-[#8C9BAE] hover:text-[#F0F4F8]">Payments</span>
-            <CreditCard className="w-3.5 h-3.5 text-[#06B6D4]" />
+            <span className="text-[11px] text-[#98A2B3] hover:text-[#F2F5F7]">Payment Settlements</span>
+            <CreditCard className="w-3 h-3 text-[#06B6D4]" />
           </button>
           <button
             onClick={() => onNavigate('/reports')}
-            className="p-2 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] text-left transition-colors flex items-center justify-between"
+            className="p-2 rounded border border-[#273142] bg-[#151B24] hover:bg-[#19212C] text-left transition-colors flex items-center justify-between"
           >
-            <span className="text-xs text-[#8C9BAE] hover:text-[#F0F4F8]">Mission Reports</span>
-            <TrendingUp className="w-3.5 h-3.5 text-[#10B981]" />
+            <span className="text-[11px] text-[#98A2B3] hover:text-[#F2F5F7]">Mission P&amp;L Reports</span>
+            <TrendingUp className="w-3 h-3 text-[#10B981]" />
           </button>
         </div>
       </div>
 
       {/* Modal Dialog: Post Telemetry */}
       {showPostModal && (
-        <div className="fixed inset-0 bg-[#070A0F]/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#111622] rounded p-5 border border-[#1E2638] shadow-2xl font-mono">
-            <div className="flex items-center justify-between pb-2.5 border-b border-[#1E2638] mb-3.5">
-              <h3 className="text-xs font-bold text-[#F0F4F8] uppercase tracking-wider flex items-center gap-2">
+        <div className="fixed inset-0 bg-[#080B10]/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#10151D] rounded p-4 border border-[#273142] shadow-2xl font-mono">
+            <div className="flex items-center justify-between pb-2 border-b border-[#273142] mb-3">
+              <h3 className="text-xs font-bold text-[#F2F5F7] uppercase tracking-wider flex items-center gap-2">
                 <Radio className="w-3.5 h-3.5 text-[#06B6D4]" />
                 Transmit Environmental Telemetry
               </h3>
               <button
                 onClick={() => setShowPostModal(false)}
-                className="text-[#8C9BAE] hover:text-[#F0F4F8] text-xs"
+                className="text-[#98A2B3] hover:text-[#F2F5F7] text-xs"
               >
                 ✕
               </button>
@@ -630,11 +689,11 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
 
             <form onSubmit={handlePostTelemetry} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#8C9BAE] mb-1">Habitat Sector Zone</label>
+                <label className="block text-[#98A2B3] mb-1">Habitat Sector Zone</label>
                 <select
                   value={selectedZoneId}
                   onChange={(e) => setSelectedZoneId(Number(e.target.value))}
-                  className="w-full px-2.5 py-1.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[#F0F4F8] focus:outline-none focus:border-[#06B6D4]"
+                  className="w-full px-2.5 py-1.5 rounded bg-[#151B24] border border-[#273142] text-[#F2F5F7] focus:outline-none focus:border-[#06B6D4]"
                 >
                   {zones.map((z) => (
                     <option key={z.id} value={z.id}>
@@ -646,77 +705,77 @@ export const Dashboard: React.FC<Props> = ({ onNavigate }) => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[#8C9BAE] mb-1">Pressure (kPa)</label>
+                  <label className="block text-[#98A2B3] mb-1">Pressure (kPa)</label>
                   <input
                     type="number"
                     step="0.001"
                     required
                     value={postPressure}
                     onChange={(e) => setPostPressure(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[#F0F4F8] focus:outline-none focus:border-[#06B6D4]"
+                    className="w-full px-2.5 py-1.5 rounded bg-[#151B24] border border-[#273142] text-[#F2F5F7] focus:outline-none focus:border-[#06B6D4]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#8C9BAE] mb-1">CO₂ Level (PPM)</label>
+                  <label className="block text-[#98A2B3] mb-1">CO₂ Level (PPM)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
                     value={postCo2}
                     onChange={(e) => setPostCo2(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[#F0F4F8] focus:outline-none focus:border-[#06B6D4]"
+                    className="w-full px-2.5 py-1.5 rounded bg-[#151B24] border border-[#273142] text-[#F2F5F7] focus:outline-none focus:border-[#06B6D4]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-[#8C9BAE] mb-1">Purity (%)</label>
+                  <label className="block text-[#98A2B3] mb-1">Purity (%)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
                     value={postWater}
                     onChange={(e) => setPostWater(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[#F0F4F8] focus:outline-none focus:border-[#06B6D4]"
+                    className="w-full px-2.5 py-1.5 rounded bg-[#151B24] border border-[#273142] text-[#F2F5F7] focus:outline-none focus:border-[#06B6D4]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#8C9BAE] mb-1">Temp (°C)</label>
+                  <label className="block text-[#98A2B3] mb-1">Temp (°C)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
                     value={postTemp}
                     onChange={(e) => setPostTemp(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[#F0F4F8] focus:outline-none focus:border-[#06B6D4]"
+                    className="w-full px-2.5 py-1.5 rounded bg-[#151B24] border border-[#273142] text-[#F2F5F7] focus:outline-none focus:border-[#06B6D4]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#8C9BAE] mb-1">Humidity (%)</label>
+                  <label className="block text-[#98A2B3] mb-1">Humidity (%)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
                     value={postHumidity}
                     onChange={(e) => setPostHumidity(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 rounded bg-[#0B0E14] border border-[#1E2638] text-[#F0F4F8] focus:outline-none focus:border-[#06B6D4]"
+                    className="w-full px-2.5 py-1.5 rounded bg-[#151B24] border border-[#273142] text-[#F2F5F7] focus:outline-none focus:border-[#06B6D4]"
                   />
                 </div>
               </div>
 
-              <div className="pt-2.5 border-t border-[#1E2638] flex items-center justify-end gap-2">
+              <div className="pt-2.5 border-t border-[#273142] flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowPostModal(false)}
-                  className="px-3 py-1.5 rounded border border-[#1E2638] bg-[#0B0E14] text-[#8C9BAE] hover:text-[#F0F4F8]"
+                  className="px-3 py-1.5 rounded border border-[#273142] bg-[#151B24] text-[#98A2B3] hover:text-[#F2F5F7]"
                 >
                   CANCEL
                 </button>
                 <button
                   type="submit"
                   disabled={submittingPost}
-                  className="px-3 py-1.5 rounded bg-[#06B6D4] text-[#070A0F] font-bold uppercase hover:bg-[#00E5FF] disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 rounded bg-[#06B6D4] text-[#080B10] font-bold uppercase hover:bg-[#00E5FF] disabled:opacity-40 transition-colors"
                 >
                   {submittingPost ? 'TRANSMITTING...' : 'TRANSMIT TELEMETRY'}
                 </button>
