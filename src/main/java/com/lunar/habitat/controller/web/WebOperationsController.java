@@ -92,7 +92,7 @@ public class WebOperationsController {
         return "redirect:/alerts";
     }
 
-    @GetMapping("/resources")
+    @GetMapping({"/resources", "/inventory", "/operations/inventory", "/operations/resources"})
     public String resourcesPage(Model model) {
         List<ResourceInventory> inventory = resourceInventoryService.getAllInventory();
         model.addAttribute("inventory", inventory);

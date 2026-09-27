@@ -103,6 +103,30 @@ public class WebCommercialController {
         return "commercial/purchase-orders";
     }
 
+    @PostMapping("/purchase-orders")
+    public String createPo(@RequestParam Long vendorId,
+                           @RequestParam Long productId,
+                           @RequestParam java.math.BigDecimal quantity,
+                           @RequestParam(required = false) java.math.BigDecimal unitPrice,
+                           @RequestParam(required = false) String notes,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            PurchaseOrderRequest req = new PurchaseOrderRequest();
+            req.setVendorId(vendorId);
+            req.setNotes(notes);
+            req.setExpectedDate(java.time.LocalDate.now().plusDays(7));
+            Product prod = productService.getProductById(productId);
+            java.math.BigDecimal price = unitPrice != null ? unitPrice : prod.getUnitPrice();
+            LineItemRequest line = new LineItemRequest(productId, quantity, price, prod.getTaxRate());
+            req.setLines(List.of(line));
+            PurchaseOrder po = purchaseOrderService.createPurchaseOrder(req);
+            redirectAttributes.addFlashAttribute("successMessage", "Purchase order created: " + po.getPoNumber());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/purchase-orders";
+    }
+
     @PostMapping("/purchase-orders/{id}/submit")
     public String submitPo(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -161,6 +185,33 @@ public class WebCommercialController {
         return "commercial/sales-orders";
     }
 
+    @PostMapping("/sales-orders")
+    public String createSo(@RequestParam Long customerId,
+                           @RequestParam(required = false) Long habitatZoneId,
+                           @RequestParam Long productId,
+                           @RequestParam java.math.BigDecimal quantity,
+                           @RequestParam(required = false) java.math.BigDecimal unitPrice,
+                           @RequestParam(required = false) String notes,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            SalesOrderRequest req = new SalesOrderRequest();
+            req.setCustomerId(customerId);
+            req.setHabitatZoneId(habitatZoneId);
+            req.setNotes(notes);
+            req.setServicePeriodStart(java.time.LocalDate.now().minusDays(30));
+            req.setServicePeriodEnd(java.time.LocalDate.now());
+            Product prod = productService.getProductById(productId);
+            java.math.BigDecimal price = unitPrice != null ? unitPrice : prod.getUnitPrice();
+            LineItemRequest line = new LineItemRequest(productId, quantity, price, prod.getTaxRate());
+            req.setLines(List.of(line));
+            SalesOrder so = salesOrderService.createSalesOrder(req);
+            redirectAttributes.addFlashAttribute("successMessage", "Sales order registered: " + so.getOrderNumber());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/sales-orders";
+    }
+
     @PostMapping("/sales-orders/{id}/confirm")
     public String confirmSo(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
@@ -210,17 +261,41 @@ public class WebCommercialController {
 
     // --- Payments ---
     @GetMapping("/payments")
-    public String paymentsPage(@RequestParam(defaultValue = "0") int page, Model model) {
+    public String paymentsPage(@RequestParam(defaultValue = "0") int page,
+                               @RequestParam(required = false) Long vendorBillId,
+                               @RequestParam(required = false) Long invoiceId,
+                               Model model) {
         Page<Payment> paymentsPage = paymentService.searchPayments(null, null, null, null, PageRequest.of(page, 20));
         List<Invoice> postedInvoices = invoiceService.getAllInvoices().stream()
                 .filter(i -> i.getStatus() == InvoiceStatus.POSTED || i.getStatus() == InvoiceStatus.PARTIALLY_PAID)
                 .toList();
+        List<VendorBill> postedVendorBills = vendorBillService.getAllVendorBills().stream()
+                .filter(b -> b.getStatus() == BillStatus.POSTED || b.getStatus() == BillStatus.PARTIALLY_PAID)
+                .toList();
         List<Contact> contacts = contactService.getAllContacts();
+
+        PaymentRequest pr = new PaymentRequest();
+        if (vendorBillId != null) {
+            pr.setVendorBillId(vendorBillId);
+            postedVendorBills.stream().filter(b -> b.getId().equals(vendorBillId)).findFirst().ifPresent(b -> {
+                pr.setContactId(b.getVendor().getId());
+                pr.setAmount(b.getBalanceDue());
+            });
+        } else if (invoiceId != null) {
+            pr.setInvoiceId(invoiceId);
+            postedInvoices.stream().filter(i -> i.getId().equals(invoiceId)).findFirst().ifPresent(i -> {
+                pr.setContactId(i.getCustomer().getId());
+                pr.setAmount(i.getBalanceDue());
+            });
+        }
 
         model.addAttribute("paymentsPage", paymentsPage);
         model.addAttribute("postedInvoices", postedInvoices);
+        model.addAttribute("postedVendorBills", postedVendorBills);
         model.addAttribute("contacts", contacts);
-        model.addAttribute("paymentRequest", new PaymentRequest());
+        model.addAttribute("paymentRequest", pr);
+        model.addAttribute("preselectedBillId", vendorBillId);
+        model.addAttribute("preselectedInvoiceId", invoiceId);
         model.addAttribute("activeNav", "payments");
         return "commercial/payments";
     }

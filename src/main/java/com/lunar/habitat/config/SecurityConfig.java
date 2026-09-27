@@ -51,9 +51,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/login", "/logout", "/h2-console/**")
-            )
+            .csrf(AbstractHttpConfigurer::disable)
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin())) // For H2 console if used
             .authorizeHttpRequests(auth -> auth
                 // Static resources & documentation & authentication

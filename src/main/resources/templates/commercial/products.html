@@ -54,7 +54,7 @@
                             </td>
                             <td th:text="${p.unitOfMeasure}">M3</td>
                             <td style="font-family: var(--font-mono); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(p.unitPrice, 1, 2)}">₹12.50</td>
-                            <td th:text="${#numbers.formatPercent(p.taxRate, 1, 1)}">0.0%</td>
+                            <td th:text="${p.taxRate != null ? #numbers.formatPercent(p.taxRate, 1, 1) : '0.0%'}">0.0%</td>
                             <td>
                                 <span class="badge badge-paid" th:if="${p.active}">ACTIVE</span>
                                 <span class="badge badge-draft" th:unless="${p.active}">INACTIVE</span>

@@ -19,6 +19,10 @@ public interface TelemetryRepository extends JpaRepository<Telemetry, Long> {
 
     Optional<Telemetry> findFirstByHabitatZoneIdOrderByRecordedAtDesc(Long habitatZoneId);
 
+    List<Telemetry> findTop10ByOrderByRecordedAtDesc();
+
+    Optional<Telemetry> findTopByOrderByRecordedAtDesc();
+
     @Query("SELECT t FROM Telemetry t WHERE " +
            "(:zoneId IS NULL OR t.habitatZone.id = :zoneId) AND " +
            "(:status IS NULL OR t.status = :status) AND " +

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('Analytic Cost Centers')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('analytic-accounts')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>🏷️</span> Analytic Accounts & Cost Centers</h1>
+                <p class="page-subtitle">Managerial accounting dimensions, habitat zone cost allocation, and departmental expenditure tracking</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="analyticModal">
+                <span>➕</span> Create Analytic Cost Center
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Active Cost Distribution Dimensions</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>Cost Center Code</th>
+                            <th>Cost Center Title</th>
+                            <th>Associated Habitat Zone</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(analyticAccounts)}">
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No analytic cost centers defined in ledger.
+                            </td>
+                        </tr>
+                        <tr th:each="aa : ${analyticAccounts}">
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: var(--accent-cyan);" th:text="${aa.code}">CC-LSS-ALPHA</td>
+                            <td style="font-weight: 600;" th:text="${aa.name}">Life Support Unit Dome Alpha</td>
+                            <td th:text="${aa.habitatZone != null ? aa.habitatZone.name : 'Central Station'}">Habitat Dome Alpha</td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${aa.active}">ACTIVE</span>
+                                <span class="badge badge-draft" th:unless="${aa.active}">ARCHIVED</span>
+                            </td>
+                            <td style="font-size: 12px; color: var(--text-muted);"
+                                th:text="${aa.createdAt != null ? #temporals.format(aa.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">2026-09-24</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Analytic Account Modal -->
+<div class="modal" id="analyticModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Define Analytic Cost Center</div>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/analytic-accounts}" method="post">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="code">Cost Center Code</label>
+                        <input type="text" id="code" name="code" class="form-control" placeholder="e.g. CC-LSS-BRAVO" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="habitatZoneId">Linked Habitat Zone</label>
+                        <select id="habitatZoneId" name="habitatZoneId" class="form-control">
+                            <option value="">-- Station-Wide / General --</option>
+                            <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="name">Cost Center Name</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Life Support Subsystem Bravo" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Managerial Accounting Purpose</label>
+                    <input type="text" id="description" name="description" class="form-control" placeholder="Tracking O2/H2O costs for research biodome...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Cost Center</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

@@ -513,7 +513,7 @@ body {
     color: var(--text-secondary);
 }
 
-.form-control {
+.form-control, .form-select {
     width: 100%;
     padding: 10px 14px;
     background: var(--bg-surface);
@@ -524,7 +524,7 @@ body {
     transition: border-color 0.2s;
 }
 
-.form-control:focus {
+.form-control:focus, .form-select:focus {
     outline: none;
     border-color: var(--accent-cyan);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
@@ -556,7 +556,7 @@ body {
     display: flex;
 }
 
-.modal-content {
+.modal-content, .modal-dialog {
     background: var(--bg-surface-card);
     border: 1px solid var(--border-color);
     border-radius: 16px;

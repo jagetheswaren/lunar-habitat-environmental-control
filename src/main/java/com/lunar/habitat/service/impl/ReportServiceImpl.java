@@ -275,9 +275,61 @@ public class ReportServiceImpl implements ReportService {
         summary.setCurrentMonthExpenses(monthExpenses);
         summary.setNetMonthlyIncome(monthRevenue.subtract(monthExpenses));
 
-        // Budget variance
+        // Budget variance & Planned/Actual
         BudgetReportResponse budgetReport = budgetService.calculateBudgetVsActual(LocalDate.now().getYear(), "ALL");
         summary.setBudgetVariance(budgetReport.getTotalVariance());
+        summary.setBudgetPlanned(budgetReport.getTotalPlanned());
+        summary.setBudgetActual(budgetReport.getTotalActual());
+        if (budgetReport.getTotalPlanned().compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal utilization = budgetReport.getTotalActual()
+                    .multiply(new BigDecimal("100"))
+                    .divide(budgetReport.getTotalPlanned(), 2, java.math.RoundingMode.HALF_UP);
+            summary.setBudgetUtilization(utilization);
+        }
+
+        // Latest real environmental telemetry reading
+        telemetryRepository.findTopByOrderByRecordedAtDesc().ifPresent(t -> {
+            summary.setLatestPressure(t.getAtmosphericPressureKpa());
+            summary.setLatestCo2Level(t.getCo2LevelPpm());
+            summary.setLatestWaterPurity(t.getWaterPurityPercent());
+            summary.setLatestTemperature(t.getTemperatureCelsius());
+            summary.setLatestHumidity(t.getHumidityPercent());
+        });
+
+        // Real double-entry general ledger balances
+        accountRepository.findByAccountCode("1200").ifPresent(cashAcc -> {
+            BigDecimal debits = journalEntryLineRepository.sumDebitByAccountId(cashAcc.getId());
+            BigDecimal credits = journalEntryLineRepository.sumCreditByAccountId(cashAcc.getId());
+            summary.setCashBankBalance(debits.subtract(credits));
+        });
+
+        accountRepository.findByAccountCode("5000").ifPresent(maintAcc -> {
+            BigDecimal debits = journalEntryLineRepository.sumDebitByAccountId(maintAcc.getId());
+            BigDecimal credits = journalEntryLineRepository.sumCreditByAccountId(maintAcc.getId());
+            summary.setMaintenanceExpenses(debits.subtract(credits));
+        });
+
+        accountRepository.findByAccountCode("4000").ifPresent(revAcc -> {
+            BigDecimal debits = journalEntryLineRepository.sumDebitByAccountId(revAcc.getId());
+            BigDecimal credits = journalEntryLineRepository.sumCreditByAccountId(revAcc.getId());
+            summary.setLifeSupportRevenue(credits.subtract(debits));
+        });
+
+        // Real Telemetry Points for Chart.js (chronological order)
+        List<Telemetry> recentDesc = telemetryRepository.findTop10ByOrderByRecordedAtDesc();
+        List<Telemetry> chronological = new ArrayList<>(recentDesc);
+        java.util.Collections.reverse(chronological);
+        java.time.format.DateTimeFormatter timeFmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss");
+        for (Telemetry t : chronological) {
+            summary.getRecentTelemetry().add(new DashboardSummaryResponse.TelemetryDataPoint(
+                    t.getRecordedAt() != null ? t.getRecordedAt().format(timeFmt) : "",
+                    t.getAtmosphericPressureKpa() != null ? t.getAtmosphericPressureKpa().doubleValue() : null,
+                    t.getCo2LevelPpm() != null ? t.getCo2LevelPpm().doubleValue() : null,
+                    t.getWaterPurityPercent() != null ? t.getWaterPurityPercent().doubleValue() : null,
+                    t.getOxygenConsumptionM3() != null ? t.getOxygenConsumptionM3().doubleValue() : null,
+                    t.getWaterConsumptionLiters() != null ? t.getWaterConsumptionLiters().doubleValue() : null
+            ));
+        }
 
         if (summary.getCriticalAlerts() > 0) {
             summary.setSystemStatus("CRITICAL_ALERT");

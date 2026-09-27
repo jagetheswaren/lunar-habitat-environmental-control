@@ -108,7 +108,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="scheduledDate">Scheduled Date</label>
-                        <input type="date" id="scheduledDate" name="scheduledDate" class="form-control" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
+                        <input type="date" id="scheduledDate" name="scheduledDate" class="form-control" th:value="${T(java.time.LocalDate).now()}" required>
                     </div>
                 </div>
                 <div class="form-group">

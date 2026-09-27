@@ -2,14 +2,21 @@ package com.lunar.habitat.controller.web;
 
 import com.lunar.habitat.dto.request.HabitatZoneRequest;
 import com.lunar.habitat.dto.request.ThresholdRequest;
+import com.lunar.habitat.dto.request.UserRequest;
 import com.lunar.habitat.entity.AuditLog;
 import com.lunar.habitat.entity.EnvironmentalThreshold;
 import com.lunar.habitat.entity.HabitatZone;
+import com.lunar.habitat.entity.Role;
+import com.lunar.habitat.entity.User;
+import com.lunar.habitat.enums.RoleType;
+import com.lunar.habitat.repository.RoleRepository;
+import com.lunar.habitat.repository.UserRepository;
 import com.lunar.habitat.service.AuditLogService;
 import com.lunar.habitat.service.HabitatZoneService;
 import com.lunar.habitat.service.ThresholdEngineService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Set;
 
 @Controller
 public class WebAdminController {
@@ -26,13 +34,22 @@ public class WebAdminController {
     private final HabitatZoneService habitatZoneService;
     private final ThresholdEngineService thresholdEngineService;
     private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public WebAdminController(HabitatZoneService habitatZoneService,
                               ThresholdEngineService thresholdEngineService,
-                              AuditLogService auditLogService) {
+                              AuditLogService auditLogService,
+                              UserRepository userRepository,
+                              RoleRepository roleRepository,
+                              PasswordEncoder passwordEncoder) {
         this.habitatZoneService = habitatZoneService;
         this.thresholdEngineService = thresholdEngineService;
         this.auditLogService = auditLogService;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/habitat-zones")
@@ -83,7 +100,52 @@ public class WebAdminController {
         return "admin/audit-logs";
     }
 
-    @GetMapping("/settings")
+    @GetMapping({"/users", "/admin/users"})
+    public String usersPage(Model model) {
+        List<User> users = userRepository.findAll();
+        model.addAttribute("users", users);
+        model.addAttribute("userRequest", new UserRequest());
+        model.addAttribute("activeNav", "users");
+        return "admin/users";
+    }
+
+    @PostMapping({"/users", "/admin/users"})
+    public String createUser(@ModelAttribute UserRequest request, RedirectAttributes redirectAttributes) {
+        try {
+            User existing = userRepository.findByUsername(request.getUsername()).orElse(null);
+            if (existing != null) {
+                existing.setFullName(request.getFullName());
+                existing.setEmail(request.getEmail());
+                if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                    existing.setPassword(passwordEncoder.encode(request.getPassword()));
+                }
+                userRepository.save(existing);
+                redirectAttributes.addFlashAttribute("successMessage", "Personnel record updated.");
+            } else {
+                User user = new User(
+                        request.getUsername(),
+                        passwordEncoder.encode(request.getPassword()),
+                        request.getEmail(),
+                        request.getFullName()
+                );
+                String roleStr = request.getRole() != null ? request.getRole().toUpperCase() : "ROLE_HABITAT_OPERATOR";
+                if (!roleStr.startsWith("ROLE_")) {
+                    roleStr = "ROLE_" + roleStr;
+                }
+                RoleType roleType = RoleType.valueOf(roleStr);
+                Role role = roleRepository.findByName(roleType)
+                        .orElseGet(() -> roleRepository.save(new Role(roleType, roleType.name())));
+                user.setRoles(Set.of(role));
+                userRepository.save(user);
+                redirectAttributes.addFlashAttribute("successMessage", "New operator registered with clearance: " + roleType.name());
+            }
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/users";
+    }
+
+    @GetMapping({"/admin", "/admin/settings", "/settings"})
     public String settingsPage(Model model) {
         model.addAttribute("activeNav", "settings");
         return "admin/settings";

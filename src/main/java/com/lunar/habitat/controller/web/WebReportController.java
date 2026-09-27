@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.time.LocalDate;
 
 @Controller
-@RequestMapping("/reports")
+@RequestMapping
 public class WebReportController {
 
     private final ReportService reportService;
@@ -21,7 +21,17 @@ public class WebReportController {
         this.reportService = reportService;
     }
 
-    @GetMapping("/balance-sheet")
+    @GetMapping({"/reports", "/reports/financial", "/financial-reports"})
+    public String financialReportsRedirect() {
+        return "redirect:/reports/profit-loss";
+    }
+
+    @GetMapping({"/reports/environmental", "/environmental-reports"})
+    public String environmentalReportsRedirect() {
+        return "redirect:/reports/environment";
+    }
+
+    @GetMapping("/reports/balance-sheet")
     public String balanceSheetPage(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate asOfDate, Model model) {
         LocalDate date = asOfDate != null ? asOfDate : LocalDate.now();
         BalanceSheetResponse report = reportService.generateBalanceSheet(date);
@@ -31,7 +41,7 @@ public class WebReportController {
         return "reports/balance-sheet";
     }
 
-    @GetMapping("/profit-loss")
+    @GetMapping({"/reports/profit-loss", "/profit-loss"})
     public String profitLossPage(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                  Model model) {
@@ -41,7 +51,7 @@ public class WebReportController {
         return "reports/profit-loss";
     }
 
-    @GetMapping("/budget")
+    @GetMapping({"/reports/budget", "/reports/budget-variance"})
     public String budgetReportPage(@RequestParam(required = false) Integer fiscalYear,
                                    @RequestParam(required = false) String period,
                                    Model model) {
@@ -54,7 +64,7 @@ public class WebReportController {
         return "reports/budget";
     }
 
-    @GetMapping("/resources")
+    @GetMapping("/reports/resources")
     public String resourceReportPage(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                      Model model) {
@@ -64,7 +74,7 @@ public class WebReportController {
         return "reports/resources";
     }
 
-    @GetMapping("/environment")
+    @GetMapping({"/reports/environment", "/reports/environmental-audit"})
     public String environmentalReportPage(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
                                           Model model) {

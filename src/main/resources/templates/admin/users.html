@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: html-head('User & Access Control')}"></head>
+<body>
+
+<aside th:replace="~{fragments/layout :: sidebar('users')}"></aside>
+
+<main class="lunar-main">
+    <header th:replace="~{fragments/layout :: top-header}"></header>
+
+    <div class="page-container">
+        <div th:replace="~{fragments/layout :: alerts-banner}"></div>
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title"><span>👤</span> Personnel & Access Management</h1>
+                <p class="page-subtitle">Role-Based Access Control (RBAC), habitat flight controller credentials, and authentication privileges</p>
+            </div>
+            <button class="btn btn-primary" data-modal-target="userModal">
+                <span>➕</span> Register New Operator
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Active Station Crew & Operator Directory</div>
+            </div>
+            <div class="table-responsive">
+                <table class="lunar-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Username</th>
+                            <th>Officer Name</th>
+                            <th>Communication Email</th>
+                            <th>Station Privileges</th>
+                            <th>Account Status</th>
+                            <th>Created Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No system personnel registered.
+                            </td>
+                        </tr>
+                        <tr th:each="u : ${users}">
+                            <td style="font-family: var(--font-mono); color: var(--accent-cyan);" th:text="${u.id}">1</td>
+                            <td style="font-family: var(--font-mono); font-weight: 700; color: #fff;" th:text="${u.username}">admin</td>
+                            <td style="font-weight: 600;" th:text="${u.fullName}">Chief Commander</td>
+                            <td th:text="${u.email}">admin@lunar.habitat</td>
+                            <td>
+                                <span th:each="r : ${u.roles}" class="badge badge-posted" style="margin-right: 4px;" th:text="${r.name}">ROLE_ADMIN</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-paid" th:if="${u.enabled}">AUTHORIZED</span>
+                                <span class="badge badge-critical" th:unless="${u.enabled}">SUSPENDED</span>
+                            </td>
+                            <td style="font-size: 12px; color: var(--text-muted);"
+                                th:text="${u.createdAt != null ? #temporals.format(u.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">2026-09-24</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- User Registration Modal -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Register Lunar Habitat Personnel</div>
+            <button class="modal-close" data-modal-close>&times;</button>
+        </div>
+        <form th:action="@{/users}" method="post">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="username">Access Call-Sign / Username</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="e.g. flight.commander" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">Initial Password</label>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="fullName">Full Officer Name</label>
+                    <input type="text" id="fullName" name="fullName" class="form-control" placeholder="Dr. Sarah Connor" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Mission Communication Email</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="s.connor@lunar.habitat" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="role">Security Clearance Level (Role)</label>
+                    <select id="role" name="role" class="form-control" required>
+                        <option value="ROLE_ADMIN">ROLE_ADMIN (Full System & Financial Command)</option>
+                        <option value="ROLE_HABITAT_OPERATOR" selected>ROLE_HABITAT_OPERATOR (Life Support & Work Orders)</option>
+                        <option value="ROLE_ACCOUNTANT">ROLE_ACCOUNTANT (Double-Entry General Ledger & Billing)</option>
+                        <option value="ROLE_TENANT_USER">ROLE_TENANT_USER (Habitat Zone Occupant)</option>
+                        <option value="ROLE_VIEWER">ROLE_VIEWER (Telemetry Monitor Only)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+                <button type="submit" class="btn btn-primary">Authorize & Provision User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

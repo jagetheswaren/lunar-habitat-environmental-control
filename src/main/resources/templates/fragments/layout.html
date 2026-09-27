@@ -76,6 +76,9 @@
         <li class="nav-item" th:classappend="${activeNav == 'journals' ? 'active' : ''}">
             <a th:href="@{/journals}"><span class="nav-icon">📜</span> General Ledger</a>
         </li>
+        <li class="nav-item" th:classappend="${activeNav == 'analytic-accounts' ? 'active' : ''}">
+            <a th:href="@{/analytic-accounts}"><span class="nav-icon">🏷️</span> Analytic Accounts</a>
+        </li>
         <li class="nav-item" th:classappend="${activeNav == 'budgets' ? 'active' : ''}">
             <a th:href="@{/budgets}"><span class="nav-icon">📊</span> Budget vs Actuals</a>
         </li>
@@ -102,6 +105,9 @@
 
     <div class="nav-section">Administration</div>
     <ul class="nav-list">
+        <li class="nav-item" th:classappend="${activeNav == 'users' ? 'active' : ''}">
+            <a th:href="@{/users}"><span class="nav-icon">👤</span> Personnel & Users</a>
+        </li>
         <li class="nav-item" th:classappend="${activeNav == 'zones' ? 'active' : ''}">
             <a th:href="@{/habitat-zones}"><span class="nav-icon">🪐</span> Habitat Zones</a>
         </li>

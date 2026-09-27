@@ -72,8 +72,8 @@
                                 th:classappend="${item.variance.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
                                 th:text="'₹' + ${#numbers.formatDecimal(item.variance, 1, 'COMMA', 2, 'POINT')}">₹0.00</td>
                             <td style="font-family: var(--font-mono); font-weight: 600;"
-                                th:classappend="${item.variancePercentage.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
-                                th:text="${#numbers.formatDecimal(item.variancePercentage, 1, 2, 'POINT')} + '%'">0.00%</td>
+                                th:classappend="${item.variancePercent.doubleValue() >= 0 ? 'text-emerald' : 'text-danger'}"
+                                th:text="${#numbers.formatDecimal(item.variancePercent, 1, 2, 'POINT')} + '%'">0.00%</td>
                             <td>
                                 <span class="badge badge-paid" th:if="${item.variance.doubleValue() >= 0}">ON TARGET</span>
                                 <span class="badge badge-critical" th:if="${item.variance.doubleValue() < 0}">OVER BUDGET</span>
@@ -112,7 +112,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">Fiscal Year *</label>
-                        <input type="number" class="form-control" name="fiscalYear" th:value="${#dates.year(#dates.createNow())}" required min="2025" max="2050">
+                        <input type="number" class="form-control" name="fiscalYear" th:value="${T(java.time.LocalDate).now().year}" required min="2025" max="2050">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Period *</label>

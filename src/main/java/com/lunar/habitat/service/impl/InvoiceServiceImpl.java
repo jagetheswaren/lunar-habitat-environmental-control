@@ -185,11 +185,13 @@ public class InvoiceServiceImpl implements InvoiceService {
         BigDecimal totalOxygen = telemetryRepository.calculateTotalOxygenConsumption(zone.getId(), startDt, endDt);
         BigDecimal totalWater = telemetryRepository.calculateTotalWaterConsumption(zone.getId(), startDt, endDt);
 
-        // Fetch master products from DB to get unit prices and tax rates (Never hardcoded)
+        // Fetch master products from DB to get unit prices and tax rates (supporting both standard & seed SKUs)
         Product oxygenProduct = productRepository.findBySku(SKU_OXYGEN)
+                .or(() -> productRepository.findBySku("RES-O2-REC"))
                 .orElseThrow(() -> new ResourceNotFoundException("Master product not found with SKU: " + SKU_OXYGEN));
 
         Product waterProduct = productRepository.findBySku(SKU_WATER)
+                .or(() -> productRepository.findBySku("RES-H2O-POT"))
                 .orElseThrow(() -> new ResourceNotFoundException("Master product not found with SKU: " + SKU_WATER));
 
         Invoice invoice = new Invoice();
@@ -230,15 +232,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         // Optional Scrubber Servicing Fee
         if (request.isIncludeScrubberService()) {
-            productRepository.findBySku(SKU_SCRUBBER).ifPresent(scrubberProduct -> {
-                InvoiceLine scrubberLine = new InvoiceLine(
-                        scrubberProduct,
-                        "CO2 Scrubber Maintenance & Environmental Monitoring service charge",
-                        BigDecimal.ONE,
-                        scrubberProduct.getUnitPrice(),
-                        scrubberProduct.getTaxRate());
-                invoice.addLine(scrubberLine);
-            });
+            productRepository.findBySku(SKU_SCRUBBER)
+                    .or(() -> productRepository.findBySku("SRV-CO2-SCRUB"))
+                    .ifPresent(scrubberProduct -> {
+                        InvoiceLine scrubberLine = new InvoiceLine(
+                                scrubberProduct,
+                                "CO2 Scrubber Maintenance & Environmental Monitoring service charge",
+                                BigDecimal.ONE,
+                                scrubberProduct.getUnitPrice(),
+                                scrubberProduct.getTaxRate());
+                        invoice.addLine(scrubberLine);
+                    });
         }
 
         // Ensure at least one line exists even if zero consumption was recorded
