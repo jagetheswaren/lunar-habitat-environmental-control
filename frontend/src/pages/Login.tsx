@@ -135,14 +135,14 @@ export const Login: React.FC<Props> = ({ onLoginSuccess }) => {
               </button>
               <button
                 type="button"
-                onClick={() => setDemoCredentials('operator', 'operator123')}
+                onClick={() => setDemoCredentials('operator', 'admin123')}
                 className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
               >
                 OPERATOR
               </button>
               <button
                 type="button"
-                onClick={() => setDemoCredentials('accountant', 'accountant123')}
+                onClick={() => setDemoCredentials('accountant', 'admin123')}
                 className="py-1 px-1.5 rounded border border-[#1E2638] bg-[#0B0E14] hover:bg-[#161D2B] hover:text-[#06B6D4] text-[#8C9BAE] transition-colors"
               >
                 FINANCE
