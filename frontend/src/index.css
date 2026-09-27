@@ -1,17 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  --bg-void: #0A0D12;
+  --bg-panel: #12161D;
+  --border: #232A35;
+  --text: #E7ECF2;
+  --text-muted: #8A94A3;
+  --amber: #E8A33D;
+  --nominal: #6FD3C7;
+  --critical: #E5484D;
   color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background-color: #030712;
-  color: #f1f5f9;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0A0D12;
+  color: #E7ECF2;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Spacecraft Instrumentation Styling */
+.panel-card {
+  background-color: #12161D;
+  border: 1px solid #232A35;
+  border-radius: 4px;
 }
 
 /* Custom Scrollbars */
@@ -20,48 +42,63 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #070d1d;
+  background: #0A0D12;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1c2a4f;
-  border-radius: 3px;
+  background: #232A35;
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00f0ff;
+  background: #E8A33D;
 }
 
-/* Glassmorphism Styles */
+/* Glass & Card Surfaces */
 .lunar-glass {
-  background: rgba(11, 19, 41, 0.7);
+  background: rgba(18, 22, 29, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 240, 255, 0.15);
+  border: 1px solid #232A35;
 }
 
 .lunar-glass-card {
-  background: rgba(11, 19, 41, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.3s ease;
+  background: #12161D;
+  border: 1px solid #232A35;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+  transition: border-color 0.15s ease;
 }
 
 .lunar-glass-card:hover {
-  border-color: rgba(0, 240, 255, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 240, 255, 0.1);
+  border-color: #E8A33D;
 }
 
+/* Instrument Glows */
 .lunar-glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 12px rgba(111, 211, 199, 0.25);
 }
 
-.lunar-glow-green {
-  box-shadow: 0 0 20px rgba(0, 223, 143, 0.25);
+.lunar-glow-amber {
+  box-shadow: 0 0 12px rgba(232, 163, 61, 0.25);
 }
 
 .lunar-glow-red {
-  box-shadow: 0 0 20px rgba(255, 0, 85, 0.35);
+  box-shadow: 0 0 16px rgba(229, 72, 77, 0.35);
+}
+
+/* Critical Pulse */
+@keyframes pulse-critical {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.4);
+    border-color: rgba(229, 72, 77, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 14px 2px rgba(229, 72, 77, 0.6);
+    border-color: rgba(229, 72, 77, 1);
+  }
+}
+
+.pulse-critical {
+  animation: pulse-critical 2s ease-in-out infinite;
 }
 
 /* Orbit Animation */
@@ -76,17 +113,18 @@ body {
 }
 
 .animate-spin-slow {
-  animation: spin-slow 25s linear infinite;
+  animation: spin-slow 35s linear infinite;
 }
 
 .animate-spin-reverse {
-  animation: spin-reverse 35s linear infinite;
+  animation: spin-reverse 45s linear infinite;
 }
 
-/* Reduced Motion */
+/* Reduced Motion Compliance */
 @media (prefers-reduced-motion: reduce) {
   * {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

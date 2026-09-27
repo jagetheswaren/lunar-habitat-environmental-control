@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/thresholds")
+@RequestMapping({"/api/v1/lunar/thresholds", "/api/v2/thresholds"})
 @Tag(name = "Environmental Thresholds", description = "Environmental Safety Threshold Engine Configuration API")
 public class ThresholdApiController {
 

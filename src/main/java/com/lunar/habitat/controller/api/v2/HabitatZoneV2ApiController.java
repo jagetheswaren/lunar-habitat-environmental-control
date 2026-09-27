@@ -10,6 +10,7 @@ import com.lunar.habitat.repository.TelemetryRepository;
 import com.lunar.habitat.service.TelemetryStreamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,15 +27,18 @@ public class HabitatZoneV2ApiController {
     private final TelemetryRepository telemetryRepository;
     private final EnvironmentalAlertRepository alertRepository;
     private final TelemetryStreamService telemetryStreamService;
+    private final com.lunar.habitat.service.HabitatZoneService habitatZoneService;
 
     public HabitatZoneV2ApiController(HabitatZoneRepository zoneRepository,
                                      TelemetryRepository telemetryRepository,
                                      EnvironmentalAlertRepository alertRepository,
-                                     TelemetryStreamService telemetryStreamService) {
+                                     TelemetryStreamService telemetryStreamService,
+                                     com.lunar.habitat.service.HabitatZoneService habitatZoneService) {
         this.zoneRepository = zoneRepository;
         this.telemetryRepository = telemetryRepository;
         this.alertRepository = alertRepository;
         this.telemetryStreamService = telemetryStreamService;
+        this.habitatZoneService = habitatZoneService;
     }
 
     @GetMapping
@@ -106,5 +110,18 @@ public class HabitatZoneV2ApiController {
                 .findFirst()
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    @Operation(summary = "Create Zone V2", description = "Registers a new lunar habitat zone")
+    public ResponseEntity<com.lunar.habitat.entity.HabitatZone> createZone(@jakarta.validation.Valid @RequestBody com.lunar.habitat.dto.request.HabitatZoneRequest request) {
+        com.lunar.habitat.entity.HabitatZone created = habitatZoneService.createZone(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update Zone V2", description = "Modifies existing habitat zone configuration")
+    public ResponseEntity<com.lunar.habitat.entity.HabitatZone> updateZone(@PathVariable Long id, @jakarta.validation.Valid @RequestBody com.lunar.habitat.dto.request.HabitatZoneRequest request) {
+        return ResponseEntity.ok(habitatZoneService.updateZone(id, request));
     }
 }

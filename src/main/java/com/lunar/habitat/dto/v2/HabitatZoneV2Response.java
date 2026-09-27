@@ -56,6 +56,8 @@ public class HabitatZoneV2Response {
     public double getPositionZ() { return positionZ; }
     public void setPositionZ(double positionZ) { this.positionZ = positionZ; }
 
+    public double[] getPosition() { return new double[] { positionX, positionY, positionZ }; }
+
     public String getPrimarySystem() { return primarySystem; }
     public void setPrimarySystem(String primarySystem) { this.primarySystem = primarySystem; }
 

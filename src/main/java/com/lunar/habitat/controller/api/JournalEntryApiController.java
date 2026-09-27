@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/journals")
+@RequestMapping({"/api/v1/lunar/journals", "/api/v2/journals"})
 @Tag(name = "General Ledger & Journals", description = "Double-Entry General Ledger and Journal Entries API")
 public class JournalEntryApiController {
 

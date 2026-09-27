@@ -6,8 +6,8 @@
 [![Database](https://img.shields.io/badge/MySQL-8.0%2B-orange.svg)](https://www.mysql.com/)
 [![Thymeleaf](https://img.shields.io/badge/UI-Thymeleaf%20%2B%20CSS3-green.svg)](https://www.thymeleaf.org/)
 [![Swagger](https://img.shields.io/badge/OpenAPI-3.0%20(Swagger%20UI)-brightgreen.svg)](http://localhost:8081/swagger-ui/index.html)
-[![Postman](https://img.shields.io/badge/Postman%2FNewman-65%2F65%20Passed-orange.svg)](postman/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-21%2F21%20Passed-blue.svg)](src/test/java)
+[![Postman](https://img.shields.io/badge/Postman%2FNewman-72%2F72%20Passed%20(141%20Assertions)-orange.svg)](postman/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-27%2F27%20Passed-blue.svg)](src/test/java)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 ---
@@ -59,7 +59,7 @@ Maintaining human presence on the Moon requires complete self-sufficiency and re
 | **Migrations** | Flyway | Versioned SQL migrations V1 through V7 (27 MySQL tables) |
 | **Database** | MySQL / H2 MySQL-Mode | 8.0+ (InnoDB, UTF-8 MB4) |
 | **API Docs** | SpringDoc OpenAPI | OpenAPI 3.0 / Swagger UI (`/swagger-ui/index.html`) |
-| **Testing** | JUnit 5 + MockMvc + Newman | 21/21 JUnit passed + 65/65 Postman requests passed (130/130 assertions) |
+| **Testing** | JUnit 5 + MockMvc + Newman | 27/27 JUnit passed + 72/72 Postman requests passed (141/141 assertions) |
 
 ---
 

@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/payments")
+@RequestMapping({"/api/v1/lunar/payments", "/api/v2/payments"})
 @Tag(name = "Payments", description = "Cash & Bank Payment Processing for Customer Invoices and Vendor Bills")
 public class PaymentApiController {
 

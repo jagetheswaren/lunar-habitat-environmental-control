@@ -14,7 +14,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('lunar_token');
   if (token) {
-    config.headers.Authorization = token.startsWith('Basic ') ? token : `Basic ${token}`;
+    config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }
   return config;
 });

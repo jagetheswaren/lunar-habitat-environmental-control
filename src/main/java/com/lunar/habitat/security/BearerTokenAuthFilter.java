@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 @Component
 public class BearerTokenAuthFilter extends OncePerRequestFilter {
@@ -34,42 +32,21 @@ public class BearerTokenAuthFilter extends OncePerRequestFilter {
         if (authHeader != null && (authHeader.startsWith("Bearer ") || authHeader.startsWith("bearer "))) {
             String token = authHeader.substring(7).trim();
 
-            // 1. Try JWT authentication first
+            // Strict cryptographic signature and expiry validation
             if (jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
                 if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                    if (userDetails != null) {
+                    if (userDetails != null && userDetails.isEnabled()) {
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 }
-            } else {
-                // 2. Fallback to Basic credentials encoded in Bearer token (backwards compatibility for E2E suites)
-                if (token.startsWith("Basic ") || token.startsWith("basic ")) {
-                    token = token.substring(6).trim();
-                }
-
-                try {
-                    byte[] decoded = Base64.getDecoder().decode(token);
-                    String credentials = new String(decoded, StandardCharsets.UTF_8);
-                    String[] parts = credentials.split(":", 2);
-                    if (parts.length == 2) {
-                        String username = parts[0];
-                        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                        if (userDetails != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                            UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                            SecurityContextHolder.getContext().setAuthentication(authentication);
-                        }
-                    }
-                } catch (Exception ignored) {
-                    // Let security filter chain proceed
-                }
             }
+            // No fallback, no plain Base64 decoding, no unauthenticated username loading.
+            // Forged, expired, or invalid tokens fail validation and authentication remains null.
         }
 
         filterChain.doFilter(request, response);

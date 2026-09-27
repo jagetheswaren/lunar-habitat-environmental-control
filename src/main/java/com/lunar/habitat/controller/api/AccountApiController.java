@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/accounts")
+@RequestMapping({"/api/v1/lunar/accounts", "/api/v2/accounts"})
 @Tag(name = "Chart of Accounts", description = "Chart of Accounts (CoA) Master API")
 public class AccountApiController {
 

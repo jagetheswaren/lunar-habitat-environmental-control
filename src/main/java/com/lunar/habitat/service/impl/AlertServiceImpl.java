@@ -10,13 +10,17 @@ import com.lunar.habitat.repository.EnvironmentalAlertRepository;
 import com.lunar.habitat.security.SecurityUtils;
 import com.lunar.habitat.service.AlertService;
 import com.lunar.habitat.service.AuditLogService;
+import com.lunar.habitat.service.TelemetryStreamService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -24,10 +28,14 @@ public class AlertServiceImpl implements AlertService {
 
     private final EnvironmentalAlertRepository alertRepository;
     private final AuditLogService auditLogService;
+    private final TelemetryStreamService telemetryStreamService;
 
-    public AlertServiceImpl(EnvironmentalAlertRepository alertRepository, AuditLogService auditLogService) {
+    public AlertServiceImpl(EnvironmentalAlertRepository alertRepository,
+                            AuditLogService auditLogService,
+                            @Autowired(required = false) TelemetryStreamService telemetryStreamService) {
         this.alertRepository = alertRepository;
         this.auditLogService = auditLogService;
+        this.telemetryStreamService = telemetryStreamService;
     }
 
     @Override
@@ -35,6 +43,8 @@ public class AlertServiceImpl implements AlertService {
         EnvironmentalAlert saved = alertRepository.save(alert);
         auditLogService.log(AuditAction.THRESHOLD_ALERT, "EnvironmentalAlert", saved.getId().toString(),
                 "Triggered alert [" + saved.getSeverity() + "]: " + saved.getMessage());
+
+        broadcastAlertChange("CREATED", saved);
         return saved;
     }
 
@@ -51,6 +61,8 @@ public class AlertServiceImpl implements AlertService {
         EnvironmentalAlert saved = alertRepository.save(alert);
         auditLogService.log(AuditAction.ACKNOWLEDGE, "EnvironmentalAlert", id.toString(),
                 "Acknowledged alert by " + saved.getAcknowledgedBy());
+
+        broadcastAlertChange("ACKNOWLEDGED", saved);
         return saved;
     }
 
@@ -64,7 +76,26 @@ public class AlertServiceImpl implements AlertService {
         EnvironmentalAlert saved = alertRepository.save(alert);
         auditLogService.log(AuditAction.RESOLVE, "EnvironmentalAlert", id.toString(),
                 "Resolved alert by " + saved.getResolvedBy());
+
+        broadcastAlertChange("RESOLVED", saved);
         return saved;
+    }
+
+    private void broadcastAlertChange(String eventType, EnvironmentalAlert alert) {
+        if (telemetryStreamService != null) {
+            try {
+                Map<String, Object> data = new HashMap<>();
+                data.put("eventType", eventType);
+                data.put("id", alert.getId());
+                data.put("zoneId", alert.getHabitatZone() != null ? alert.getHabitatZone().getId() : null);
+                data.put("zoneName", alert.getHabitatZone() != null ? alert.getHabitatZone().getName() : "Unknown");
+                data.put("severity", alert.getSeverity() != null ? alert.getSeverity().name() : "WARNING");
+                data.put("status", alert.getStatus() != null ? alert.getStatus().name() : "OPEN");
+                data.put("message", alert.getMessage());
+                data.put("timestamp", alert.getCreatedAt() != null ? alert.getCreatedAt().toString() : LocalDateTime.now().toString());
+                telemetryStreamService.broadcastAlert(data);
+            } catch (Exception ignored) {}
+        }
     }
 
     @Override

@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/lunar/vendor-bills")
+@RequestMapping({"/api/v1/lunar/vendor-bills", "/api/v2/vendor-bills"})
 @Tag(name = "Vendor Bills", description = "Vendor Invoices and Accounts Payable API")
 public class VendorBillApiController {
 

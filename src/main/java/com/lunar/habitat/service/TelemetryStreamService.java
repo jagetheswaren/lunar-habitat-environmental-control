@@ -5,12 +5,13 @@ import com.lunar.habitat.entity.Telemetry;
 import com.lunar.habitat.repository.TelemetryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +24,15 @@ public class TelemetryStreamService {
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
     private final TelemetryRepository telemetryRepository;
 
+    @Autowired(required = false)
+    private SimpMessagingTemplate simpMessagingTemplate;
+
     public TelemetryStreamService(TelemetryRepository telemetryRepository) {
         this.telemetryRepository = telemetryRepository;
     }
 
     public SseEmitter registerEmitter() {
-        // 30-minute timeout for mission control sessions
-        SseEmitter emitter = new SseEmitter(1800000L);
+        SseEmitter emitter = new SseEmitter(1800000L); // 30 min timeout
 
         emitters.add(emitter);
 
@@ -40,7 +43,6 @@ public class TelemetryStreamService {
         });
         emitter.onError(e -> emitters.remove(emitter));
 
-        // Send initial connect greeting and current state
         try {
             emitter.send(SseEmitter.event()
                     .name("CONNECTED")
@@ -63,6 +65,7 @@ public class TelemetryStreamService {
     }
 
     public void broadcastTelemetry(TelemetryV2Response telemetry) {
+        // 1. Broadcast to SSE clients
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().name("TELEMETRY").data(telemetry));
@@ -70,9 +73,22 @@ public class TelemetryStreamService {
                 emitters.remove(emitter);
             }
         }
+
+        // 2. Broadcast to STOMP WebSocket subscribers
+        if (simpMessagingTemplate != null) {
+            try {
+                simpMessagingTemplate.convertAndSend("/topic/telemetry", telemetry);
+                if (telemetry.getHabitatZoneId() != null) {
+                    simpMessagingTemplate.convertAndSend("/topic/zone/" + telemetry.getHabitatZoneId(), telemetry);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to publish STOMP telemetry message: {}", e.getMessage());
+            }
+        }
     }
 
     public void broadcastAlert(Map<String, Object> alertData) {
+        // 1. Broadcast to SSE clients
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().name("ALERT").data(alertData));
@@ -80,11 +96,20 @@ public class TelemetryStreamService {
                 emitters.remove(emitter);
             }
         }
+
+        // 2. Broadcast to STOMP WebSocket subscribers
+        if (simpMessagingTemplate != null) {
+            try {
+                simpMessagingTemplate.convertAndSend("/topic/alerts", alertData);
+            } catch (Exception e) {
+                log.warn("Failed to publish STOMP alert message: {}", e.getMessage());
+            }
+        }
     }
 
     @Scheduled(fixedRate = 10000)
     public void sendHeartbeat() {
-        if (emitters.isEmpty()) return;
+        if (emitters.isEmpty() && simpMessagingTemplate == null) return;
 
         telemetryRepository.findTopByOrderByRecordedAtDesc().ifPresent(t -> {
             TelemetryV2Response dto = toV2(t);
@@ -94,6 +119,11 @@ public class TelemetryStreamService {
                 } catch (Exception e) {
                     emitters.remove(emitter);
                 }
+            }
+            if (simpMessagingTemplate != null) {
+                try {
+                    simpMessagingTemplate.convertAndSend("/topic/heartbeat", dto);
+                } catch (Exception ignored) {}
             }
         });
     }
@@ -119,7 +149,6 @@ public class TelemetryStreamService {
         dto.setSource(t.getSource() != null ? t.getSource().name() : "ORBITAL_STATION");
         dto.setRecordedAt(t.getRecordedAt());
 
-        // Derive Digital Twin operational statuses
         double co2 = t.getCo2LevelPpm() != null ? t.getCo2LevelPpm().doubleValue() : 450.0;
         double pres = t.getAtmosphericPressureKpa() != null ? t.getAtmosphericPressureKpa().doubleValue() : 101.3;
 

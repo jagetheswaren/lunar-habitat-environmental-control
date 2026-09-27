@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/lunar/invoices")
+@RequestMapping({"/api/v1/lunar/invoices", "/api/v2/invoices"})
 @Tag(name = "Customer Invoices", description = "Utility Billing, Sales Invoicing, and Accounts Receivable API")
 public class InvoiceApiController {
 
