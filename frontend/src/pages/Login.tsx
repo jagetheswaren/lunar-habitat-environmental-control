@@ -37,7 +37,7 @@ export const Login: React.FC<Props> = ({ onLoginSuccess }) => {
     setPassword(p);
   };
 
-  const showDevCredentials = !import.meta.env.PROD && import.meta.env.VITE_ENABLE_DEMO_CREDENTIALS !== 'false';
+  const showDevCredentials = !import.meta.env.PROD && import.meta.env.VITE_ENABLE_DEMO_CREDENTIALS === 'true';
 
   return (
     <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center p-4 relative overflow-hidden select-none">

@@ -36,6 +36,19 @@ jobs:
           cd frontend
           npm ci
 
+      - name: Validate Production Deployment Variables
+        run: |
+          if [ -z "${{ vars.VITE_API_URL }}" ]; then
+            echo "::error::CRITICAL PRODUCTION CONFIGURATION ERROR: vars.VITE_API_URL is not set in GitHub repository variables."
+            echo "Configure vars.VITE_API_URL in Repository Settings -> Secrets and variables -> Actions -> Variables to your stable HTTPS backend gateway."
+            exit 1
+          fi
+          if [ -z "${{ vars.VITE_WS_URL }}" ]; then
+            echo "::error::CRITICAL PRODUCTION CONFIGURATION ERROR: vars.VITE_WS_URL is not set in GitHub repository variables."
+            echo "Configure vars.VITE_WS_URL (e.g., wss://<domain>/ws) in Repository Settings -> Secrets and variables -> Actions -> Variables."
+            exit 1
+          fi
+
       - name: Build frontend for GitHub Pages
         run: |
           cd frontend
@@ -43,7 +56,9 @@ jobs:
         env:
           GITHUB_PAGES: 'true'
           VITE_BASE_PATH: '/lunar-habitat-environmental-control/'
-          VITE_ENABLE_DEMO_CREDENTIALS: 'true'
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_WS_URL: ${{ vars.VITE_WS_URL }}
+          VITE_ENABLE_DEMO_CREDENTIALS: 'false'
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

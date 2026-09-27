@@ -1,9 +1,40 @@
 import axios from 'axios';
 import * as T from './types';
 
-const BACKEND_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
-const API_BASE = BACKEND_BASE ? `${BACKEND_BASE}/api/v1/lunar` : '/api/v1/lunar';
-const API_V2_BASE = BACKEND_BASE ? `${BACKEND_BASE}/api/v2` : '/api/v2';
+const RAW_API_URL = import.meta.env.VITE_API_URL;
+let BACKEND_BASE = (RAW_API_URL || '').replace(/\/+$/, '');
+
+if (!BACKEND_BASE) {
+  if (import.meta.env.DEV) {
+    BACKEND_BASE = 'http://localhost:8081';
+  } else {
+    console.error(
+      'CRITICAL CONFIGURATION ERROR: VITE_API_URL is not defined in production build. ' +
+      'API requests will not target GitHub Pages origin. Please configure VITE_API_URL in deployment settings.'
+    );
+  }
+}
+
+export function getWebSocketUrl(): string {
+  const envWs = import.meta.env.VITE_WS_URL;
+  if (envWs) {
+    if (window.location.protocol === 'https:' && envWs.startsWith('ws://')) {
+      return envWs.replace(/^ws:\/\//i, 'wss://');
+    }
+    return envWs;
+  }
+  if (import.meta.env.DEV) {
+    return 'ws://localhost:8081/ws';
+  }
+  if (BACKEND_BASE) {
+    const wsProto = BACKEND_BASE.startsWith('https:') ? 'wss:' : 'ws:';
+    return `${BACKEND_BASE.replace(/^https?:/, wsProto)}/ws`;
+  }
+  return '';
+}
+
+const API_BASE = BACKEND_BASE ? `${BACKEND_BASE}/api/v1/lunar` : '';
+const API_V2_BASE = BACKEND_BASE ? `${BACKEND_BASE}/api/v2` : '';
 
 export const apiClient = axios.create({
   baseURL: API_BASE,
@@ -22,6 +53,9 @@ export const apiV2Client = axios.create({
 });
 
 apiV2Client.interceptors.request.use((config) => {
+  if (!BACKEND_BASE && import.meta.env.PROD) {
+    return Promise.reject(new Error('CRITICAL: VITE_API_URL is not configured in production environment. Backend connection unavailable.'));
+  }
   const token = localStorage.getItem('lunar_token');
   if (token) {
     config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
@@ -30,6 +64,9 @@ apiV2Client.interceptors.request.use((config) => {
 });
 
 apiClient.interceptors.request.use((config) => {
+  if (!BACKEND_BASE && import.meta.env.PROD) {
+    return Promise.reject(new Error('CRITICAL: VITE_API_URL is not configured in production environment. Backend connection unavailable.'));
+  }
   const token = localStorage.getItem('lunar_token');
   if (token) {
     config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
@@ -237,6 +274,15 @@ export const api = {
       const res = await apiV2Client.get('/telemetry/latest');
       return res.data;
     },
-    getStreamUrl: () => `${API_V2_BASE}/telemetry/stream`,
+    getStreamUrl: () => {
+      if (!BACKEND_BASE && import.meta.env.PROD) {
+        console.error('Cannot open SSE stream: VITE_API_URL is not configured in production.');
+        return '';
+      }
+      const token = localStorage.getItem('lunar_token')?.replace(/^Bearer /i, '');
+      const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
+      return `${API_V2_BASE}/telemetry/stream${tokenQuery}`;
+    },
+    getWebSocketUrl,
   },
 };

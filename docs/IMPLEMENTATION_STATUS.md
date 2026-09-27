@@ -82,6 +82,10 @@
 | Maven JUnit Suite | 27/27 Tests Passing | COMPLETED | 100% pass on core services, accounting, and controllers |
 | Newman Postman Suite | 72/72 Requests, 141/141 Assertions Passing | COMPLETED | Full regression suite verified against running server |
 | Frontend Verification | `tsc --noEmit`, ESLint, Vite build | COMPLETED | 0 TypeScript errors, 0 build failures, code-split chunks |
-| JWT Security & RBAC | HMAC-SHA256, token revocation, production guardrails | COMPLETED | Mandatory strong secret in prod; demo credentials hidden |
-| Public Deployment | Cloudflare HTTPS/WSS Tunnels & GitHub Pages | COMPLETED | Public HTTPS frontend & backend endpoints live |
-| Continuous Integration | GitHub Actions: Java CI, Frontend CI, Deploy Pages | COMPLETED | Green build status on all pipelines |
+| JWT Security & RBAC | HMAC-SHA256, token revocation, production guardrails | COMPLETED | Mandatory strong secret in prod; demo credentials strictly disabled |
+| Production Config Validator | Fail-fast validation in `prod` profile | COMPLETED | JVM terminates if DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, or FRONTEND_URL missing; rejects H2 |
+| Production Admin Bootstrap | Secure admin injection | COMPLETED | Reads `ADMIN_USERNAME` & `ADMIN_PASSWORD`, BCrypt hashes, skips if exists |
+| Exact Production CORS | `https://jagetheswaren.github.io` only | COMPLETED | Wildcard patterns eliminated in `prod` profile |
+| GitHub Pages Production Flow | Required repository variables | COMPLETED | Workflow validates `vars.VITE_API_URL` and `vars.VITE_WS_URL`; sets `VITE_ENABLE_DEMO_CREDENTIALS=false` |
+| Containerization & IaC | Multi-stage Dockerfile & `render.yaml` | COMPLETED | Java 17 + Alpine non-root container with PORT and healthcheck support |
+| Production Deployment Status | Permanent Host & Persistent MySQL | BLOCKED BY EXTERNAL AUTHORIZATION | External cloud authorization (Render/Railway/Cloudflare Named Tunnel token) & persistent MySQL credentials required |
