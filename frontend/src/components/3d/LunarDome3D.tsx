@@ -28,6 +28,7 @@ interface Props {
   waterPurity?: number;
   temperature?: number;
   humidity?: number;
+  selectedModuleId?: string;
   onSelectModule?: (moduleId: string) => void;
 }
 
@@ -39,6 +40,7 @@ export const LunarDome3D: React.FC<Props> = ({
   waterPurity = 99.4,
   temperature = 22.1,
   humidity = 46,
+  selectedModuleId,
   onSelectModule,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -142,6 +144,12 @@ export const LunarDome3D: React.FC<Props> = ({
     targetCamPos.current.set(0, 7, 12);
     targetLookAt.current.set(0, 0.5, 0);
   };
+
+  useEffect(() => {
+    if (selectedModuleId && selectedModuleId !== activeModuleId) {
+      selectModule(selectedModuleId);
+    }
+  }, [selectedModuleId]);
 
   useEffect(() => {
     const container = containerRef.current;

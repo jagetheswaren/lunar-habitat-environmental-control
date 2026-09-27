@@ -17,7 +17,7 @@ export const Layout: React.FC<Props> = ({
   children,
 }) => {
   return (
-    <div className="min-h-screen bg-[#0B0E14] text-[#F0F4F8] flex relative overflow-hidden">
+    <div className="min-h-screen bg-[#080B10] text-[#F2F5F7] flex relative overflow-hidden">
       {/* Background Starfield Canvas */}
       <StarfieldCanvas />
 
@@ -25,9 +25,9 @@ export const Layout: React.FC<Props> = ({
       <Sidebar currentPath={currentPath} onNavigate={onNavigate} />
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-60 flex flex-col min-h-screen relative z-10">
+      <div className="flex-1 ml-[230px] flex flex-col min-h-screen relative z-10">
         <Header currentPath={currentPath} onLogout={onLogout} />
-        <main className="flex-1 p-5 overflow-y-auto max-w-[1500px] w-full mx-auto">
+        <main className="flex-1 p-4 md:p-5 overflow-y-auto max-w-[1550px] w-full mx-auto">
           {children}
         </main>
       </div>

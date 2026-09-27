@@ -274,14 +274,68 @@ export const api = {
       const res = await apiV2Client.get('/telemetry/latest');
       return res.data;
     },
-    getStreamUrl: () => {
+    getStreamTicket: async (): Promise<string> => {
+      try {
+        const res = await apiV2Client.post<{ streamToken: string }>('/telemetry/stream-token');
+        return res.data?.streamToken || '';
+      } catch {
+        return '';
+      }
+    },
+    getStreamUrl: (ticket?: string) => {
       if (!BACKEND_BASE && import.meta.env.PROD) {
         console.error('Cannot open SSE stream: VITE_API_URL is not configured in production.');
         return '';
       }
-      const token = localStorage.getItem('lunar_token')?.replace(/^Bearer /i, '');
-      const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
-      return `${API_V2_BASE}/telemetry/stream${tokenQuery}`;
+      const query = ticket ? `?ticket=${encodeURIComponent(ticket)}` : '';
+      return `${API_V2_BASE}/telemetry/stream${query}`;
+    },
+    connectTelemetryStream: (
+      onConnected: () => void,
+      onTelemetry: (data?: any) => void,
+      onAlert: (data?: any) => void,
+      onError: () => void
+    ): (() => void) => {
+      if (!BACKEND_BASE && import.meta.env.PROD) {
+        console.error('Cannot open SSE stream: VITE_API_URL is not configured in production.');
+        onError();
+        return () => {};
+      }
+
+      let activeSource: EventSource | null = null;
+      let isClosed = false;
+
+      const init = async () => {
+        let ticket = '';
+        try {
+          const res = await apiV2Client.post<{ streamToken: string }>('/telemetry/stream-token');
+          ticket = res.data?.streamToken || '';
+        } catch {
+          // If unauthenticated or token endpoint unavailable, fallback to base stream
+        }
+
+        if (isClosed) return;
+
+        const url = `${API_V2_BASE}/telemetry/stream${ticket ? `?ticket=${encodeURIComponent(ticket)}` : ''}`;
+        activeSource = new EventSource(url);
+
+        activeSource.addEventListener('CONNECTED', onConnected);
+        activeSource.addEventListener('TELEMETRY', onTelemetry);
+        activeSource.addEventListener('ALERT', onAlert);
+        activeSource.addEventListener('HEARTBEAT', onConnected);
+        activeSource.onerror = () => {
+          onError();
+        };
+      };
+
+      init();
+
+      return () => {
+        isClosed = true;
+        if (activeSource) {
+          activeSource.close();
+        }
+      };
     },
     getWebSocketUrl,
   },

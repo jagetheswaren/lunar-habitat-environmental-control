@@ -89,19 +89,19 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
   ];
 
   return (
-    <aside className="w-60 bg-[#0B0E14] border-r border-[#1E2638] flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
+    <aside className="w-[230px] bg-[#10151D] border-r border-[#273142] flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
       {/* Brand Header */}
-      <div className="p-3.5 border-b border-[#1E2638] flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-[#111622] border border-[#06B6D4]/40 flex items-center justify-center text-[#06B6D4]">
-            <Globe2 className="w-4 h-4" />
+      <div className="p-3 border-b border-[#273142] flex items-center justify-between bg-[#080B10]/60">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded bg-[#151B24] border border-[#06B6D4]/40 flex items-center justify-center text-[#06B6D4]">
+            <Globe2 className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h1 className="text-xs font-bold tracking-widest text-[#F0F4F8] font-mono uppercase">
+            <h1 className="text-xs font-bold tracking-widest text-[#F2F5F7] font-mono uppercase">
               LUNAR HABITAT
             </h1>
-            <p className="text-[10px] text-[#06B6D4] font-mono tracking-wider uppercase">
-              MISSION OPS V2.1
+            <p className="text-[9px] text-[#06B6D4] font-mono tracking-wider uppercase leading-none">
+              OPERATIONS CONSOLE
             </p>
           </div>
         </div>
@@ -109,10 +109,10 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto py-2 px-2.5 space-y-4">
+      <div className="flex-1 overflow-y-auto py-2 px-2 space-y-3.5">
         {sections.map((section, sIdx) => (
           <div key={sIdx}>
-            <div className="px-2 mb-1 text-[9px] font-mono font-bold tracking-widest text-[#5A677B] uppercase">
+            <div className="px-2 mb-1 text-[9px] font-mono font-bold tracking-widest text-[#667085] uppercase">
               {section.title}
             </div>
             <div className="space-y-0.5">
@@ -123,13 +123,13 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
                   <button
                     key={iIdx}
                     onClick={() => onNavigate(item.path)}
-                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs font-mono transition-all text-left ${
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs font-mono transition-all text-left ${
                       isActive
-                        ? 'bg-[#161D2B] text-[#06B6D4] font-semibold border border-[#06B6D4]/40'
-                        : 'text-[#8C9BAE] hover:text-[#F0F4F8] hover:bg-[#111622] border border-transparent'
+                        ? 'border-l-2 border-[#06B6D4] bg-[#151B24] text-[#F2F5F7] font-semibold pl-2'
+                        : 'border-l-2 border-transparent text-[#98A2B3] hover:text-[#F2F5F7] hover:bg-[#151B24]/70 pl-2'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-[#06B6D4]' : 'text-[#5A677B]'}`} />
+                    <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-[#06B6D4]' : 'text-[#667085]'}`} />
                     <span className="truncate">{item.name}</span>
                   </button>
                 );
@@ -139,25 +139,25 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
         ))}
 
         {/* External Swagger Link */}
-        <div className="pt-2 border-t border-[#1E2638] px-1">
+        <div className="pt-2 border-t border-[#273142] px-1">
           <a
             href={(import.meta.env.VITE_API_URL || '') + '/swagger-ui/index.html'}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono text-[#8C9BAE] hover:text-[#06B6D4] hover:bg-[#111622] transition-colors border border-[#1E2638]"
+            className="flex items-center justify-between px-2 py-1.5 rounded-sm text-xs font-mono text-[#98A2B3] hover:text-[#06B6D4] hover:bg-[#151B24] transition-colors border border-[#273142]"
           >
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-              Swagger OpenAPI
+              Swagger API
             </span>
-            <ExternalLink className="w-3 h-3 text-[#5A677B]" />
+            <ExternalLink className="w-3 h-3 text-[#667085]" />
           </a>
         </div>
       </div>
 
       {/* Footer System Telemetry Status */}
-      <div className="p-2.5 border-t border-[#1E2638] bg-[#070A0F] text-[10px] font-mono text-[#8C9BAE] flex items-center justify-between">
-        <span className="text-[#5A677B]">{import.meta.env.PROD ? 'PROD CLUSTER' : 'DEV CLUSTER'}</span>
+      <div className="p-2 border-t border-[#273142] bg-[#080B10] text-[10px] font-mono text-[#98A2B3] flex items-center justify-between">
+        <span className="text-[#667085]">{import.meta.env.PROD ? 'PROD CLUSTER' : 'DEV CLUSTER'}</span>
         <span className="flex items-center gap-1.5 text-[#10B981]">
           <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
           SYS SYNCED

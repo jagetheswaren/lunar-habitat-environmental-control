@@ -35,24 +35,24 @@ export const TelemetryPage: React.FC = () => {
   useEffect(() => {
     fetchTelemetry();
 
-    // SSE connection check
-    let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource(api.v2.getStreamUrl());
-      eventSource.addEventListener('CONNECTED', () => setSseConnected(true));
-      eventSource.addEventListener('TELEMETRY', () => {
+    // SSE connection check via scoped tickets
+    const closeStream = api.v2.connectTelemetryStream(
+      () => setSseConnected(true),
+      () => {
         setSseConnected(true);
         fetchTelemetry();
-      });
-      eventSource.onerror = () => setSseConnected(false);
-    } catch {
-      setSseConnected(false);
-    }
+      },
+      () => {
+        setSseConnected(true);
+        fetchTelemetry();
+      },
+      () => setSseConnected(false)
+    );
 
     const interval = setInterval(fetchTelemetry, 15000);
     return () => {
       clearInterval(interval);
-      if (eventSource) eventSource.close();
+      closeStream();
     };
   }, []);
 
