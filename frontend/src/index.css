@@ -5,126 +5,121 @@
 @tailwind utilities;
 
 :root {
-  --bg-void: #0A0D12;
-  --bg-panel: #12161D;
-  --border: #232A35;
-  --text: #E7ECF2;
-  --text-muted: #8A94A3;
-  --amber: #E8A33D;
-  --nominal: #6FD3C7;
-  --critical: #E5484D;
+  --bg-void: #070A0F;
+  --bg-root: #0B0E14;
+  --bg-panel: #111622;
+  --bg-card: #161D2B;
+  --border: #1E2638;
+  --border-active: #2B374E;
+  --text: #F0F4F8;
+  --text-muted: #8C9BAE;
+  --cyan: #06B6D4;
+  --emerald: #10B981;
+  --amber: #F59E0B;
+  --red: #EF4444;
+  --slate: #64748B;
   color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background-color: #0A0D12;
-  color: #E7ECF2;
-  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #0B0E14;
+  color: #F0F4F8;
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .font-mono {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
   font-variant-numeric: tabular-nums;
 }
 
-/* Spacecraft Instrumentation Styling */
+/* Aerospace Technical Surfaces */
 .panel-card {
-  background-color: #12161D;
-  border: 1px solid #232A35;
+  background-color: #111622;
+  border: 1px solid #1E2638;
   border-radius: 4px;
 }
 
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0A0D12;
-}
-::-webkit-scrollbar-thumb {
-  background: #232A35;
-  border-radius: 2px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #E8A33D;
+.panel-card-hover {
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-/* Glass & Card Surfaces */
+.panel-card-hover:hover {
+  border-color: #2B374E;
+  background-color: #161D2B;
+}
+
+/* Subtle Technical Grid Lines */
+.tactical-border {
+  border: 1px solid #1E2638;
+}
+
+.tactical-border-b {
+  border-bottom: 1px solid #1E2638;
+}
+
+.tactical-border-r {
+  border-right: 1px solid #1E2638;
+}
+
+/* Custom Tactical Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0E14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2638;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2B374E;
+}
+
+/* Controlled Surface Styling */
 .lunar-glass {
-  background: rgba(18, 22, 29, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid #232A35;
+  background: rgba(17, 22, 34, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid #1E2638;
 }
 
 .lunar-glass-card {
-  background: #12161D;
-  border: 1px solid #232A35;
+  background: #111622;
+  border: 1px solid #1E2638;
   border-radius: 4px;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
-  transition: border-color 0.15s ease;
 }
 
-.lunar-glass-card:hover {
-  border-color: #E8A33D;
-}
-
-/* Instrument Glows */
-.lunar-glow-cyan {
-  box-shadow: 0 0 12px rgba(111, 211, 199, 0.25);
-}
-
-.lunar-glow-amber {
-  box-shadow: 0 0 12px rgba(232, 163, 61, 0.25);
-}
-
-.lunar-glow-red {
-  box-shadow: 0 0 16px rgba(229, 72, 77, 0.35);
-}
-
-/* Critical Pulse */
+/* Precise Status Pulse (used strictly on critical alert indicators) */
 @keyframes pulse-critical {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.4);
-    border-color: rgba(229, 72, 77, 0.7);
+    opacity: 1;
   }
   50% {
-    box-shadow: 0 0 14px 2px rgba(229, 72, 77, 0.6);
-    border-color: rgba(229, 72, 77, 1);
+    opacity: 0.45;
   }
 }
 
 .pulse-critical {
-  animation: pulse-critical 2s ease-in-out infinite;
+  animation: pulse-critical 1.8s ease-in-out infinite;
 }
 
-/* Orbit Animation */
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes spin-reverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
-.animate-spin-slow {
-  animation: spin-slow 35s linear infinite;
-}
-
-.animate-spin-reverse {
-  animation: spin-reverse 45s linear infinite;
-}
-
-/* Reduced Motion Compliance */
+/* Reduced Motion Compliance (Taste Skill mandatory) */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
