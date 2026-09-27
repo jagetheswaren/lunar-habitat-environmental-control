@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,
+  Box,
   Radio,
   BellRing,
   Sliders,
@@ -24,7 +25,6 @@ import {
   UserCheck,
   Settings,
   ExternalLink,
-  ChevronDown,
 } from 'lucide-react';
 
 interface Props {
@@ -33,52 +33,53 @@ interface Props {
   userRole?: string;
 }
 
-export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate, userRole = 'ROLE_ADMIN' }) => {
+export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate }) => {
   const sections = [
     {
-      title: 'OPERATIONS',
+      title: 'MISSION',
       items: [
-        { name: 'Mission Dashboard', path: '/dashboard', icon: LayoutDashboard },
-        { name: 'Telemetry Stream', path: '/telemetry', icon: Radio },
-        { name: 'Environmental Alerts', path: '/alerts', icon: BellRing },
-        { name: 'Threshold Rules', path: '/thresholds', icon: Sliders },
-        { name: 'Habitat Zones', path: '/zones', icon: Globe2 },
-        { name: 'Resource Inventory', path: '/inventory', icon: Boxes },
+        { name: 'Mission Control', path: '/dashboard', icon: LayoutDashboard },
+        { name: 'Digital Twin 3D', path: '/digital-twin', icon: Box },
+        { name: 'Live Telemetry', path: '/telemetry', icon: Radio },
+        { name: 'Alerts & Incidents', path: '/alerts', icon: BellRing },
+      ],
+    },
+    {
+      title: 'LIFE SUPPORT',
+      items: [
+        { name: 'Atmospheric Rules', path: '/thresholds', icon: Sliders },
+        { name: 'Habitat Sectors', path: '/zones', icon: Globe2 },
+        { name: 'Resource Reserves', path: '/inventory', icon: Boxes },
         { name: 'Life Support Maint.', path: '/maintenance', icon: Wrench },
       ],
     },
     {
-      title: 'COMMERCIAL',
+      title: 'OPERATIONS',
       items: [
-        { name: 'Entity Contacts', path: '/contacts', icon: Users },
+        { name: 'Entity Directory', path: '/contacts', icon: Users },
         { name: 'Resource Catalog', path: '/products', icon: Package },
         { name: 'Purchase Orders', path: '/purchase-orders', icon: ShoppingBag },
         { name: 'Vendor Bills', path: '/vendor-bills', icon: Receipt },
         { name: 'Sales Orders', path: '/sales-orders', icon: FileSpreadsheet },
         { name: 'Customer Invoices', path: '/invoices', icon: FileCheck },
-        { name: 'Payment Transactions', path: '/payments', icon: CreditCard },
+        { name: 'Payments', path: '/payments', icon: CreditCard },
       ],
     },
     {
-      title: 'FINANCE & GENERAL LEDGER',
+      title: 'FINANCE',
       items: [
         { name: 'Chart of Accounts', path: '/accounts', icon: BookOpen },
         { name: 'Journal Types', path: '/journals', icon: Layers },
-        { name: 'Journal Entries (GL)', path: '/journal-entries', icon: FileText },
-        { name: 'Cost Centers (Analytic)', path: '/analytic-accounts', icon: PieChart },
-        { name: 'Operational Budgets', path: '/budgets', icon: Calculator },
+        { name: 'General Ledger', path: '/journal-entries', icon: FileText },
+        { name: 'Cost Centers', path: '/analytic-accounts', icon: PieChart },
+        { name: 'Budgets', path: '/budgets', icon: Calculator },
+        { name: 'Reports & Intelligence', path: '/reports', icon: BarChart3 },
       ],
     },
     {
-      title: 'REPORTS & INTELLIGENCE',
+      title: 'SYSTEM',
       items: [
-        { name: 'Financial & Eco Reports', path: '/reports', icon: BarChart3 },
-      ],
-    },
-    {
-      title: 'SYSTEM & GOVERNANCE',
-      items: [
-        { name: 'Security Audit Logs', path: '/audit-logs', icon: ShieldCheck },
+        { name: 'Security Audit Trail', path: '/audit-logs', icon: ShieldCheck },
         { name: 'Access & User Admin', path: '/users', icon: UserCheck },
         { name: 'Console Settings', path: '/settings', icon: Settings },
       ],
@@ -86,30 +87,33 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate, userRole = '
   ];
 
   return (
-    <aside className="w-64 bg-space-900/90 border-r border-slate-800 flex flex-col h-screen fixed left-0 top-0 z-30 backdrop-blur-xl">
+    <aside className="w-60 bg-[#0B0E14] border-r border-[#1E2638] flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
       {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-          <Globe2 className="w-5 h-5 text-space-950 font-bold" />
+      <div className="p-3.5 border-b border-[#1E2638] flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded bg-[#111622] border border-[#06B6D4]/40 flex items-center justify-center text-[#06B6D4]">
+            <Globe2 className="w-4 h-4" />
+          </div>
+          <div>
+            <h1 className="text-xs font-bold tracking-widest text-[#F0F4F8] font-mono uppercase">
+              LUNAR HABITAT
+            </h1>
+            <p className="text-[10px] text-[#06B6D4] font-mono tracking-wider uppercase">
+              MISSION OPS V2.1
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-sm font-bold tracking-wider text-white font-mono uppercase">
-            LUNAR HABITAT
-          </h1>
-          <p className="text-[10px] text-cyan-400 font-mono tracking-widest uppercase">
-            OPS CONSOLE v2.0
-          </p>
-        </div>
+        <span className="w-2 h-2 rounded-full bg-[#10B981]" title="Local node operational" />
       </div>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-6">
+      <div className="flex-1 overflow-y-auto py-2 px-2.5 space-y-4">
         {sections.map((section, sIdx) => (
           <div key={sIdx}>
-            <div className="px-2 mb-2 text-[10px] font-mono font-semibold tracking-widest text-slate-500 uppercase">
+            <div className="px-2 mb-1 text-[9px] font-mono font-bold tracking-widest text-[#5A677B] uppercase">
               {section.title}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {section.items.map((item, iIdx) => {
                 const Icon = item.icon;
                 const isActive = currentPath === item.path;
@@ -117,13 +121,13 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate, userRole = '
                   <button
                     key={iIdx}
                     onClick={() => onNavigate(item.path)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-mono transition-all duration-150 ${
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-xs font-mono transition-all text-left ${
                       isActive
-                        ? 'bg-cyan-500/15 text-cyan-300 font-semibold border border-cyan-500/30 shadow-sm shadow-cyan-500/10'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                        ? 'bg-[#161D2B] text-[#06B6D4] font-semibold border border-[#06B6D4]/40'
+                        : 'text-[#8C9BAE] hover:text-[#F0F4F8] hover:bg-[#111622] border border-transparent'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                    <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? 'text-[#06B6D4]' : 'text-[#5A677B]'}`} />
                     <span className="truncate">{item.name}</span>
                   </button>
                 );
@@ -133,26 +137,29 @@ export const Sidebar: React.FC<Props> = ({ currentPath, onNavigate, userRole = '
         ))}
 
         {/* External Swagger Link */}
-        <div className="pt-2 border-t border-slate-800/80 px-2">
+        <div className="pt-2 border-t border-[#1E2638] px-1">
           <a
             href="http://localhost:8081/swagger-ui/index.html"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-mono text-slate-400 hover:text-cyan-300 hover:bg-slate-800/50 transition-colors border border-slate-800"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-mono text-[#8C9BAE] hover:text-[#06B6D4] hover:bg-[#111622] transition-colors border border-[#1E2638]"
           >
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
               Swagger OpenAPI
             </span>
-            <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+            <ExternalLink className="w-3 h-3 text-[#5A677B]" />
           </a>
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="p-3 border-t border-slate-800 bg-space-950/60 text-[10px] font-mono text-slate-500 flex items-center justify-between">
-        <span>PORT: 8081 REST</span>
-        <span className="text-emerald-400">ONLINE</span>
+      {/* Footer System Telemetry Status */}
+      <div className="p-2.5 border-t border-[#1E2638] bg-[#070A0F] text-[10px] font-mono text-[#8C9BAE] flex items-center justify-between">
+        <span className="text-[#5A677B]">PORT 8081</span>
+        <span className="flex items-center gap-1.5 text-[#10B981]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+          SYS SYNCED
+        </span>
       </div>
     </aside>
   );

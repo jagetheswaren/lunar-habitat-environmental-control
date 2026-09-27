@@ -20,51 +20,60 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   trend,
   subtitle,
 }) => {
-  const statusColors = {
-    ok: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
-    warning: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
-    critical: 'border-red-500/30 text-red-400 bg-red-500/10 animate-pulse',
-    info: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10',
+  const statusStyles = {
+    ok: {
+      badge: 'text-[#10B981] bg-[#10B981]/10 border-[#10B981]/30',
+      dot: 'bg-[#10B981]',
+      border: 'border-[#1E2638] hover:border-[#10B981]/40',
+    },
+    warning: {
+      badge: 'text-[#F59E0B] bg-[#F59E0B]/10 border-[#F59E0B]/30',
+      dot: 'bg-[#F59E0B]',
+      border: 'border-[#F59E0B]/40 hover:border-[#F59E0B]/60',
+    },
+    critical: {
+      badge: 'text-[#EF4444] bg-[#EF4444]/10 border-[#EF4444]/40 pulse-critical',
+      dot: 'bg-[#EF4444] pulse-critical',
+      border: 'border-[#EF4444]/50 hover:border-[#EF4444]',
+    },
+    info: {
+      badge: 'text-[#06B6D4] bg-[#06B6D4]/10 border-[#06B6D4]/30',
+      dot: 'bg-[#06B6D4]',
+      border: 'border-[#1E2638] hover:border-[#06B6D4]/40',
+    },
   };
 
-  const statusGlow = {
-    ok: 'hover:border-emerald-500/50',
-    warning: 'hover:border-amber-500/50',
-    critical: 'hover:border-red-500/50 border-red-500/40',
-    info: 'hover:border-cyan-500/50',
-  };
+  const current = statusStyles[status];
 
   return (
-    <div className={`lunar-glass-card rounded-xl p-4 transition-all duration-300 relative overflow-hidden ${statusGlow[status]}`}>
-      {/* Top row */}
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-mono font-medium tracking-wider text-slate-400 uppercase">
+    <div className={`bg-[#111622] rounded p-3 border transition-colors ${current.border} font-mono relative select-none`}>
+      {/* Top Header */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] font-bold tracking-wider text-[#8C9BAE] uppercase truncate">
           {title}
         </span>
-        <div className={`p-2 rounded-lg border ${statusColors[status]}`}>
-          <Icon className="w-4 h-4" />
+        <div className={`p-1 rounded border ${current.badge}`}>
+          <Icon className="w-3.5 h-3.5" />
         </div>
       </div>
 
-      {/* Main Value */}
-      <div className="flex items-baseline gap-1.5 mb-1">
-        <span className="text-2xl font-bold font-mono tracking-tight text-white">
+      {/* Primary Value Readout */}
+      <div className="flex items-baseline gap-1 mb-1">
+        <span className="text-xl font-bold tracking-tight text-[#F0F4F8] tabular-nums">
           {value}
         </span>
         {unit && (
-          <span className="text-xs font-mono text-slate-400 font-medium">
+          <span className="text-[10px] text-[#8C9BAE] font-medium uppercase">
             {unit}
           </span>
         )}
       </div>
 
-      {/* Subtitle / Trend */}
-      {(subtitle || trend) && (
-        <div className="flex items-center justify-between text-xs font-mono text-slate-400 pt-2 border-t border-slate-800/80">
-          <span>{subtitle}</span>
-          {trend && <span className="text-cyan-400">{trend}</span>}
-        </div>
-      )}
+      {/* Subtitle / Threshold Target */}
+      <div className="flex items-center justify-between text-[10px] text-[#5A677B] pt-1.5 border-t border-[#1E2638]">
+        <span className="truncate">{subtitle || 'Nominal Range'}</span>
+        {trend && <span className="text-[#06B6D4] text-[9px] font-semibold">{trend}</span>}
+      </div>
     </div>
   );
 };

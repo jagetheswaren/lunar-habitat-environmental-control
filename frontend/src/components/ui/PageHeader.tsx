@@ -17,26 +17,28 @@ export const PageHeader: React.FC<Props> = ({
   actions,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-[#1E2638]">
+      <div className="flex items-center gap-3">
         {Icon && (
-          <div className="p-2.5 rounded-xl border border-cyan-500/20 bg-space-850 text-cyan-400 mt-1">
-            <Icon className="w-5 h-5" />
+          <div className="w-8 h-8 rounded bg-[#111622] border border-[#1E2638] text-[#06B6D4] flex items-center justify-center flex-shrink-0">
+            <Icon className="w-4 h-4" />
           </div>
         )}
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-white">{title}</h1>
+            <h1 className="text-lg font-bold font-mono tracking-tight text-[#F0F4F8] uppercase">
+              {title}
+            </h1>
             {badge && (
-              <span className="px-2 py-0.5 rounded text-xs font-mono font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#06B6D4]/10 text-[#06B6D4] border border-[#06B6D4]/30 uppercase">
                 {badge}
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-400 mt-0.5 font-mono">{subtitle}</p>
+          <p className="text-xs text-[#8C9BAE] font-mono mt-0.5">{subtitle}</p>
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2.5">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
     </div>
   );
 };

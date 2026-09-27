@@ -87,22 +87,22 @@ export const HabitatZonesPage: React.FC = () => {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {zones.map((z) => (
-          <div key={z.id} className="lunar-glass-card rounded-xl p-5 border border-slate-800">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-mono text-cyan-400 font-bold">{z.code}</span>
-              <StatusBadge status={z.operationalStatus || 'OPERATIONAL'} />
+          <div key={z.id} className="bg-[#111622] rounded p-4 border border-[#1E2638] font-mono">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-[#06B6D4] font-bold">{z.code}</span>
+              <StatusBadge status={z.operationalStatus || 'OPERATIONAL'} size="sm" />
             </div>
-            <h4 className="text-base font-bold text-white mb-1">{z.name}</h4>
-            <p className="text-xs text-slate-400 font-mono mb-4 leading-relaxed">
+            <h4 className="text-sm font-bold text-[#F0F4F8] mb-1">{z.name}</h4>
+            <p className="text-[11px] text-[#8C9BAE] mb-3 leading-relaxed">
               {z.description || 'Pressurized lunar biome sector.'}
             </p>
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono border-t border-slate-800 pt-3 text-slate-400">
-              <div>PRESSURE: <span className="text-white font-semibold">{z.targetPressureKpa || 101.3} kPa</span></div>
-              <div>MAX CO₂: <span className="text-white font-semibold">{z.maxCo2Ppm || 950} ppm</span></div>
-              <div>VOLUME: <span className="text-white font-semibold">{z.totalVolumeM3 || 4500} m³</span></div>
-              <div>OCCUPANCY: <span className="text-cyan-400 font-semibold">{z.occupancyCount || 4}</span></div>
+            <div className="grid grid-cols-2 gap-1.5 text-[10px] border-t border-[#1E2638] pt-2.5 text-[#8C9BAE]">
+              <div>PRESSURE: <span className="text-[#F0F4F8] font-semibold">{z.targetPressureKpa || 101.3} kPa</span></div>
+              <div>MAX CO₂: <span className="text-[#F0F4F8] font-semibold">{z.maxCo2Ppm || 950} ppm</span></div>
+              <div>VOLUME: <span className="text-[#F0F4F8] font-semibold">{z.totalVolumeM3 || 4500} m³</span></div>
+              <div>OCCUPANCY: <span className="text-[#06B6D4] font-semibold">{z.occupancyCount || 4} CREW</span></div>
             </div>
           </div>
         ))}

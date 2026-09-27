@@ -40,11 +40,11 @@ export const AccountsPage: React.FC = () => {
       header: 'Classification',
       render: (r) => {
         const typeColors: Record<string, string> = {
-          ASSET: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-          LIABILITY: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-          EQUITY: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
-          REVENUE: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-          EXPENSE: 'bg-red-500/10 text-red-400 border-red-500/30',
+          ASSET: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/40',
+          LIABILITY: 'bg-[#F59E0B]/15 text-[#F59E0B] border-[#F59E0B]/40',
+          EQUITY: 'bg-[#06B6D4]/15 text-[#06B6D4] border-[#06B6D4]/40',
+          REVENUE: 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/40',
+          EXPENSE: 'bg-[#EF4444]/15 text-[#EF4444] border-[#EF4444]/40',
         };
         return (
           <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold border ${typeColors[r.type] || 'bg-slate-800'}`}>

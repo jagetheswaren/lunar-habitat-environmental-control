@@ -40,10 +40,10 @@ export const PaymentsPage: React.FC = () => {
       header: 'Payment Type',
       render: (r) => (
         <span
-          className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold border ${
+          className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${
             r.type === 'CUSTOMER_PAYMENT'
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-              : 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+              ? 'bg-[#10B981]/15 text-[#10B981] border-[#10B981]/40'
+              : 'bg-[#06B6D4]/15 text-[#06B6D4] border-[#06B6D4]/40'
           }`}
         >
           {r.type}

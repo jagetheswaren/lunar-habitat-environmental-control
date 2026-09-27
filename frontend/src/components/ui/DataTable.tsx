@@ -25,49 +25,53 @@ export function DataTable<T extends { id?: string | number }>({
 }: Props<T>) {
   if (loading) {
     return (
-      <div className="lunar-glass-card rounded-xl p-12 text-center flex flex-col items-center justify-center">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-3" />
-        <p className="text-sm font-mono text-slate-400">Querying lunar mission database...</p>
+      <div className="panel-card p-12 text-center flex flex-col items-center justify-center">
+        <Loader2 className="w-6 h-6 text-[#06B6D4] animate-spin mb-3" />
+        <p className="text-xs font-mono text-[#8C9BAE] tracking-wider uppercase">
+          QUERYING LUNAR MISSION DATABASE...
+        </p>
       </div>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <div className="lunar-glass-card rounded-xl p-12 text-center flex flex-col items-center justify-center">
-        <div className="p-3 rounded-full bg-slate-800/80 border border-slate-700 text-slate-400 mb-3">
-          <Database className="w-6 h-6" />
+      <div className="panel-card p-10 text-center flex flex-col items-center justify-center">
+        <div className="w-10 h-10 rounded bg-[#161D2B] border border-[#1E2638] text-[#8C9BAE] flex items-center justify-center mb-3">
+          <Database className="w-5 h-5" />
         </div>
-        <h4 className="text-base font-semibold text-slate-300">No Records Available</h4>
-        <p className="text-xs font-mono text-slate-500 mt-1">{emptyMessage}</p>
+        <h4 className="text-sm font-semibold font-mono text-[#F0F4F8] uppercase tracking-wide">
+          NO RECORDS AVAILABLE
+        </h4>
+        <p className="text-xs font-mono text-[#8C9BAE] mt-1">{emptyMessage}</p>
       </div>
     );
   }
 
   return (
-    <div className="lunar-glass rounded-xl border border-slate-800 overflow-hidden shadow-xl">
+    <div className="panel-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-space-900/90 text-slate-400 font-mono text-xs uppercase border-b border-slate-800">
+        <table className="w-full text-left text-xs font-mono">
+          <thead className="bg-[#0B0E14] text-[#8C9BAE] text-[10px] uppercase tracking-wider border-b border-[#1E2638]">
             <tr>
               {columns.map((col, idx) => (
-                <th key={idx} className={`px-4 py-3.5 font-semibold tracking-wider ${col.className || ''}`}>
+                <th key={idx} className={`px-3.5 py-2.5 font-bold ${col.className || ''}`}>
                   {col.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
+          <tbody className="divide-y divide-[#1E2638] bg-[#111622]">
             {data.map((row, idx) => (
               <tr
                 key={row.id ? String(row.id) : idx}
                 onClick={() => onRowClick && onRowClick(row)}
-                className={`transition-colors duration-150 ${
-                  onRowClick ? 'cursor-pointer hover:bg-cyan-950/20' : 'hover:bg-slate-900/50'
+                className={`transition-colors duration-100 ${
+                  onRowClick ? 'cursor-pointer hover:bg-[#161D2B]' : 'hover:bg-[#141A27]'
                 }`}
               >
                 {columns.map((col, cIdx) => (
-                  <td key={cIdx} className={`px-4 py-3 text-slate-300 ${col.className || ''}`}>
+                  <td key={cIdx} className={`px-3.5 py-2 text-[#F0F4F8] ${col.className || ''}`}>
                     {col.render
                       ? col.render(row)
                       : col.accessorKey
@@ -80,9 +84,9 @@ export function DataTable<T extends { id?: string | number }>({
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-2.5 bg-space-900/40 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
-        <span>TOTAL RECORDS: {data.length}</span>
-        <span>LUNAR ORBITAL REPLICATION: SYNCED</span>
+      <div className="px-3.5 py-2 bg-[#0B0E14] border-t border-[#1E2638] flex items-center justify-between text-[10px] font-mono text-[#5A677B]">
+        <span>TOTAL ENTRIES: {data.length}</span>
+        <span className="text-[#10B981]">LEDGER / SENSOR SYNC: NOMINAL</span>
       </div>
     </div>
   );
