@@ -6,8 +6,8 @@
 [![Database](https://img.shields.io/badge/MySQL-8.0%2B-orange.svg)](https://www.mysql.com/)
 [![Thymeleaf](https://img.shields.io/badge/UI-Thymeleaf%20%2B%20CSS3-green.svg)](https://www.thymeleaf.org/)
 [![Swagger](https://img.shields.io/badge/OpenAPI-3.0%20(Swagger%20UI)-brightgreen.svg)](http://localhost:8081/swagger-ui/index.html)
-[![Postman](https://img.shields.io/badge/Postman%2FNewman-65%2F65%20Passed-orange.svg)](postman/)
-[![JUnit 5](https://img.shields.io/badge/JUnit%205-21%2F21%20Passed-blue.svg)](src/test/java)
+[![Postman](https://img.shields.io/badge/Postman%2FNewman-72%2F72%20Passed%20(141%20Assertions)-orange.svg)](postman/)
+[![JUnit 5](https://img.shields.io/badge/JUnit%205-27%2F27%20Passed-blue.svg)](src/test/java)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 ---
@@ -44,20 +44,22 @@ Maintaining human presence on the Moon requires complete self-sufficiency and re
 
 ---
 
-## 💻 4. Technology Stack
+## 💻 4. Technology Stack & V2 Architecture
 
 | Layer | Component | Specification |
 |---|---|---|
 | **Language** | Java | Java 17 LTS (Eclipse Temurin / OpenJDK) |
-| **Framework** | Spring Boot | 3.4.3 |
-| **Persistence** | Spring Data JPA / Hibernate | 6.x ORM with Lazy Loading & Cascades |
-| **Migrations** | Flyway | Versioned migrations V1 through V7 |
-| **Database** | MySQL | 8.0+ (InnoDB, UTF-8 MB4) |
-| **Security** | Spring Security | Role-Based Access Control (RBAC) + BCrypt Hashing |
-| **Validation** | Jakarta Bean Validation | `@NotNull`, `@NotBlank`, `@Positive`, `@Email` |
-| **API Docs** | SpringDoc OpenAPI | OpenAPI 3.0 / Swagger UI |
-| **Frontend** | Thymeleaf + HTML5 + CSS3 | Space-console dark theme, Chart.js 4.4, Vanilla JS |
-| **Testing** | JUnit 5 + Mockito + MockMvc | Unit tests + Integration tests + Newman E2E |
+| **Backend Framework** | Spring Boot | 3.4.3 (REST APIs `/api/v1/*` & `/api/v2/*`) |
+| **V2 Frontend** | React 18 + Vite + TypeScript | Mission Control UI, Tailwind CSS, Lucide icons, Starfield Canvas |
+| **3D Digital Twin** | Three.js WebGL | 4 interconnected lunar base sectors, animated camera zoom, live telemetry overlay |
+| **Operational Intelligence** | LUNAR CORE Engine | Deterministic 0-100 Habitat Health Index + Grounded Operator Diagnostic Assistant |
+| **Real-Time Streaming** | Server-Sent Events (SSE) | Live telemetry and threshold breach broadcasting (`/api/v2/telemetry/stream`) |
+| **Security & Auth** | Spring Security + JWT | Dual-mode: HMAC-SHA256 JWT access/refresh tokens + legacy HTTP Basic/Bearer support |
+| **Persistence** | Spring Data JPA / Hibernate | 6.x ORM with Lazy Loading, Cascades, and Pagination |
+| **Migrations** | Flyway | Versioned SQL migrations V1 through V7 (27 MySQL tables) |
+| **Database** | MySQL / H2 MySQL-Mode | 8.0+ (InnoDB, UTF-8 MB4) |
+| **API Docs** | SpringDoc OpenAPI | OpenAPI 3.0 / Swagger UI (`/swagger-ui/index.html`) |
+| **Testing** | JUnit 5 + MockMvc + Newman | 27/27 JUnit passed + 72/72 Postman requests passed (141/141 assertions) |
 
 ---
 
@@ -323,6 +325,73 @@ All **21 automated tests** cover:
 mvn clean package
 ```
 Generates production-ready standalone JAR: `target/lunar-habitat-0.0.1-SNAPSHOT.jar`.
+
+---
+
+## 🛰️ 15.5. Full-Stack 3D Architecture & Modern Frontend Upgrade
+
+The project features a **two-tier enterprise full-stack architecture** with a dedicated modern 3D Mission Control web console alongside the existing Spring Boot + Thymeleaf application:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│             LUNAR HABITAT MISSION CONTROL CONSOLE                      │
+│                                                                        │
+│   [ Modern 3D Frontend (Port 5173) ]       [ Thymeleaf SSR (Port 8081) ]│
+│   • React 18 + Vite + TypeScript           • Thymeleaf 3 + Chart.js    │
+│   • Three.js 3D Biosphere Dome             • Server-rendered templates │
+│   • Tailwind CSS + Glassmorphism           • Space-console CSS3        │
+│   • 28 Mission Operations Pages            • 33 Monolithic routes      │
+└──────────────────┬─────────────────────────────────────┬───────────────┘
+                   │ HTTP REST (CORS/Proxy)              │ Direct SSR
+                   ▼                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             SPRING BOOT 3.4.3 ENTERPRISE BACKEND (Port 8081)           │
+│   • 21 REST API Controllers (/api/v1/lunar/**)                         │
+│   • Spring Security 6.4 + BCrypt + HTTP Basic / Token Auth             │
+│   • Double-Entry General Ledger (Debit = Credit Verification)          │
+│   • OpenAPI 3.0 / Swagger UI (/swagger-ui/index.html)                  │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │ JPA / Hibernate ORM
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             DATABASE LAYER: MySQL 8.0 / In-Memory H2                    │
+│   • Flyway Migrations (V1 - V7) • 27 Production Schema Tables          │
+│   • Zero Hardcoded Data • Pure Database Persistence & Real KPIs       │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Running the Full-Stack Application
+
+#### 1. Backend (Spring Boot 3.4.3 + Flyway + MySQL/H2)
+```bash
+# In the project root:
+mvn spring-boot:run
+# Or run packaged jar:
+java -jar target/lunar-habitat-0.0.1-SNAPSHOT.jar
+```
+- **Backend URL:** `http://localhost:8081`
+- **Swagger Documentation:** `http://localhost:8081/swagger-ui/index.html`
+- **Actuator Health:** `http://localhost:8081/actuator/health`
+
+#### 2. Frontend (React 18 + Vite + TypeScript + Three.js)
+```bash
+# In frontend directory:
+cd frontend
+npm install
+npm run dev
+```
+- **Frontend URL:** `http://localhost:5173`
+- **Build Production Bundle:** `npm run build` (outputs to `frontend/dist/`)
+- **Lint Check:** `npm run lint`
+
+### 3D Interactive Web Design & V2 Features
+1. **Cinematic & Functional 3D Lunar Habitat Digital Twin:** Real-time Three.js WebGL simulation featuring 4 interconnected base sectors (Habitat Dome Alpha, Hydroponics Dome Beta, Life Support Sector Gamma, and Solar Grid Delta), resource transfer pipelines, and smooth camera zoom animations.
+2. **Interactive Telemetry Spec Overlays:** Selecting any module pans the camera and reveals real-time metrics (Pressure, Oxygen, CO₂, Temperature, Humidity, Water Purity, Life Support, Scrubber status, and Power). Modules glow amber or pulsing red during threshold excursions.
+3. **LUNAR CORE Operational Intelligence:** Deterministic 0-100 Habitat Health Index (Atmosphere, Water, Life Support, Power, Resources, Maintenance) with an interactive Grounded Operator Diagnostic Assistant answering incident and telemetry inquiries.
+4. **Live Server-Sent Events (SSE) Streaming:** Real-time push updates via `GET /api/v2/telemetry/stream` for zero-latency mission control monitoring without polling.
+5. **Modern JWT Authentication (`/api/v2/auth/login`):** Issues RFC 7519 HMAC-SHA256 access and refresh tokens with role-based claims.
+6. **Deep-Space Twinkling Starfield:** High-performance, lightweight HTML5 2D canvas with variable-opacity twinkling stars.
+7. **Mission Control Glassmorphism:** Graphite-black surfaces, warm lunar-grey panels, restrained cyan telemetry highlights, amber warnings, and ruby critical states.
 
 ---
 

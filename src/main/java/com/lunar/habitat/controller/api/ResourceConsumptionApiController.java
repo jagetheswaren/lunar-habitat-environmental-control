@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/lunar/resources")
+@RequestMapping({"/api/v1/lunar/resources", "/api/v2/resources"})
 @Tag(name = "Resource Consumption", description = "Oxygen and Water resource consumption analytics derived from telemetry")
 public class ResourceConsumptionApiController {
 

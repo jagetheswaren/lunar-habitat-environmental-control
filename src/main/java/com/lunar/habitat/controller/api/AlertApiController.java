@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/alerts")
+@RequestMapping({"/api/v1/lunar/alerts", "/api/v2/alerts"})
 @Tag(name = "Environmental Alerts", description = "Alert lifecycle and incident management API")
 public class AlertApiController {
 
@@ -46,13 +46,13 @@ public class AlertApiController {
         return ResponseEntity.ok(alertService.getAlertById(id));
     }
 
-    @PutMapping("/{id}/acknowledge")
+    @RequestMapping(value = "/{id}/acknowledge", method = {RequestMethod.PUT, RequestMethod.POST})
     @Operation(summary = "Acknowledge Alert", description = "Transitions alert from OPEN to ACKNOWLEDGED with operator audit log")
     public ResponseEntity<EnvironmentalAlert> acknowledgeAlert(@PathVariable Long id) {
         return ResponseEntity.ok(alertService.acknowledgeAlert(id, com.lunar.habitat.security.SecurityUtils.getCurrentUsername()));
     }
 
-    @PutMapping("/{id}/resolve")
+    @RequestMapping(value = "/{id}/resolve", method = {RequestMethod.PUT, RequestMethod.POST})
     @Operation(summary = "Resolve Alert", description = "Transitions alert to RESOLVED with operator audit log")
     public ResponseEntity<EnvironmentalAlert> resolveAlert(@PathVariable Long id) {
         return ResponseEntity.ok(alertService.resolveAlert(id, com.lunar.habitat.security.SecurityUtils.getCurrentUsername()));

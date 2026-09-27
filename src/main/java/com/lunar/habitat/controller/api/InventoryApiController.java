@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/lunar/inventory")
+@RequestMapping({"/api/v1/lunar/inventory", "/api/v2/inventory"})
 @Tag(name = "Resource Inventory", description = "Stock Tracking and Low-Stock Alerting for Lunar Consumables and Equipment")
 public class InventoryApiController {
 

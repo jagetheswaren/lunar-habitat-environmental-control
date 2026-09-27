@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;
 
 @RestController
-@RequestMapping("/api/v1/lunar/audit-logs")
+@RequestMapping({"/api/v1/lunar/audit-logs", "/api/v2/audit-logs"})
 @Tag(name = "Audit Logs", description = "Immutable System and Financial Audit Trails API")
 public class AuditLogApiController {
 

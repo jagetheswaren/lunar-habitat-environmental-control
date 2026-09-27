@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/lunar/maintenance")
+@RequestMapping({"/api/v1/lunar/maintenance", "/api/v2/maintenance"})
 @Tag(name = "Equipment Maintenance", description = "Scrubber Servicing and Life-Support Maintenance Activities API")
 public class MaintenanceApiController {
 

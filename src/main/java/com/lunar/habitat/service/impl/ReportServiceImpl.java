@@ -91,8 +91,14 @@ public class ReportServiceImpl implements ReportService {
         }
 
         // Add cumulative Net Result (Retained Earnings) into Equity
-        BigDecimal totalCumulativeRevenue = journalEntryLineRepository.calculateTotalRevenue(null, response.getAsOfDate());
-        BigDecimal totalCumulativeExpenses = journalEntryLineRepository.calculateTotalExpenses(null, response.getAsOfDate());
+        BigDecimal totalCumulativeRevenue = asOfDate != null ?
+                journalEntryLineRepository.calculateTotalRevenue(null, asOfDate) :
+                journalEntryLineRepository.calculateTotalRevenue(null, null);
+        BigDecimal totalCumulativeExpenses = asOfDate != null ?
+                journalEntryLineRepository.calculateTotalExpenses(null, asOfDate) :
+                journalEntryLineRepository.calculateTotalExpenses(null, null);
+        if (totalCumulativeRevenue == null) totalCumulativeRevenue = BigDecimal.ZERO;
+        if (totalCumulativeExpenses == null) totalCumulativeExpenses = BigDecimal.ZERO;
         BigDecimal retainedEarnings = totalCumulativeRevenue.subtract(totalCumulativeExpenses);
 
         response.getEquity().add(new BalanceSheetResponse.AccountBalanceItem(

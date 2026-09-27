@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/lunar/sales-orders")
+@RequestMapping({"/api/v1/lunar/sales-orders", "/api/v2/sales-orders"})
 @Tag(name = "Sales Orders", description = "Commercial Customer Contracts and Sales Orders API")
 public class SalesOrderApiController {
 

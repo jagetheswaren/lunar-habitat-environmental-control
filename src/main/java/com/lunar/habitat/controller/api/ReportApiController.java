@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/lunar/reports")
+@RequestMapping({"/api/v1/lunar/reports", "/api/v2/reports"})
 @Tag(name = "Reports & Analytics", description = "Financial, Resource, Environmental, and Operational Reports API")
 public class ReportApiController {
 

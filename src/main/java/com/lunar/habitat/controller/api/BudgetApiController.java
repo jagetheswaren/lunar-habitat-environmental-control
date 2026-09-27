@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/lunar/budgets")
+@RequestMapping({"/api/v1/lunar/budgets", "/api/v2/budgets"})
 @Tag(name = "Budgets & Analytic Accounts", description = "Operational Budgeting and Budget vs Actuals Variance API")
 public class BudgetApiController {
 

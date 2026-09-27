@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/v1/lunar/users")
+@RequestMapping({"/api/v1/lunar/users", "/api/v2/users"})
 @Tag(name = "Users", description = "User Management and Access Control API")
 public class UserApiController {
 

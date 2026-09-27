@@ -1,0 +1,224 @@
+import axios from 'axios';
+import * as T from './types';
+
+const API_BASE = 'http://localhost:8081/api/v1/lunar';
+
+export const apiClient = axios.create({
+  baseURL: API_BASE,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+});
+
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('lunar_token');
+  if (token) {
+    config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && window.location.pathname !== '/login') {
+      localStorage.removeItem('lunar_token');
+      localStorage.removeItem('lunar_user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const api = {
+  auth: {
+    login: async (username: string, password: string): Promise<T.AuthResponse> => {
+      const res = await apiClient.post<T.AuthResponse>('/auth/login', { username, password });
+      return res.data;
+    },
+    me: async (): Promise<T.AuthResponse> => {
+      const res = await apiClient.get<T.AuthResponse>('/auth/me');
+      return res.data;
+    },
+  },
+  telemetry: {
+    getAll: async (): Promise<T.Telemetry[]> => {
+      const res = await apiClient.get('/telemetry');
+      return res.data?.content || res.data || [];
+    },
+    getById: async (id: number): Promise<T.Telemetry> => {
+      const res = await apiClient.get(`/telemetry/${id}`);
+      return res.data;
+    },
+    post: async (payload: any): Promise<T.Telemetry> => {
+      const res = await apiClient.post('/telemetry', payload);
+      return res.data;
+    },
+  },
+  alerts: {
+    getAll: async (): Promise<T.EnvironmentalAlert[]> => {
+      const res = await apiClient.get('/alerts');
+      return res.data?.content || res.data || [];
+    },
+    acknowledge: async (id: number, notes?: string): Promise<T.EnvironmentalAlert> => {
+      const res = await apiClient.put(`/alerts/${id}/acknowledge`, { notes });
+      return res.data;
+    },
+    resolve: async (id: number, notes?: string): Promise<T.EnvironmentalAlert> => {
+      const res = await apiClient.put(`/alerts/${id}/resolve`, { notes });
+      return res.data;
+    },
+  },
+  zones: {
+    getAll: async (): Promise<T.HabitatZone[]> => {
+      const res = await apiClient.get('/zones');
+      return res.data?.content || res.data || [];
+    },
+  },
+  thresholds: {
+    getAll: async (): Promise<T.EnvironmentalThreshold[]> => {
+      const res = await apiClient.get('/thresholds');
+      return res.data?.content || res.data || [];
+    },
+  },
+  inventory: {
+    getAll: async (): Promise<T.InventoryItem[]> => {
+      const res = await apiClient.get('/inventory');
+      return res.data?.content || res.data || [];
+    },
+  },
+  maintenance: {
+    getAll: async (): Promise<T.MaintenanceRecord[]> => {
+      const res = await apiClient.get('/maintenance');
+      return res.data?.content || res.data || [];
+    },
+  },
+  contacts: {
+    getAll: async (): Promise<T.Contact[]> => {
+      const res = await apiClient.get('/contacts');
+      return res.data?.content || res.data || [];
+    },
+  },
+  products: {
+    getAll: async (): Promise<T.Product[]> => {
+      const res = await apiClient.get('/products');
+      return res.data?.content || res.data || [];
+    },
+  },
+  purchaseOrders: {
+    getAll: async (): Promise<T.PurchaseOrder[]> => {
+      const res = await apiClient.get('/purchase-orders');
+      return res.data?.content || res.data || [];
+    },
+  },
+  vendorBills: {
+    getAll: async (): Promise<T.VendorBill[]> => {
+      const res = await apiClient.get('/vendor-bills');
+      return res.data?.content || res.data || [];
+    },
+  },
+  salesOrders: {
+    getAll: async (): Promise<T.SalesOrder[]> => {
+      const res = await apiClient.get('/sales-orders');
+      return res.data?.content || res.data || [];
+    },
+  },
+  invoices: {
+    getAll: async (): Promise<T.Invoice[]> => {
+      const res = await apiClient.get('/invoices');
+      return res.data?.content || res.data || [];
+    },
+  },
+  payments: {
+    getAll: async (): Promise<T.Payment[]> => {
+      const res = await apiClient.get('/payments');
+      return res.data?.content || res.data || [];
+    },
+  },
+  accounts: {
+    getAll: async (): Promise<T.Account[]> => {
+      const res = await apiClient.get('/accounts');
+      return res.data?.content || res.data || [];
+    },
+  },
+  journals: {
+    getAll: async (): Promise<T.Journal[]> => {
+      const res = await apiClient.get('/journals');
+      return res.data?.content || res.data || [];
+    },
+    getEntries: async (): Promise<T.JournalEntry[]> => {
+      const res = await apiClient.get('/journals/entries');
+      return res.data?.content || res.data || [];
+    },
+  },
+  budgets: {
+    getAll: async (): Promise<T.Budget[]> => {
+      const res = await apiClient.get('/budgets');
+      return res.data?.content || res.data || [];
+    },
+    getAnalyticAccounts: async (): Promise<T.AnalyticAccount[]> => {
+      const res = await apiClient.get('/budgets/analytic-accounts');
+      return res.data?.content || res.data || [];
+    },
+    getVariance: async (year = 2026): Promise<any> => {
+      const res = await apiClient.get(`/budgets/analysis?fiscalYear=${year}`);
+      return res.data;
+    },
+  },
+  reports: {
+    getBalanceSheet: async () => {
+      const res = await apiClient.get('/reports/balance-sheet');
+      return res.data;
+    },
+    getProfitLoss: async () => {
+      const res = await apiClient.get('/reports/profit-loss');
+      return res.data;
+    },
+    getBudgetVariance: async (year = 2026) => {
+      const res = await apiClient.get(`/reports/budget?fiscalYear=${year}`);
+      return res.data;
+    },
+    getEnvironment: async () => {
+      const res = await apiClient.get('/reports/environment');
+      return res.data;
+    },
+    getResources: async () => {
+      const res = await apiClient.get('/reports/resources');
+      return res.data;
+    },
+  },
+  auditLogs: {
+    getAll: async (): Promise<T.AuditLog[]> => {
+      const res = await apiClient.get('/audit-logs');
+      return res.data?.content || res.data || [];
+    },
+  },
+  users: {
+    getAll: async (): Promise<T.User[]> => {
+      const res = await apiClient.get('/users');
+      return res.data?.content || res.data || [];
+    },
+  },
+  v2: {
+    getHealth: async (): Promise<T.LunarCoreHealth> => {
+      const res = await axios.get<T.LunarCoreHealth>('http://localhost:8081/api/v2/lunar-core/health');
+      return res.data;
+    },
+    diagnose: async (query: string): Promise<T.DiagnosticQueryResult> => {
+      const res = await axios.get<T.DiagnosticQueryResult>('http://localhost:8081/api/v2/lunar-core/diagnose', {
+        params: { q: query },
+      });
+      return res.data;
+    },
+    getZones: async (): Promise<T.HabitatZoneV2[]> => {
+      const res = await axios.get<T.HabitatZoneV2[]>('http://localhost:8081/api/v2/zones');
+      return res.data || [];
+    },
+    getLatestTelemetry: async () => {
+      const res = await axios.get('http://localhost:8081/api/v2/telemetry/latest');
+      return res.data;
+    },
+    getStreamUrl: () => 'http://localhost:8081/api/v2/telemetry/stream',
+  },
+};

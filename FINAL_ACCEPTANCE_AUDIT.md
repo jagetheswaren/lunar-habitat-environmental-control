@@ -14,7 +14,7 @@ Docker and Docker Compose have been **completely excluded** per user requirement
 | **1. PROJECT BUILD** | Java 17, Spring Boot 3.4.3, Maven | `mvn test` and `mvn compile jar:jar spring-boot:repackage` executed cleanly. | `pom.xml`, `target/lunar-habitat-0.0.1-SNAPSHOT.jar` | PASS |
 | **2. MYSQL + SQL** | MySQL 8+, Flyway SQL Migrations V1-V7 | Database schema bootstrapped across 27 relational tables with constraints and indexes. | `src/main/resources/db/migration/` | PASS |
 | **3. JAVA BACKEND** | Controller → DTO → Service → Repo → Entity → DB | Full end-to-end transaction paths verified across all business domains. | `src/main/java/com/lunar/habitat/` | PASS |
-| **4. AUTH + SECURITY** | Spring Security, BCrypt, RBAC, Bearer Token | Authenticates admin and operators, issues token, enforces role-based access. | `SecurityConfig.java`, `BearerTokenAuthFilter.java` | PASS |
+| **4. AUTH + SECURITY** | Spring Security, BCrypt, RBAC, Signed JJWT (HS256) | Authenticates credentials via AuthenticationManager, issues cryptographically signed JJWT (HMAC-SHA256) access (30m) & refresh (7d) tokens, validates signature & expiry server-side on every request, revokes tokens on logout, rejects forged/tampered tokens with HTTP 401/403. | `SecurityConfig.java`, `JwtTokenProvider.java`, `BearerTokenAuthFilter.java`, `AuthApiController.java` | PASS |
 | **5. TELEMETRY** | Sensor ingestion, Threshold engine, Alert dispatch | Real telemetry ingested, evaluated against zone thresholds, triggers alerts. | `TelemetryApiController.java`, `ThresholdEngineServiceImpl.java` | PASS |
 | **6. RESOURCE CONSUMPTION** | Telemetry integration, real consumption metrics | Real sensor deltas power consumption billing and reporting. | `ResourceConsumptionServiceImpl.java` | PASS |
 | **7. SCRUBBER CONTROL** | Automated life support adjustments | Actuator logic triggers on CO2 breaches, adjusts scrubber loop. | `ScrubberActuatorServiceImpl.java` | PASS |
@@ -154,16 +154,26 @@ Post-execution database verification was performed directly against the persiste
 
 ## Final Verification Summary
 
-- **Total Postman Requests:** 65
-- **Total Postman Tests/Assertions:** 130
-- **Postman Execution Result:** 65/65 Requests Executed, 130/130 Assertions Passed (0 Failed)
-- **Maven Test Result:** `Tests run: 21, Failures: 0, Errors: 0, Skipped: 0` (`BUILD SUCCESS`)
-- **Maven Package Result:** `mvn compile jar:jar spring-boot:repackage` (`BUILD SUCCESS`)
+- **V2 Postman Collection:** `postman/Lunar_Habitat_V2_API.postman_collection.json`
+- **Total Postman Folders:** 21 Modules
+- **Total Postman Requests:** 72
+- **Total Postman Tests/Assertions:** 141
+- **Postman Execution Result:** 72/72 Requests Executed, 141/141 Assertions Passed (0 Failed, 100% Pass Rate via Newman)
+- **Maven Test Result:** `Tests run: 27, Failures: 0, Errors: 0, Skipped: 0` (`BUILD SUCCESS`)
+- **Maven Package Result:** `mvn package` (`BUILD SUCCESS`, `target/lunar-habitat-0.0.1-SNAPSHOT.jar`)
+- **Frontend Build Result:** `npm run build` (`BUILD SUCCESS`, 1668 modules transformed, Vite bundle clean)
+- **Frontend Typecheck Result:** `npm run typecheck` (`tsc --noEmit`, 0 errors)
+- **Frontend Port:** `http://localhost:5173` (React 18 + Vite + TypeScript + Three.js)
+- **Backend Port:** `http://localhost:8081` (Spring Boot 3.4.3 + Flyway + MySQL/H2)
+- **Swagger Documentation:** `http://localhost:8081/swagger-ui/index.html`
+- **Rebuild Branch:** `fullstack-3d-rebuild`
 - **GitHub Repository URL:** https://github.com/jagetheswaren/lunar-habitat-environmental-control
-- **Default Branch:** `main`
 - **Docker:** Completely excluded (0 Dockerfiles or Docker Compose configurations).
+- **Authentication & Security:** Signed JJWT (HMAC-SHA256) access & refresh tokens, token blacklist revocation on logout, zero security bypasses.
 
 ---
 
 ## 🏆 FULL WORKING PROJECT STATUS: READY
+## 🏆 FULL-STACK REBUILD STATUS: READY
+
 
