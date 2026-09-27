@@ -1,0 +1,28 @@
+name: Feature Request
+description: Propose a new feature or enhancement for Lunar Habitat
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea to improve the Lunar Habitat Mission Operations or Life-Support platform? Let us know!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Operational Need
+      description: Is your feature request related to a specific operational challenge?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features considered.
