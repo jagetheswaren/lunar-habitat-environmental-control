@@ -8,9 +8,9 @@
 
 ## Quick Reference for Faculty Presentation
 
-- **Application URL:** `http://localhost:8080`
-- **Login URL:** `http://localhost:8080/login`
-- **Swagger / OpenAPI Documentation:** `http://localhost:8080/swagger-ui.html`
+- **Application URL:** `http://localhost:8081`
+- **Login URL:** `http://localhost:8081/login`
+- **Swagger / OpenAPI Documentation:** `http://localhost:8081/swagger-ui/index.html`
 - **Access Credentials:**
   - **Administrator:** `admin` / `admin123` (Clearance: `ROLE_ADMIN`)
   - **Habitat Operator:** `operator` / `admin123` (Clearance: `ROLE_HABITAT_OPERATOR`)
@@ -22,7 +22,7 @@
 ## 20-Step Faculty Presentation Walkthrough
 
 ### 1. Project Introduction
-- **WHAT TO OPEN:** Browser tab at `http://localhost:8080/login`
+- **WHAT TO OPEN:** Browser tab at `http://localhost:8081/login`
 - **WHAT TO CLICK:** Point out the station terminal header and the aesthetic lunar mission theme.
 - **WHAT TO EXPLAIN:**
   > "Respected faculty, welcome to the demonstration of the Autonomous Lunar Habitat Environmental Control & Resource Reclamation Infrastructure. This system simulates a production-grade mission operations and enterprise ERP platform deployed to manage atmospheric life support, resource recycling, procurement, utility billing, and general ledger double-entry accounting for human lunar settlements."
@@ -39,7 +39,7 @@
 ---
 
 ### 3. Proposed Solution
-- **WHAT TO OPEN:** `http://localhost:8080/dashboard` (after login)
+- **WHAT TO OPEN:** `http://localhost:8081/dashboard` (after login)
 - **WHAT TO EXPLAIN:**
   > "We developed a unified, full-stack platform integrating real-time environmental telemetry evaluation with double-entry accounting. When an environmental anomaly occurs, the system triggers alerts, activates scrubber maintenance, generates procurement work orders, records utility consumption, and updates general ledger accounts in real-time."
 
@@ -80,15 +80,15 @@
 ---
 
 ### 7. Login & Authentication
-- **WHAT TO OPEN:** `http://localhost:8080/login`
+- **WHAT TO OPEN:** `http://localhost:8081/login`
 - **WHAT TO CLICK:** Enter `admin` and `admin123`, then click **Authenticate Access Key**.
 - **WHAT TO EXPLAIN:**
   > "Authentication is handled by Spring Security using DaoAuthenticationProvider with BCrypt encryption. Upon login, the user's role (`ROLE_ADMIN`) is established in the security context, granting clearance to flight control consoles and financial ledgers."
 
 ---
 
-### 8. Mission Operations Dashboard
-- **WHAT TO OPEN:** `http://localhost:8080/dashboard`
+## 8. Mission Operations Dashboard
+- **WHAT TO OPEN:** `http://localhost:8081/dashboard`
 - **WHAT TO CLICK:** Scroll smoothly through the two KPI sections and Chart.js graphs.
 - **WHAT TO EXPLAIN:**
   > "The Dashboard reflects **live database metrics**:

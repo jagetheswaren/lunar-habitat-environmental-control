@@ -1,7 +1,7 @@
 import requests
 import json
 
-base_url = "http://localhost:8080/api/v1/lunar"
+base_url = "http://localhost:8081/api/v1/lunar"
 
 login_res = requests.post(f"{base_url}/auth/login", json={"username": "admin", "password": "admin123"})
 assert login_res.status_code == 200, f"Login failed: {login_res.text}"

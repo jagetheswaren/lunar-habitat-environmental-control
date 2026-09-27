@@ -5,7 +5,7 @@
 [![Flyway](https://img.shields.io/badge/Flyway-V1--V7-red.svg)](https://flywaydb.org/)
 [![Database](https://img.shields.io/badge/MySQL-8.0%2B-orange.svg)](https://www.mysql.com/)
 [![Thymeleaf](https://img.shields.io/badge/UI-Thymeleaf%20%2B%20CSS3-green.svg)](https://www.thymeleaf.org/)
-[![Swagger](https://img.shields.io/badge/OpenAPI-3.0%20(Swagger%20UI)-brightgreen.svg)](http://localhost:8080/swagger-ui/index.html)
+[![Swagger](https://img.shields.io/badge/OpenAPI-3.0%20(Swagger%20UI)-brightgreen.svg)](http://localhost:8081/swagger-ui/index.html)
 [![Postman](https://img.shields.io/badge/Postman%2FNewman-65%2F65%20Passed-orange.svg)](postman/)
 [![JUnit 5](https://img.shields.io/badge/JUnit%205-21%2F21%20Passed-blue.svg)](src/test/java)
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
@@ -202,8 +202,8 @@ The backend provides **20 REST API Controllers** with **65 production endpoints*
 - **Audit Logs:** `GET /api/v1/lunar/audit-logs`
 
 Interactive Swagger Documentation:
-- **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- **OpenAPI JSON:** [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+- **Swagger UI:** [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html)
+- **OpenAPI JSON:** [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)
 
 ---
 
@@ -263,8 +263,8 @@ mvn spring-boot:run
 
 Upon startup:
 1. Flyway will execute migrations `V1` through `V7` automatically.
-2. Spring Boot will start on port `8080`.
-3. Open [http://localhost:8080](http://localhost:8080) to access the console.
+2. Spring Boot will start on port `8081`.
+3. Open [http://localhost:8081](http://localhost:8081) to access the console.
 
 Alternatively, package into an executable JAR:
 ```powershell

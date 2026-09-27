@@ -5,7 +5,7 @@ environment = {
     "id": "lunar-habitat-env-id",
     "name": "Lunar Habitat Environment",
     "values": [
-        {"key": "baseUrl", "value": "http://localhost:8080", "type": "default", "enabled": True},
+        {"key": "baseUrl", "value": "http://localhost:8081", "type": "default", "enabled": True},
         {"key": "token", "value": "", "type": "secret", "enabled": True},
         {"key": "userId", "value": "", "type": "default", "enabled": True},
         {"key": "customerId", "value": "", "type": "default", "enabled": True},

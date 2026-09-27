@@ -35,7 +35,7 @@ Docker and Docker Compose have been **completely excluded** per user requirement
 
 ## Postman Workflow Execution Report
 
-The Postman test suite was executed against the active Spring Boot application server running on `http://localhost:8080`.
+The Postman test suite was executed against the active Spring Boot application server running on `http://localhost:8081`.
 
 ### Newman Execution Summary
 ```text
