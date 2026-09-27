@@ -1,5 +1,6 @@
 package com.lunar.habitat.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -7,12 +8,15 @@ public class HabitatZoneRequest {
 
     @NotBlank(message = "Zone code is required")
     @Size(max = 50, message = "Code must be at most 50 characters")
+    @JsonAlias({"moduleCode", "zoneCode", "moduleId"})
     private String code;
 
     @NotBlank(message = "Zone name is required")
     @Size(max = 150, message = "Name must be at most 150 characters")
+    @JsonAlias({"moduleName", "zoneName"})
     private String name;
 
+    @JsonAlias({"type", "sectorType"})
     private String description;
     private String locationDescription;
     private String status = "OPERATIONAL";

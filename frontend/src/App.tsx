@@ -25,6 +25,7 @@ import { ReportsPage } from './pages/ReportsPage';
 import { AuditLogsPage } from './pages/AuditLogsPage';
 import { UsersPage } from './pages/UsersPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { ResourceReclamationPage } from './pages/ResourceReclamationPage';
 
 export const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
@@ -77,6 +78,9 @@ export const App: React.FC = () => {
         return <InventoryPage />;
       case '/maintenance':
         return <MaintenancePage />;
+      case '/reclamation':
+      case '/resource-reclamation':
+        return <ResourceReclamationPage />;
       case '/contacts':
         return <ContactsPage />;
       case '/products':
